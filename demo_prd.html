@@ -10,43 +10,124 @@
         body { 
             background-color: #F3F5F8; 
             margin: 0; 
-            padding: 40px 20px; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+            display: flex;
+        }
+        
+        /* 侧边栏大纲定位 */
+        .toc-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            background: #fff;
+            border-right: 1px solid rgba(0,0,0,0.08);
+            box-shadow: 2px 0 12px rgba(0,0,0,0.03);
+            overflow-y: auto;
+            padding: 32px 20px;
+            z-index: 100;
+        }
+        
+        /* 美化滚动条 */
+        .toc-sidebar::-webkit-scrollbar { width: 4px; }
+        .toc-sidebar::-webkit-scrollbar-thumb { background: #dcdcdc; border-radius: 4px; }
+        
+        .toc-sidebar h3 { font-size: 15px; color: #181818; margin-top: 0; margin-bottom: 20px; font-weight: 600; border-bottom: 1px solid #f0f0f0; padding-bottom: 12px; }
+        .toc-list { list-style: none; padding: 0; margin: 0; }
+        .toc-item { margin-bottom: 8px; }
+        .toc-link { 
+            text-decoration: none; 
+            color: #666; 
+            font-size: 13px; 
+            display: block;
+            transition: all 0.2s;
+            line-height: 1.5;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+        .toc-link:hover { color: #0052D9; background: rgba(0,82,217,0.06); }
+        /* 缩进层级树 */
+        .toc-h1 { margin-left: 0; font-weight: 600; color: #333; margin-top: 12px; }
+        .toc-h2 { margin-left: 0; font-weight: 500; color: #444; }
+        .toc-h3 { margin-left: 16px; font-size: 12.5px; }
+        .toc-h4 { margin-left: 32px; font-size: 12px; color: #888; }
+        
+        /* 右侧正文区 */
+        .main-content {
+            margin-left: 280px; /* 拉开给侧边栏的位置 */
+            padding: 40px;
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            justify-content: center;
         }
         .markdown-container {
-            max-width: 900px; 
-            margin: 0 auto; 
+            width: 100%;
+            max-width: 1200px; /* 大幅加宽正文 */
             background: #fff; 
-            padding: 48px 56px; 
+            padding: 60px 80px; 
             border-radius: 16px; 
             box-shadow: 0 8px 30px rgba(0,0,0,0.04);
             border: 1px solid rgba(0,0,0,0.04);
         }
-        @media (max-width: 768px) { 
-            body { padding: 16px; }
-            .markdown-container { padding: 24px 20px; } 
+        
+        @media (max-width: 1024px) { 
+            .toc-sidebar { width: 240px; }
+            .main-content { margin-left: 240px; padding: 24px; }
+            .markdown-container { padding: 40px; }
         }
+        @media (max-width: 768px) { 
+            /* 手机端隐藏侧边栏 */
+            .toc-sidebar { display: none; }
+            body { display: block; }
+            .main-content { margin-left: 0; padding: 16px; }
+            .markdown-container { padding: 24px; } 
+        }
+
         .back-btn { 
-            display: inline-block; 
-            margin-bottom: 24px; 
+            display: inline-flex; 
+            align-items: center;
+            margin-bottom: 32px; 
             color: #0052D9; 
             text-decoration: none; 
             font-weight: 600; 
             font-size: 14px; 
-            padding: 6px 12px;
+            padding: 8px 16px;
             background: rgba(0,82,217,0.06);
             border-radius: 8px;
             transition: all 0.2s;
         }
         .back-btn:hover { background: rgba(0,82,217,0.12); }
+        .back-btn svg { width: 16px; height: 16px; margin-right: 4px; }
+
+        /* 给带id的标题一个向下的偏移，避免被锚点跳转时贴着屏幕顶端 */
+        .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4 {
+            scroll-margin-top: 40px;
+        }
     </style>
 </head>
 <body>
-    <div class="markdown-container">
-        <a href="index.html" class="back-btn">← 返回演示大厅</a>
-        <div id="content" class="markdown-body">
-            <p style="text-align: center; color: #888; margin-top: 40px;">正在努力加载产品需求文档...</p>
-            <p style="text-align: center; font-size: 12px; color: #ccc;">Powered by Marked.js</p>
+    
+    <!-- 左侧目录大纲 -->
+    <div class="toc-sidebar">
+        <a href="index.html" class="back-btn">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            返回大厅
+        </a>
+        <h3>文档大纲</h3>
+        <ul class="toc-list" id="tocList">
+            <li class="toc-item" style="color: #999; font-size: 13px;">正在解析文档大纲...</li>
+        </ul>
+    </div>
+
+    <!-- 右侧容器 -->
+    <div class="main-content">
+        <div class="markdown-container">
+            <div id="content" class="markdown-body">
+                <p style="text-align: center; color: #888; margin-top: 80px;">正在解析加载超长文档...</p>
+                <div style="text-align: center; margin-top: 20px;"><svg class="loading-svg" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" fill="none"><circle cx="12" cy="12" r="10" stroke-width="2" stroke-opacity="0.2"></circle><path d="M12 2a10 10 0 0 1 10 10" stroke-width="2"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></path></svg></div>
+            </div>
         </div>
     </div>
     
@@ -60,14 +141,59 @@
                 return response.text();
             })
             .then(text => {
-                document.getElementById('content').innerHTML = marked.parse(text);
+                // 1. 渲染 markdown 内容
+                const contentBox = document.getElementById('content');
+                contentBox.innerHTML = marked.parse(text);
+                
+                // 2. 解析抽取所有标题，生成自动大纲目录树 (TOC)
+                const tocList = document.getElementById('tocList');
+                tocList.innerHTML = ''; // 清空预设的加载提示
+                
+                const headings = contentBox.querySelectorAll('h1, h2, h3, h4');
+                
+                if(headings.length === 0) {
+                    tocList.innerHTML = '<li class="toc-item" style="color:#999;font-size:13px;text-align:center;">此文档无可用的大纲</li>';
+                    return;
+                }
+
+                headings.forEach((heading, index) => {
+                    // 为所有标题打下唯一的锚点标签
+                    const anchorId = 'heading-' + index;
+                    heading.id = anchorId;
+                    
+                    const level = parseInt(heading.tagName.substring(1));
+                    
+                    // 基于标题的 Header 级别决定他在目录上的缩进尺寸
+                    let tocClass = 'toc-h1';
+                    if (level === 2) tocClass = 'toc-h2';
+                    if (level === 3) tocClass = 'toc-h3';
+                    if (level === 4) tocClass = 'toc-h4';
+                    
+                    const li = document.createElement('li');
+                    li.className = 'toc-item';
+                    
+                    const a = document.createElement('a');
+                    a.className = 'toc-link ' + tocClass;
+                    a.href = '#' + anchorId;
+                    a.innerText = heading.innerText;
+                    
+                    // 为左侧目录增加丝滑的跳跃动画
+                    a.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        document.getElementById(anchorId).scrollIntoView({ behavior: 'smooth' });
+                        history.pushState(null, null, '#' + anchorId);
+                    });
+                    
+                    li.appendChild(a);
+                    tocList.appendChild(li);
+                });
             })
             .catch(error => {
                 document.getElementById('content').innerHTML = `
                     <div style="text-align:center; padding: 40px; color:#d32f2f;">
-                        <h3>无法渲染该文档</h3>
+                        <h3 style="margin-bottom:12px;">无法渲染该文档</h3>
                         <p>${error.message}</p>
-                        <p style="font-size: 13px; color: #888;">提示：如果在本地直接双击打开此HTML，可能因为跨域安全限制无法读取同目录文件。部署到 Vercel 后将恢复正常！</p>
+                        <p style="font-size: 13px; color: #888;">提示：如果您是在本地电脑中双击直接打开的本网页，浏览器往往会因为“跨域安全策略”拦截对本地文件的读取操作。<br/>当部署至 Vercel 云端后，文件在服务器内，这道锁将会自动解除！</p>
                     </div>
                 `;
             });
