@@ -157,6 +157,21 @@
     </style>
 </head>
 <body>
+    <!-- 访问控制大门 -->
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-box">
+            <div class="card-icon" style="margin: 0 auto 20px; width: 56px; height: 56px;">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:28px;height:28px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            </div>
+            <h2>项目汇报演示通道</h2>
+            <p>内部系统级视觉方案，凭通行证口令访问</p>
+            <input type="password" id="authPwd" class="auth-input" placeholder="输入访问口令" autocomplete="off" onkeypress="if(event.key==='Enter')checkPwd()">
+            <button class="auth-btn" onclick="checkPwd()">验证并解锁大厅</button>
+            <div class="auth-error" id="authError">口令不正确，请核实！</div>
+        </div>
+    </div>
+
+    <!-- 主展示区会被上面锁定 -->
     <div class="header">
         <h1>JET3.0 产品线前端演示体验大厅</h1>
         <p>提供核心场景的高拟真交互演示与设计规范参考</p>
