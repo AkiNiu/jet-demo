@@ -126,6 +126,7 @@
             transform: translateX(4px);
         }
         
+        
         .section-title {
             font-size: 20px;
             font-weight: 600;
@@ -133,6 +134,26 @@
             padding-bottom: 12px;
             border-bottom: 1px solid rgba(0,0,0,0.08);
         }
+
+        /* 鉴权遮罩 */
+        .auth-overlay {
+            position: fixed; inset: 0; background: rgba(243,245,248,0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; transition: opacity 0.3s;
+        }
+        .auth-box {
+            background: #fff; padding: 40px; border-radius: 20px; box-shadow: 0 12px 40px rgba(0,82,217,0.1); width: 90%; max-width: 400px; text-align: center;
+        }
+        .auth-box h2 { margin: 0 0 12px; font-size: 22px; color: var(--text-main); }
+        .auth-box p { font-size: 14px; color: var(--text-sub); margin-bottom: 24px; }
+        .auth-input {
+            width: 100%; padding: 14px 16px; font-size: 16px; border: 1.5px solid rgba(0,0,0,0.1); border-radius: 12px; margin-bottom: 20px; outline: none; transition: border 0.2s; text-align: center; letter-spacing: 2px;
+        }
+        .auth-input:focus { border-color: var(--primary-color); }
+        .auth-btn {
+            width: 100%; padding: 14px; background: var(--primary-color); color: #fff; font-size: 16px; font-weight: 600; border: none; border-radius: 12px; cursor: pointer; transition: all 0.2s;
+        }
+        .auth-btn:active { transform: scale(0.98); }
+        .auth-error { color: #d32f2f; font-size: 13px; margin-top: 12px; display: none; }
     </style>
 </head>
 <body>
@@ -212,5 +233,27 @@
             </a>
         </div>
     </div>
+
+    <script>
+        function initAuth() {
+            // 一旦验证成功，本次浏览器会话免验证
+            if(sessionStorage.getItem('jet_demo_auth') === 'true') {
+                document.getElementById('authOverlay').style.display = 'none';
+            }
+        }
+        function checkPwd() {
+            const pwd = document.getElementById('authPwd').value;
+            // 访问密码设置为 jet2026 或直接大写均可
+            if(pwd.toLowerCase() === 'jet2026' || pwd.toLowerCase() === 'jet3.0') {
+                sessionStorage.setItem('jet_demo_auth', 'true');
+                document.getElementById('authOverlay').style.opacity = '0';
+                setTimeout(() => { document.getElementById('authOverlay').style.display = 'none'; }, 300);
+            } else {
+                document.getElementById('authError').style.display = 'block';
+                setTimeout(() => { document.getElementById('authError').style.display = 'none'; }, 2000);
+            }
+        }
+        initAuth();
+    </script>
 </body>
 </html>
