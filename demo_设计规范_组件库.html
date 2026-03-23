@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>检e通 V3.0 — 设计规范 · 组件库</title>
+<link rel="stylesheet" href="demo_shared_base.css">
+<style>
+body { background:#F5F5F5; }
+.spec-page { max-width:1100px; margin:0 auto; padding:24px; }
+.spec-header { text-align:center; padding:40px 0 32px; }
+.spec-header h1 { font-size:28px; font-weight:700; color:var(--g800); }
+.spec-header p { font-size:14px; color:var(--g500); margin-top:8px; }
+.spec-section { margin-bottom:48px; }
+.spec-section > h2 { font-size:20px; font-weight:700; color:var(--g800); padding-bottom:10px; border-bottom:2px solid var(--pri); display:inline-block; margin-bottom:20px; }
+.spec-subsection { margin-bottom:28px; }
+.spec-subsection > h3 { font-size:15px; font-weight:600; color:var(--g700); margin-bottom:12px; }
+.spec-desc { font-size:13px; color:var(--g500); margin-bottom:12px; line-height:1.6; }
+.spec-row { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-start; margin-bottom:16px; }
+.spec-card { background:#fff; border-radius:var(--r); padding:16px; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
+.spec-label { font-size:11px; color:var(--g400); margin-bottom:6px; font-weight:500; text-transform:uppercase; letter-spacing:0.5px; }
+
+/* 色板 */
+.color-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(120px,1fr)); gap:8px; }
+.color-chip { border-radius:var(--rs); overflow:hidden; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
+.color-chip .swatch { height:56px; }
+.color-chip .info { padding:8px 10px; }
+.color-chip .info .name { font-size:12px; font-weight:600; color:var(--g700); }
+.color-chip .info .hex { font-size:11px; color:var(--g400); font-family:monospace; }
+
+/* 字体 */
+.type-row { padding:12px 0; border-bottom:0.5px solid var(--g100); display:flex; align-items:baseline; gap:16px; }
+.type-row:last-child { border-bottom:none; }
+.type-row .sample { flex:1; color:var(--g800); }
+.type-row .meta { font-size:11px; color:var(--g400); white-space:nowrap; font-family:monospace; }
+
+/* 组件展示区 */
+.comp-showcase { background:#fff; border-radius:var(--r); padding:20px; box-shadow:0 1px 4px rgba(0,0,0,0.06); margin-bottom:16px; }
+.comp-showcase .showcase-label { font-size:11px; color:var(--g400); margin-bottom:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+.comp-row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:12px; }
+.comp-row:last-child { margin-bottom:0; }
+
+/* 间距展示 */
+.spacing-demo { display:flex; gap:16px; flex-wrap:wrap; }
+.spacing-box { display:flex; align-items:center; gap:8px; }
+.spacing-box .box { background:var(--pri-l); border:1px dashed var(--pri); display:flex; align-items:center; justify-content:center; font-size:10px; color:var(--pri); font-weight:600; }
+.spacing-box .lbl { font-size:11px; color:var(--g500); }
+
+/* 手机壳预览 */
+.phone-mini { width:200px; height:420px; margin:0; transform-origin:top left; }
+.phone-mini .sbar { height:26px; font-size:8px; }
+.phone-mini .nbar { height:24px; font-size:9px; padding:0 8px; }
+.phone-mini .nbar .back { font-size:12px; width:16px; }
+.phone-mini .nbar .title { font-size:9px; margin-right:16px; }
+</style>
+</head>
+<body>
+
+<div class="spec-page">
+
+<div class="spec-header">
+  <h1>检e通 V3.0 设计规范</h1>
+  <p>基于 Material Design 3 · 适配居配检测现场作业场景 · 共享样式层 demo_shared_base.css</p>
+</div>
+
+<!-- ==================== 1. 配色 ==================== -->
+<div class="spec-section">
+  <h2>1. 配色体系</h2>
+
+  <div class="spec-subsection">
+    <h3>品牌色</h3>
+    <div class="color-grid">
+      <div class="color-chip"><div class="swatch" style="background:#3CC8B4"></div><div class="info"><div class="name">主色 Primary</div><div class="hex">#3CC8B4</div></div></div>
+      <div class="color-chip"><div class="swatch" style="background:#E8F8F5"></div><div class="info"><div class="name">主色浅底</div><div class="hex">#E8F8F5</div></div></div>
+      <div class="color-chip"><div class="swatch" style="background:#2BA89A"></div><div class="info"><div class="name">主色深</div><div class="hex">#2BA89A</div></div></div>
+    </div>
+  </div>
+
+  <div class="spec-subsection">
+    <h3>语义色</h3>
+    <div class="color-grid">
+      <div class="color-chip"><div class="swatch" style="background:#34C759"></div><div class="info"><div class="name">成功/合格</div><div class="hex">#34C759</div></div></div>
+      <div class="color-chip"><div class="swatch" style="background:#FF3B30"></div><div class="info"><div class="name">危险/不合格</div><div class="hex">#FF3B30</div></div></div>
+      <div class="color-chip"><div class="swatch" style="background:#FF9500"></div><div class="info"><div class="name">警告/注意</div><div class="hex">#FF9500</div></div></div>
+    </div>
+  </div>
+
+  <div class="spec-subsection">
+    <h3>灰阶（10级）</h3>
+    <div class="color-grid">
+      <div class="color-chip"><div class="swatch" style="background:#F9FAFB"></div><div class="info"><div class="name">g50</div><div class="hex">#F9FAFB</div></div></div>
+      <div class="color-chip"><div class="swatch" style="background:#F3F4F6"></div><div class="info"><div class="name">g100</div><div class="hex">#F3F4F6</div></div></div>
+      <div class="color-chip"><div class="swatch" style="background:#E5E7EB"></div><div class="info"><div class="name">g200</div><div class="hex">#E5E7EB</div></div></div>
+      <div class="color-chip"><div class="swatch" style="background:#D1D5DB"></div><div class="info"><div class="name">g300</div><div class="hex">#D1D5DB</div></div></div>
+      <div class="color-chip"><div class="swatch" style="background:#9CA3AF"></div><div class="info"><div class="name">g400</div><div class="hex">#9CA3AF</div></div></div>
+      <div class="color-chip"><div class="swatch" style="background:#6B7280"></div><div class="info"><div class="name">g500</div><div class="hex">#6B7280</div></div></div>
+      <div class="color-chip"><div class="swatch" style="background:#4B5563"></div><div class="info"><div class="name">g600</div><div class="hex">#4B5563</div></div></div>
+      <div class="color-chip"><div class="swatch" style="background:#374151"></div><div class="info"><div class="name">g700</div><div class="hex">#374151</div></div></div>
+      <div class="color-chip"><div class="swatch" style="background:#1F2937"></div><div class="info"><div class="name">g800</div><div class="hex">#1F2937</div></div></div>
+      <div class="color-chip"><div class="swatch" style="background:#111827"></div><div class="info"><div class="name">g900</div><div class="hex">#111827</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 2. 字体 ==================== -->
+<div class="spec-section">
+  <h2>2. 字体层级</h2>
+  <div class="comp-showcase">
+    <div class="type-row"><span class="sample text-hero">数据大屏标题 Hero</span><span class="meta">28px Bold</span></div>
+    <div class="type-row"><span class="sample text-title">页面标题 Title</span><span class="meta">20px Bold</span></div>
+    <div class="type-row"><span class="sample text-heading">区块标题 Heading</span><span class="meta">17px Semibold</span></div>
+    <div class="type-row"><span class="sample text-body">正文内容 Body</span><span class="meta">15px Regular</span></div>
+    <div class="type-row"><span class="sample text-sub">副文本 Subtext</span><span class="meta">14px Regular</span></div>
+    <div class="type-row"><span class="sample text-caption">说明文字 Caption</span><span class="meta">12px Regular</span></div>
+    <div class="type-row"><span class="sample text-tiny">辅助标注 Tiny</span><span class="meta">11px Medium</span></div>
+  </div>
+</div>
+
+<!-- ==================== 3. 圆角与间距 ==================== -->
+<div class="spec-section">
+  <h2>3. 圆角与间距</h2>
+  <div class="spec-row">
+    <div class="comp-showcase" style="flex:1">
+      <div class="showcase-label">圆角</div>
+      <div class="comp-row">
+        <div style="width:80px;height:48px;background:var(--pri-l);border:1.5px solid var(--pri);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--pri);font-weight:600;">12px</div>
+        <div style="width:80px;height:48px;background:var(--pri-l);border:1.5px solid var(--pri);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--pri);font-weight:600;">8px</div>
+        <div style="width:80px;height:48px;background:var(--pri-l);border:1.5px solid var(--pri);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--pri);font-weight:600;">20px pill</div>
+      </div>
+      <div class="spec-desc">大组件12px · 小组件8px · 胶囊20px</div>
+    </div>
+    <div class="comp-showcase" style="flex:1">
+      <div class="showcase-label">间距基准</div>
+      <div class="spacing-demo">
+        <div class="spacing-box"><div class="box" style="width:4px;height:24px;">4</div><div class="lbl">micro</div></div>
+        <div class="spacing-box"><div class="box" style="width:8px;height:24px;">8</div><div class="lbl">xs</div></div>
+        <div class="spacing-box"><div class="box" style="width:12px;height:24px;">12</div><div class="lbl">sm</div></div>
+        <div class="spacing-box"><div class="box" style="width:16px;height:24px;">16</div><div class="lbl">base</div></div>
+        <div class="spacing-box"><div class="box" style="width:24px;height:24px;">24</div><div class="lbl">lg</div></div>
+        <div class="spacing-box"><div class="box" style="width:32px;height:24px;">32</div><div class="lbl">xl</div></div>
+      </div>
+      <div class="spec-desc">水平内边距统一16px</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 4. 按钮 ==================== -->
+<div class="spec-section">
+  <h2>4. 按钮</h2>
+  <div class="comp-showcase">
+    <div class="showcase-label">变体</div>
+    <div class="comp-row">
+      <button class="btn btn-primary">主要按钮</button>
+      <button class="btn btn-success">成功按钮</button>
+      <button class="btn btn-danger">危险按钮</button>
+      <button class="btn btn-warning">警告按钮</button>
+    </div>
+    <div class="comp-row">
+      <button class="btn btn-outline">描边按钮</button>
+      <button class="btn btn-outline-ng">危险描边</button>
+      <button class="btn btn-ghost">幽灵按钮</button>
+      <button class="btn btn-text">文字按钮</button>
+    </div>
+    <div class="showcase-label" style="margin-top:16px;">尺寸</div>
+    <div class="comp-row">
+      <button class="btn btn-primary btn-sm">小号 32px</button>
+      <button class="btn btn-primary">默认 44px</button>
+      <button class="btn btn-primary btn-lg">大号 52px</button>
+    </div>
+    <div class="showcase-label" style="margin-top:16px;">状态</div>
+    <div class="comp-row">
+      <button class="btn btn-primary" disabled>禁用态</button>
+      <button class="btn btn-primary btn-loading">加载中</button>
+      <button class="btn btn-icon btn-primary" style="font-size:20px;">+</button>
+      <button class="btn btn-icon btn-icon-sm btn-primary" style="font-size:14px;">+</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 5. 表单控件 ==================== -->
+<div class="spec-section">
+  <h2>5. 表单控件</h2>
+  <div class="spec-row">
+    <div class="comp-showcase" style="flex:1;min-width:280px;">
+      <div class="showcase-label">输入框</div>
+      <div class="form-group"><label class="form-label">站房编号 <span class="required">*</span></label><input class="input" placeholder="请输入站房编号"><div class="form-hint">支持汉字/英文/数字</div></div>
+      <div class="form-group"><label class="form-label">错误状态</label><input class="input error" value="abc"><div class="form-error">格式不正确</div></div>
+      <div class="form-group"><label class="form-label">禁用状态</label><input class="input" disabled value="不可编辑"></div>
+    </div>
+    <div class="comp-showcase" style="flex:1;min-width:280px;">
+      <div class="showcase-label">选择器 & 开关</div>
+      <div class="form-group"><label class="form-label">电气规模</label><select class="select"><option>两进六出</option><option>大于两进六出</option></select></div>
+      <div class="form-group"><label class="form-label">文本域</label><textarea class="textarea" placeholder="输入备注"></textarea></div>
+      <div class="comp-row" style="margin-top:12px;">
+        <span style="font-size:13px;color:var(--g600);">开关</span>
+        <button class="toggle" onclick="this.classList.toggle('on')"></button>
+        <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+        <button class="toggle ok-on" onclick="this.classList.toggle('ok-on')"></button>
+      </div>
+    </div>
+  </div>
+  <div class="spec-row">
+    <div class="comp-showcase" style="flex:1;min-width:280px;">
+      <div class="showcase-label">复选 & 单选</div>
+      <div class="checkbox checked" onclick="this.classList.toggle('checked')"><span class="ck-box">✓</span>已选中复选项</div>
+      <div class="checkbox" onclick="this.classList.toggle('checked')"><span class="ck-box">✓</span>未选中复选项</div>
+      <div class="radio checked" onclick="this.classList.toggle('checked')"><span class="rd-circle"></span>已选中单选项</div>
+      <div class="radio" onclick="this.classList.toggle('checked')"><span class="rd-circle"></span>未选中单选项</div>
+    </div>
+    <div class="comp-showcase" style="flex:1;min-width:280px;">
+      <div class="showcase-label">搜索框</div>
+      <div class="search-bar"><span class="search-icon">🔍</span><input placeholder="搜索核查项..."></div>
+      <div class="showcase-label" style="margin-top:16px;">分段控制器</div>
+      <div class="seg-ctrl" style="max-width:240px;"><div class="seg-opt active">1段</div><div class="seg-opt">2段</div><div class="seg-opt">3段</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 6. 标签与徽标 ==================== -->
+<div class="spec-section">
+  <h2>6. 标签与徽标</h2>
+  <div class="comp-showcase">
+    <div class="showcase-label">颜色标签</div>
+    <div class="comp-row">
+      <span class="tag tag-pri">主色标签</span>
+      <span class="tag tag-ok">合格</span>
+      <span class="tag tag-ng">不合格</span>
+      <span class="tag tag-warn">注意</span>
+      <span class="tag tag-gray">默认</span>
+      <span class="tag tag-outline">描边</span>
+      <span class="tag tag-outline-pri">主色描边</span>
+    </div>
+    <div class="showcase-label" style="margin-top:12px;">徽标 & 状态</div>
+    <div class="comp-row">
+      <span class="badge-dot"></span>
+      <span class="badge-num">3</span>
+      <span class="badge-num" style="min-width:24px;">12</span>
+      <span class="status-dot s-ok">在线</span>
+      <span class="status-dot s-ng">离线</span>
+      <span class="status-dot s-warn">待处理</span>
+      <span class="status-dot s-pri">进行中</span>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 7. 卡片 ==================== -->
+<div class="spec-section">
+  <h2>7. 卡片</h2>
+  <div class="spec-row">
+    <div class="card" style="width:200px;"><div class="text-heading" style="margin-bottom:4px;">基础卡片</div><p class="text-caption">box-shadow + 12px圆角</p></div>
+    <div class="card-bordered" style="width:200px;"><div class="text-heading" style="margin-bottom:4px;">描边卡片</div><p class="text-caption">1px border + 12px圆角</p></div>
+    <div class="stat-card" style="width:200px;"><div class="stat-label">本月核查</div><div class="stat-value">128</div><div class="stat-change up">↑ 12%</div></div>
+  </div>
+</div>
+
+<!-- ==================== 8. 列表 ==================== -->
+<div class="spec-section">
+  <h2>8. 列表与分组</h2>
+  <div class="comp-showcase" style="max-width:360px;">
+    <div class="showcase-label">Grouped Inset List</div>
+    <div class="group-card" style="margin:0;">
+      <div class="group-hd"><span class="gh-dot" style="background:var(--ok)"></span><span class="gh-title">站房侧搭接情况</span><span class="gh-count">1/3</span><span class="gh-arrow">▼</span></div>
+      <div class="group-bd">
+        <div class="list-row selected"><span class="row-seq ok">✓</span><span class="row-info"><span class="row-name">I段进线电缆</span></span><span class="row-right"><span class="row-status ok">✓</span></span></div>
+        <div class="list-row"><span class="row-seq">2</span><span class="row-info"><span class="row-name">II段进线电缆</span></span><span class="row-right"><span class="row-chevron">›</span></span></div>
+        <div class="list-row"><span class="row-seq">3</span><span class="row-info"><span class="row-name">电源情况核查</span></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 9. 底部控制栏 ==================== -->
+<div class="spec-section">
+  <h2>9. 底部控制栏（拇指热区）</h2>
+  <div class="comp-showcase" style="max-width:360px;">
+    <div class="showcase-label">拍照项：[合格] ◉快门 [不合格]</div>
+    <div class="ctrl-bar" style="position:static;border-radius:var(--r);border:1px solid var(--g200);">
+      <div class="ctrl-progress"><div class="bar"><div class="bar-fill" style="width:30%"></div></div><span class="text">3/10</span></div>
+      <div class="ctrl-label">站房侧 · I段进线电缆</div>
+      <div class="ctrl-actions">
+        <button class="btn-judge">✓ 合格</button>
+        <div class="btn-shutter"><span class="shutter-count" style="position:absolute;font-size:14px;font-weight:800;color:var(--pri);z-index:1;">2</span></div>
+        <button class="btn-judge">✗ 不合格</button>
+      </div>
+    </div>
+    <div class="showcase-label" style="margin-top:16px;">判定项：快门隐藏</div>
+    <div class="ctrl-bar" style="position:static;border-radius:var(--r);border:1px solid var(--g200);">
+      <div class="ctrl-label">送电痕迹确认</div>
+      <div class="ctrl-actions" style="gap:12px;">
+        <button class="btn-judge" style="flex:1;">✓ 合格</button>
+        <button class="btn-judge" style="flex:1;">✗ 不合格</button>
+      </div>
+    </div>
+    <div class="showcase-label" style="margin-top:16px;">已完成项：重新检查</div>
+    <div class="ctrl-bar" style="position:static;border-radius:var(--r);border:1px solid var(--g200);">
+      <div class="ctrl-label">站房侧 · I段进线电缆 ✓</div>
+      <div class="ctrl-actions"><button class="btn btn-outline" style="width:100%;height:44px;">↺ 重新检查</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 10. 弹出层 ==================== -->
+<div class="spec-section">
+  <h2>10. 弹出层</h2>
+  <div class="spec-row">
+    <div class="comp-showcase" style="flex:1;min-width:280px;">
+      <div class="showcase-label">不合格原因 Bottom Sheet</div>
+      <div style="background:var(--g50);border-radius:16px 16px 0 0;padding:0;overflow:hidden;border:1px solid var(--g200);">
+        <div style="width:36px;height:5px;background:var(--g300);border-radius:3px;margin:10px auto 0;"></div>
+        <div style="padding:14px 20px 10px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:17px;font-weight:700;">不合格原因</span><span style="width:28px;height:28px;border-radius:50%;background:var(--g100);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--g500);">✕</span></div>
+        <div style="padding:0 20px 16px;">
+          <div class="reason-item sel"><span class="ck">✓</span>现场与图纸不符</div>
+          <div class="reason-item"><span class="ck">✓</span>外观缺陷/损坏</div>
+          <div class="reason-item"><span class="ck">✓</span>安装不规范</div>
+          <button class="sheet-confirm" style="position:static;margin-top:8px;">确认不合格</button>
+        </div>
+      </div>
+    </div>
+    <div class="comp-showcase" style="flex:1;min-width:280px;">
+      <div class="showcase-label">Toast 轻提示</div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:center;padding:24px 0;">
+        <span style="background:rgba(0,0,0,0.78);color:#fff;padding:10px 24px;border-radius:20px;font-size:13px;">📷 拍照成功</span>
+        <span style="background:rgba(0,0,0,0.78);color:#fff;padding:10px 24px;border-radius:20px;font-size:13px;">✓ 判定合格</span>
+        <span style="background:rgba(0,0,0,0.78);color:#fff;padding:10px 24px;border-radius:20px;font-size:13px;">✗ 已标记不合格</span>
+      </div>
+      <div class="showcase-label" style="margin-top:12px;">通知条 Banner</div>
+      <div class="banner banner-warn" style="border-radius:var(--rs);">安全关卡 · 电源核查完成后方可开始</div>
+      <div class="banner banner-info" style="border-radius:var(--rs);margin-top:6px;">拍完所有站房照片后统一提交</div>
+      <div class="banner banner-ok" style="border-radius:var(--rs);margin-top:6px;">两组已提交，请审核确认</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 11. 通知与反馈 ==================== -->
+<div class="spec-section">
+  <h2>11. 通知与反馈</h2>
+  <div class="comp-showcase">
+    <div class="showcase-label">Alert 通知条</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="alert alert-info"><span class="alert-icon">ℹ️</span><span class="alert-content">信息提示：当前处于弱网环境，数据已暂存本地。</span></div>
+      <div class="alert alert-ok"><span class="alert-icon">✅</span><span class="alert-content">操作成功：核查结果已提交。</span></div>
+      <div class="alert alert-ng"><span class="alert-icon">⚠️</span><span class="alert-content">注意：存在不合格项，请确认是否取消作业。</span></div>
+      <div class="alert alert-warn"><span class="alert-icon">🔔</span><span class="alert-content">提醒：电源核查尚未完成，其他核查项暂时锁定。</span></div>
+    </div>
+  </div>
+  <div class="spec-row">
+    <div class="comp-showcase" style="flex:1;">
+      <div class="showcase-label">加载态</div>
+      <div class="comp-row" style="gap:24px;">
+        <div style="text-align:center;"><div class="spinner"></div><div class="text-tiny" style="margin-top:6px;">默认</div></div>
+        <div style="text-align:center;"><div class="spinner spinner-sm"></div><div class="text-tiny" style="margin-top:6px;">小号</div></div>
+        <div style="text-align:center;"><div class="spinner spinner-lg"></div><div class="text-tiny" style="margin-top:6px;">大号</div></div>
+      </div>
+    </div>
+    <div class="comp-showcase" style="flex:1;">
+      <div class="showcase-label">骨架屏</div>
+      <div class="skeleton skeleton-text" style="width:60%;"></div>
+      <div class="skeleton skeleton-text"></div>
+      <div class="skeleton skeleton-text" style="width:80%;"></div>
+      <div style="display:flex;gap:8px;margin-top:8px;"><div class="skeleton skeleton-circle" style="width:40px;height:40px;"></div><div style="flex:1;"><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text" style="width:50%;"></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 12. 头像与数据展示 ==================== -->
+<div class="spec-section">
+  <h2>12. 头像与数据展示</h2>
+  <div class="spec-row">
+    <div class="comp-showcase" style="flex:1;">
+      <div class="showcase-label">头像尺寸</div>
+      <div class="comp-row">
+        <span class="avatar avatar-xs">张</span>
+        <span class="avatar avatar-sm">李</span>
+        <span class="avatar avatar-md">王</span>
+        <span class="avatar avatar-lg">赵</span>
+      </div>
+      <div class="showcase-label" style="margin-top:12px;">头像组</div>
+      <div class="avatar-group">
+        <span class="avatar avatar-sm" style="background:#5BA37A;">张</span>
+        <span class="avatar avatar-sm" style="background:#D4915A;">李</span>
+        <span class="avatar avatar-sm" style="background:#7B68AE;">王</span>
+      </div>
+    </div>
+    <div class="comp-showcase" style="flex:1;">
+      <div class="showcase-label">键值对</div>
+      <div class="kv-list">
+        <div class="kv-item"><span class="kv-key">项目名称</span><span class="kv-value">慧悦雅园省检</span></div>
+        <div class="kv-item"><span class="kv-key">站房数量</span><span class="kv-value">3个（1开关站+2配电室）</span></div>
+        <div class="kv-item"><span class="kv-key">工作负责人</span><span class="kv-value">陈雷</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 13. 步骤与进度 ==================== -->
+<div class="spec-section">
+  <h2>13. 步骤与进度</h2>
+  <div class="comp-showcase">
+    <div class="showcase-label">水平步骤条</div>
+    <div class="steps" style="max-width:400px;">
+      <div class="step-item done"><div class="step-dot">✓</div><div class="step-label">核查分工</div></div>
+      <div class="step-item done"><div class="step-dot">✓</div><div class="step-label">电源核查</div></div>
+      <div class="step-item active"><div class="step-dot">3</div><div class="step-label">核查执行</div></div>
+      <div class="step-item"><div class="step-dot">4</div><div class="step-label">核查确认</div></div>
+    </div>
+  </div>
+  <div class="spec-row">
+    <div class="comp-showcase" style="flex:1;">
+      <div class="showcase-label">条形进度</div>
+      <div class="progress-bar" style="margin-bottom:8px;"><div class="fill" style="width:35%"></div></div>
+      <div class="progress-bar" style="margin-bottom:8px;"><div class="fill ok" style="width:70%"></div></div>
+      <div class="progress-bar"><div class="fill ng" style="width:15%"></div></div>
+    </div>
+    <div class="comp-showcase" style="flex:1;">
+      <div class="showcase-label">分割线</div>
+      <div style="padding:8px 0;">上方内容</div>
+      <div class="divider"></div>
+      <div style="padding:8px 0;">下方内容</div>
+      <div class="divider-text">或</div>
+      <div style="padding:8px 0;">其他内容</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 14. 空状态 ==================== -->
+<div class="spec-section">
+  <h2>14. 空状态</h2>
+  <div class="comp-showcase" style="max-width:360px;">
+    <div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <div class="empty-title">暂无核查记录</div>
+      <div class="empty-desc">完成核查分工后，核查任务将显示在这里</div>
+      <button class="btn btn-primary btn-sm">开始分工</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 15. 交互规范 ==================== -->
+<div class="spec-section">
+  <h2>15. 交互规范</h2>
+  <div class="comp-showcase">
+    <div class="showcase-label">触控目标</div>
+    <div class="spec-desc">最小点击区域 44×44px · 按钮高度不低于 44px · 按钮间距不低于 8px</div>
+
+    <div class="showcase-label" style="margin-top:16px;">弹出层显隐</div>
+    <div class="spec-desc">必须使用 display:none/block 控制，禁止使用 transform 隐藏（避免事件穿透bug）</div>
+
+    <div class="showcase-label" style="margin-top:16px;">拍照流程</div>
+    <div class="spec-desc">选中拍照项 → 快门可用 → 拍照（可多张）→ 合格/不合格激活 → 判定 → 锁定（不可追拍）→ 可"重新检查"撤销</div>
+
+    <div class="showcase-label" style="margin-top:16px;">判定项流程</div>
+    <div class="spec-desc">选中判定项 → 快门隐藏 → 合格/不合格直接可用 → 判定 → 锁定</div>
+
+    <div class="showcase-label" style="margin-top:16px;">缩略条</div>
+    <div class="spec-desc">只显示当前选中项的照片，切换选中项时缩略条跟随切换</div>
+
+    <div class="showcase-label" style="margin-top:16px;">已完成项</div>
+    <div class="spec-desc">列表行显示 ✓ 或 ✗ 状态 · 选中时底部显示"↺ 重新检查"替代操作按钮 · 推荐下一项温和黄色脉冲高亮</div>
+  </div>
+</div>
+
+<!-- ==================== 16. 筛选与操作 ==================== -->
+<div class="spec-section">
+  <h2>16. 筛选与操作</h2>
+  <div class="spec-row">
+    <div class="comp-showcase" style="flex:1;">
+      <div class="showcase-label">筛选标签 Chip</div>
+      <div class="comp-row">
+        <span class="chip active">全部</span>
+        <span class="chip">待核查</span>
+        <span class="chip">已合格</span>
+        <span class="chip">不合格</span>
+      </div>
+    </div>
+    <div class="comp-showcase" style="flex:1;">
+      <div class="showcase-label">快速跳转 Tabs</div>
+      <div class="qtabs" style="padding:4px 0;">
+        <div class="qtab active">电源核查 <span class="qt-badge">1/3</span></div>
+        <div class="qtab done">建设情况 <span class="qt-badge">4/4</span></div>
+        <div class="qtab">送电痕迹 <span class="qt-badge">0/1</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 17. 取景窗与缩略条 ==================== -->
+<div class="spec-section">
+  <h2>17. 取景窗与缩略条</h2>
+  <div class="comp-showcase" style="max-width:360px;padding:0;overflow:hidden;">
+    <div class="viewfinder" style="position:relative;height:160px;">
+      <div class="vf-grid"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="vf-label" style="display:flex;"><span class="vl-dot" style="background:var(--ok)"></span><span class="vl-text">站房侧 · I段进线电缆</span><span class="vl-badge">已拍2张</span></div>
+      <div class="rec-dot on"></div>
+    </div>
+    <div class="thumb-strip">
+      <div class="thumb-item" style="background:#2d5016;"></div>
+      <div class="thumb-item" style="background:#1a3a1a;"></div>
+      <div class="thumb-item latest" style="background:#3a2e1a;"></div>
+    </div>
+  </div>
+  <div class="spec-desc" style="margin-top:8px;">取景窗180px · 九宫格辅助线 · 底部毛玻璃标签 · 录制红点闪烁 · 拍照flash动画<br>缩略条56px · 深色背景#1a1a1a · 只显示当前选中项照片</div>
+</div>
+
+<!-- ==================== 18. 表格 ==================== -->
+<div class="spec-section">
+  <h2>18. 表格</h2>
+  <div class="comp-showcase">
+    <table class="table">
+      <thead><tr><th>站房</th><th>类型</th><th>状态</th><th>判定人</th></tr></thead>
+      <tbody>
+        <tr><td>1#开关站</td><td>开关站</td><td><span class="tag tag-ok">合格</span></td><td>张三</td></tr>
+        <tr><td>2#配电室</td><td>配电室</td><td><span class="tag tag-ok">合格</span></td><td>李四</td></tr>
+        <tr><td>3#配电室</td><td>配电室</td><td><span class="tag tag-ng">不合格</span></td><td>张三</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div style="text-align:center;padding:40px 0;color:var(--g400);font-size:12px;">
+  检e通 V3.0 设计规范 · 共享样式层 demo_shared_base.css · 39个组件模块 · 2032行<br>
+  基于 Material Design 3 + V4.0 交互方案 · 主色沿用2.4系统青绿色 #3CC8B4
+</div>
+
+</div>
+</body>
+</html>

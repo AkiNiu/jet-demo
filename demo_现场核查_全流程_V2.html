@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>现场核查全流程V2 — 检e通V3.0 Demo</title>
+<link rel="stylesheet" href="demo_shared_base.css">
+<style>
+/* Tab */
+.ptabs{position:fixed;top:0;left:0;right:0;z-index:999;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06);display:flex;max-width:1200px;margin:0 auto}
+.ptab{flex:1;text-align:center;padding:10px 4px 8px;font-size:12px;font-weight:600;cursor:pointer;color:var(--g400);border-bottom:2.5px solid transparent;transition:all .2s}
+.ptab.on{color:var(--pri);border-bottom-color:var(--pri)}
+.ptab small{display:block;font-size:10px;font-weight:400;margin-top:2px}
+.pbody{padding-top:48px}
+.pw{display:none}
+.pw.on{display:flex;justify-content:center;align-items:flex-start;gap:36px;padding:24px;max-width:1200px;margin:0 auto}
+.pw .phone{flex-shrink:0;margin:0}
+/* Side */
+.sn{width:360px;flex-shrink:0;position:sticky;top:68px}
+.sn h2{font-size:18px;font-weight:700;margin-bottom:8px;color:var(--g800)}
+.sn h3{font-size:14px;font-weight:600;margin:16px 0 6px;color:var(--g700)}
+.sn p,.sn li{font-size:13px;line-height:1.7;color:var(--g500)}
+.sn ul{padding-left:16px}
+.sn .co{border-radius:var(--rs);padding:10px 12px;margin:10px 0;font-size:12px;line-height:1.6}
+.sn .co-p{background:var(--pri-l);color:#2A6B60}
+.sn .co-w{background:#FFF9E6;color:#6B5900}
+/* Common */
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--g50);padding-bottom:12px}
+.bot{padding:8px 16px 12px;background:#fff;border-top:1px solid var(--g200);flex-shrink:0}
+.bot-i{font-size:11px;color:var(--g400);text-align:center;margin-bottom:8px}
+.bot-i b{color:var(--g700)}
+.bbtn{width:100%;padding:14px;border:none;border-radius:var(--r);font-size:16px;font-weight:600;cursor:pointer;transition:all .15s}
+.bbtn.rdy{background:var(--pri);color:#fff}
+.bbtn.rdy:active{background:var(--pri-d)}
+.bbtn.dis{background:var(--g100);color:var(--g400)}
+/* Card */
+.tc{margin:0 16px 8px;background:#fff;border-radius:var(--r);box-shadow:var(--shadow-sm);overflow:hidden}
+.tch{display:flex;align-items:center;padding:12px 14px;gap:10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tch:active{background:var(--g50)}
+.tci{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;color:#fff}
+.tcf{flex:1;min-width:0}
+.tcn{font-size:14px;font-weight:600;color:var(--g800)}
+.tcs{font-size:11px;color:var(--g400);margin-top:2px}
+.tcb{display:inline-block;font-size:11px;padding:3px 8px;border-radius:4px;font-weight:500;white-space:nowrap}
+.b0{background:var(--g100);color:var(--g500)}.bm{background:var(--pri-l);color:var(--pri-d)}
+.bs{background:rgba(52,199,89,.1);color:#16a34a}.bn{background:var(--warn-l);color:#92400E;animation:pu 2s infinite}
+.bok{background:var(--ok);color:#fff}.bng{background:var(--ng);color:#fff}
+@keyframes pu{0%,100%{opacity:1}50%{opacity:.55}}
+.tca{color:var(--g300);font-size:18px;flex-shrink:0;margin-left:4px}
+/* Role */
+.rs{display:flex;margin:8px 16px;background:var(--g100);border-radius:var(--rs);padding:2px}
+.ro{flex:1;padding:8px;text-align:center;font-size:12px;font-weight:500;cursor:pointer;border-radius:6px;color:var(--g500);transition:all .15s}
+.ro.on{background:#fff;color:var(--g800);box-shadow:var(--shadow-sm)}
+/* Cam */
+.cm{display:none;flex-direction:column;height:100%}.cm.on{display:flex}
+.lm{display:flex;flex-direction:column;height:100%}.lm.hid{display:none}
+.vf{position:relative;height:200px;background:#1a1a1a;flex-shrink:0;overflow:hidden}
+.vfg{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr;pointer-events:none}
+.vfg span{border:.5px solid rgba(255,255,255,.1)}
+.vfp{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:rgba(255,255,255,.35);font-size:12px}
+.vfl{position:absolute;bottom:10px;left:10px;right:10px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:var(--rs);padding:8px 12px;display:none;align-items:center;gap:8px}
+.vfl.vis{display:flex}
+.vld{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.vlt{color:#fff;font-size:13px;font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vlc{color:rgba(255,255,255,.5);font-size:11px;flex-shrink:0}
+.vff{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .08s}.vff.fire{opacity:.7}
+/* (缩略条已移除，照片预览改为slot展开网格) */
+/* Cam items */
+.ci{display:flex;align-items:center;padding:12px 14px;border-bottom:1px solid var(--g100);cursor:pointer;-webkit-tap-highlight-color:transparent;min-height:48px;transition:background .12s}
+.ci:active{background:var(--g50)}.ci.sel{background:var(--pri-l)}
+.cid{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-right:12px;border:2px solid var(--g300)}
+.cid.dp{border-color:var(--warn);background:var(--warn)}.cid.dd{border-color:var(--ok);background:var(--ok)}.cid.dc{border-color:var(--pri);background:var(--pri);box-shadow:0 0 0 3px var(--pri-l)}
+.cin{flex:1;font-size:14px;color:var(--g700)}.ci.sel .cin{color:var(--pri-d);font-weight:600}
+.cic{font-size:11px;color:var(--g400);background:var(--g100);padding:2px 8px;border-radius:10px}
+/* 展开的照片网格 */
+.ci-photos{display:flex;gap:6px;padding:6px 14px 10px 36px;flex-wrap:wrap;background:var(--pri-l);border-bottom:1px solid var(--g100)}
+.ci-ph{width:52px;height:52px;border-radius:var(--rs);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;font-size:10px;font-weight:600}
+.ci-ph.filled{background:#fff;color:var(--pri-d);border:1px solid var(--pri);box-shadow:var(--shadow-sm)}
+.ci-ph .ph-idx{font-size:13px}
+.ci-ph .ph-who{font-size:8px;color:var(--g500);margin-top:1px}
+.ci-ph .ph-del{position:absolute;top:-5px;right:-5px;width:18px;height:18px;border-radius:50%;background:var(--ng);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.ci-ph .ph-del:active{transform:scale(.85)}
+.ci-ph.add-ph{background:var(--g50);border:1.5px dashed var(--g300);color:var(--g400);cursor:pointer}
+.ci-ph.add-ph:active{background:var(--pri-l);border-color:var(--pri)}
+/* Cam ctrl */
+.cc{padding:6px 16px 12px;background:#fff;border-top:1px solid var(--g200);flex-shrink:0}
+.cd{display:flex;justify-content:center;gap:5px;padding:4px 0 8px;align-items:center}
+.cdd{width:8px;height:8px;border-radius:50%;transition:all .15s}
+.cde{background:var(--g200)}.cdf{background:var(--pri)}
+.cdn{font-size:11px;color:var(--g400);margin-left:6px}
+.cr{display:flex;align-items:center;justify-content:center}
+.sh{width:60px;height:60px;border-radius:50%;border:3.5px solid var(--pri);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:all .1s;position:relative}
+.sh:active{transform:scale(.88)}.shi{width:46px;height:46px;border-radius:50%;background:var(--pri);transition:all .1s}
+.sh:active .shi{background:var(--pri-d)}.sh.dis{opacity:.2;pointer-events:none}
+.shc{position:absolute;top:-6px;right:-6px;background:var(--pri-d);color:#fff;font-size:10px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+/* 判定面板（内嵌在拍照模式底部） */
+.cjp{display:none;background:#fff;border-top:1px solid var(--g200);flex-shrink:0;max-height:50%;overflow-y:auto}
+.cjp.vis{display:block;animation:su .25s ease-out}
+.cjp-ok{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 14px;background:rgba(52,199,89,.06);font-size:13px;color:#16a34a;font-weight:600}
+.cjp-wait{padding:12px 14px;text-align:center;font-size:12px;color:var(--g400)}
+.cjp-form{padding:12px 14px 0}
+.cjp-lbl{font-size:13px;font-weight:600;color:var(--g700);margin-bottom:6px}
+.cjp-sub{font-size:11px;color:var(--g400);margin-bottom:8px}
+.cjp-btns{display:flex;gap:10px;padding:10px 14px 14px}
+.cjp-btn{flex:1;padding:12px;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;text-align:center;border:none}
+.cjp-btn:active{opacity:.8}
+.cjp-cancel{background:var(--g100);color:var(--g600)}
+.cjp-submit{background:var(--pri);color:#fff}
+.cjp-submit.dis{background:var(--g200);color:var(--g400);pointer-events:none}
+/* Radio */
+.rg{display:flex;flex-direction:column;gap:0;background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-sm)}
+.ri{display:flex;align-items:center;padding:14px;border-bottom:1px solid var(--g100);cursor:pointer;-webkit-tap-highlight-color:transparent;min-height:48px}
+.ri:last-child{border-bottom:none}
+.ri:active{background:var(--g50)}
+.rir{width:20px;height:20px;border-radius:50%;border:2px solid var(--g300);margin-right:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.ri.on .rir{border-color:var(--pri);background:var(--pri)}
+.ri.on .rir::after{content:'';width:8px;height:8px;border-radius:50%;background:#fff}
+.ri.on-ng .rir{border-color:var(--ng);background:var(--ng)}
+.ri.on-ng .rir::after{content:'';width:8px;height:8px;border-radius:50%;background:#fff}
+.rit{font-size:14px;color:var(--g700)}
+/* Checkbox */
+.cg{display:flex;flex-direction:column;gap:0;background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-sm)}
+.cgi{display:flex;align-items:center;padding:12px 14px;border-bottom:1px solid var(--g100);cursor:pointer;-webkit-tap-highlight-color:transparent;min-height:48px}
+.cgi:last-child{border-bottom:none}
+.cgi:active{background:var(--g50)}
+.cgk{width:20px;height:20px;border-radius:4px;border:2px solid var(--g300);margin-right:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.cgi.on .cgk{border-color:var(--ng);background:var(--ng)}
+.cgi.on .cgk::after{content:'✓';color:#fff;font-size:12px;font-weight:700}
+.cgt{font-size:13px;color:var(--g700)}
+/* NG photos */
+.ngp{display:flex;gap:8px;flex-wrap:wrap}
+.ngps{width:60px;height:60px;border-radius:var(--rs);display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ngps.fi{background:var(--ng-l);color:var(--ng);font-size:12px;font-weight:600;flex-direction:column}
+.ngps.ad{background:var(--g100);border:1.5px dashed var(--g300);color:var(--g400);font-size:20px}
+.ngps.ad:active{background:var(--pri-l);border-color:var(--pri)}
+.ngpw{font-size:8px;color:var(--g500);margin-top:2px}
+/* (judge bot removed - now inline in cjp) */
+/* Toast */
+.toast{display:none;position:fixed;top:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.82);color:#fff;padding:10px 20px;border-radius:var(--r-pill);font-size:13px;z-index:999;max-width:300px;text-align:center}
+.toast.show{display:block;animation:ti .25s ease-out}
+@keyframes ti{from{opacity:0;transform:translateX(-50%) translateY(8px)}}
+/* BS */
+.shbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:800;align-items:flex-end;justify-content:center}
+.shbg.vis{display:flex}
+.shp{width:100%;max-width:360px;background:#fff;border-radius:16px 16px 0 0;padding:20px 16px 28px;animation:su .2s ease-out}
+@keyframes su{from{transform:translateY(100%)}}
+.sht{font-size:16px;font-weight:700;color:var(--g800);margin-bottom:16px}
+.shca{margin-top:8px;padding:14px;text-align:center;font-size:14px;color:var(--g400);cursor:pointer;border-top:1px solid var(--g100)}
+</style>
+</head>
+<body>
+<div class="ptabs">
+  <div class="ptab on" onclick="sp(0)">P1 核查分工<small>工作负责人</small></div>
+  <div class="ptab" onclick="sp(1)">P2 核查执行<small>检测人员视角</small></div>
+</div>
+<div class="pbody">
+
+<!-- P1 -->
+<div class="pw on" id="p0">
+<div class="phone">
+  <div class="sbar">9:41</div><div class="nbar"><div class="back">←</div><div class="title">核查分工</div></div>
+  <div class="scroll" id="p1s"></div>
+  <div class="bot"><div class="bot-i" id="p1i"></div><button class="bbtn dis" id="p1b" onclick="sp(1)"></button></div>
+  <div class="toast" id="t0"></div>
+</div>
+<div class="sn">
+  <h2>P1 · 核查分工</h2>
+  <p><strong>角色</strong>：工作负责人</p>
+  <div class="co co-p">按人分配，无组概念。完整交互见 demo_核查分工.html</div>
+</div>
+</div>
+
+<!-- P2 -->
+<div class="pw" id="p1">
+<!-- 角色切换（在手机壳外部，不占APP页面空间） -->
+<div class="rs" id="rs" style="margin-bottom:8px"><div class="ro on" onclick="sr('zhangsan',0)">张三（我）</div><div class="ro" onclick="sr('lisi',1)">李四视角</div></div>
+
+<div class="phone">
+  <div class="sbar">10:00</div>
+  <!-- 列表 -->
+  <div class="lm" id="lm">
+    <div class="nbar"><div class="back">←</div><div class="title">现场核查</div></div>
+    <div class="scroll" id="p2l"></div>
+  </div>
+  <!-- 拍照 -->
+  <div class="cm" id="cm">
+    <div class="nbar"><div class="back" onclick="xc()">←</div><div class="title" id="ct"></div><div id="cg" style="font-size:11px;padding:3px 8px;border-radius:4px;margin-right:12px"></div></div>
+    <div class="vf"><div class="vfg"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="vfp" id="vp"><span style="font-size:28px;opacity:.4">📷</span><span>选择拍照项，每项最多5张</span></div>
+      <div class="vfl" id="vl"><span class="vld" id="vd"></span><span class="vlt" id="vt"></span><span class="vlc" id="vc"></span></div>
+      <div class="vff" id="vff"></div>
+    </div>
+    <!-- 缩略条已移除：照片预览改为选中slot时展开照片网格 -->
+    <div class="scroll" id="cis"></div>
+    <div class="cc" id="ccr"><div class="cd" id="cds"></div><div class="cr"><div class="sh dis" id="sht" onclick="snp()"><div class="shi"></div></div></div></div>
+    <!-- 拍完后：判定表单（同页面内嵌） -->
+    <div class="cjp" id="cjp"></div>
+  </div>
+  <div class="toast" id="t1"></div>
+</div>
+<div class="sn">
+  <h2>P2 · 核查执行 + 判定</h2>
+  <h3>请试试以下完整流程</h3>
+  <ul>
+    <li><strong>1. 拍照</strong>：点"电源核查"→ 选拍照项 → 按快门连续拍（每项最多5张）→ 当前项拍满自动跳下一个</li>
+    <li><strong>2. 查看/删除照片</strong>：点击已拍的项 → 展开照片网格 → 每张显示序号+拍摄者 → 点×可删除指定那张</li>
+    <li><strong>3. 判定合格</strong>：全部至少1张后 → 底部原地展开判定表单 → 选"合格"→ 提交</li>
+    <li><strong>4. 判定不合格</strong>：选"不合格"→ 弹出Bottom Sheet勾选原因 → 点"去拍摄留证照片"→ 取景窗变红重新激活快门 → 拍完点"完成留证拍照"→ 回到判定面板提交</li>
+    <li><strong>5. 帮别人拍</strong>：点"送电痕迹"（李四负责）→ 你不是负责人，拍完后显示"等待李四判定"</li>
+    <li><strong>6. 直接判定型</strong>：点"临电电源"→ 弹出Bottom Sheet直接判定</li>
+    <li><strong>7. 切换视角</strong>：切到"李四视角"看协同效果</li>
+  </ul>
+
+  <h3>两种任务类型</h3>
+  <ul>
+    <li><strong>📷 拍照型</strong>（电源核查/建设情况/居民入住/充电设施/居民设施）：点击进入拍照模式 → 取景窗+快门连续拍 → 拍完后底部原地展开判定（不跳页）</li>
+    <li><strong>📋 直接判定型</strong>（送电痕迹/临电电源/安全风险）：点击弹出Bottom Sheet判定面板 → 默认不需要拍照，不合格时可补拍</li>
+  </ul>
+
+  <h3>判定交互设计</h3>
+  <ul>
+    <li><strong>同一页面完成</strong>：拍完后快门区域原地替换为判定表单，取景窗和拍照列表始终可见</li>
+    <li><strong>Radio单选</strong>：合格 / 不合格</li>
+    <li><strong>合格路径极简</strong>：选合格 → 提交，不弹窗</li>
+    <li><strong>不合格用Bottom Sheet</strong>：原因勾选（checkbox多选）在覆盖层中，不压缩页面</li>
+    <li><strong>留证拍照复用取景窗</strong>：不合格勾完原因后回到取景窗，快门重新激活，标签变红"不合格留证拍照"，拍完后回到判定面板</li>
+    <li><strong>底部只有两个按钮</strong>：取消 + 提交判定，保持清爽</li>
+  </ul>
+</div>
+</div>
+</div>
+
+<!-- 不合格详情 BS（拍照型任务用） -->
+<div class="shbg" id="ngbs">
+<div class="shp" style="max-height:80vh;overflow-y:auto" id="ngbsc"></div>
+</div>
+
+<!-- 直接判定 BS -->
+<div class="shbg" id="djs">
+<div class="shp">
+  <div class="sht" id="djt"></div>
+  <div id="djc"></div>
+  <div class="shca" onclick="cdj()">取消</div>
+</div>
+</div>
+
+<script>
+var MAX_PH=5;
+var P={zhangsan:{n:'张三',c:'#3B82F6'},lisi:{n:'李四',c:'#D97706'},wangwu:{n:'王五',c:'#6366F1'},zhaoliu:{n:'赵六',c:'#059669'}};
+var REASONS=['与报检资料不一致','存在安全隐患','设备缺陷或损坏','施工不规范','其他'];
+// ph: {slotName: [{w:'zhangsan'},{w:'lisi'},...], ...}  每slot数组最多5
+var T=[
+  {id:'power',n:'电源核查',tp:'photo',ow:'zhangsan',slots:['站房侧I段电缆','站房侧II段电缆','上级电源侧I段','上级电源侧II段'],ph:{},j:null,jr:[],jp:[]},
+  {id:'build',n:'建设情况',tp:'photo',ow:'zhangsan',slots:['1#开关站外景','1#开关站内景','2#配电室外景','2#配电室内景','3#配电室外景','3#配电室内景'],ph:{},j:null,jr:[],jp:[]},
+  {id:'trace',n:'送电痕迹',tp:'judge',ow:'lisi',slots:[],ph:{},j:null,jr:[],jp:[]},
+  {id:'safety',n:'安全风险',tp:'judge',ow:'lisi',slots:[],ph:{},j:null,jr:[],jp:[]},
+  {id:'temppow',n:'临电电源',tp:'judge',ow:'wangwu',slots:[],ph:{},j:null,jr:[],jp:[]},
+  {id:'resident',n:'居民入住',tp:'photo',ow:'wangwu',slots:['入住情况'],ph:{},j:null,jr:[],jp:[]},
+  {id:'charging',n:'充电设施',tp:'photo',ow:'zhaoliu',slots:['分支箱外观','分支箱内景','表箱外观','表箱内景'],ph:{},j:null,jr:[],jp:[]},
+  {id:'resfac',n:'居民设施',tp:'photo',ow:'zhaoliu',slots:['分支箱外观','分支箱内景','表箱外观','表箱内景'],ph:{},j:null,jr:[],jp:[]}
+];
+var me='zhangsan',cid=null,csl=null,djid=null;
+// 临时判定状态
+var jVal=null,jReasons=[],jPhotos=[];
+var ngMode=false; // 不合格留证拍照模式
+
+function gt(id){return T.find(function(x){return x.id===id})}
+function slotCnt(t,s){return(t.ph[s]||[]).length}
+function allDone(t){for(var i=0;i<t.slots.length;i++){if(!t.ph[t.slots[i]]||!t.ph[t.slots[i]].length)return false}return true}
+function totalPh(t){var c=0;for(var s in t.ph)c+=t.ph[s].length;return c}
+function EL(id){return document.getElementById(id)}
+
+/* P1 */
+function rP1(){
+  var bp={};T.forEach(function(t){if(!bp[t.ow])bp[t.ow]=[];bp[t.ow].push(t)});
+  var lc={indoor:'#DBEAFE;color:#1D4ED8',outdoor:'#FEF3C7;color:#92400E',mixed:'#E0E7FF;color:#4338CA'};
+  var h='<div style="padding:12px 16px 4px;font-size:12px;color:var(--g500)">分工预览</div>';
+  for(var pid in bp){var p=P[pid];
+    h+='<div class="tc"><div class="tch"><div class="tci" style="background:'+p.c+'">'+p.n[0]+'</div>';
+    h+='<div class="tcf"><div class="tcn">'+p.n+'</div><div class="tcs">'+bp[pid].length+'项</div></div></div>';
+    h+='<div style="display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 12px">';
+    bp[pid].forEach(function(t){h+='<span style="padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;background:'+lc[t.ow?t.tp==='photo'?t.loc:t.loc:t.loc]+'">'+t.n+'</span>'});
+    // fix: use t.loc
+    h+='</div></div>';
+  }
+  EL('p1s').innerHTML=h;EL('p1i').innerHTML='已分配 <b>8</b>/8';
+  var b=EL('p1b');b.className='bbtn rdy';b.textContent='确认分工，开始核查 →';
+}
+
+/* P2 List */
+function sr(r,i){me=r;document.querySelectorAll('#rs .ro').forEach(function(e,j){e.classList.toggle('on',j===i)});rL()}
+function rL(){
+  var h='<div style="padding:8px 16px 4px;font-size:12px;color:var(--g500)">点击任务进入核查</div>';
+  T.forEach(function(t){
+    var p=P[t.ow],mine=t.ow===me,done=t.tp==='photo'?allDone(t):true,tp=totalPh(t);
+    var bc,bt;
+    if(t.j){bc=t.j==='ok'?'bok':'bng';bt=t.j==='ok'?'✓ 合格':'✗ 不合格'}
+    else if(mine&&t.tp==='photo'&&done&&tp>0){bc='bn';bt='待判定'}
+    else if(mine&&t.tp==='judge'){bc='bm';bt='待判定'}
+    else if(mine){bc='bm';bt='我负责'}
+    else if(t.tp==='photo'&&done&&tp>0){bc='bs';bt='已拍完'}
+    else{bc='b0';bt=p.n+'负责'}
+    var hl={};for(var s in t.ph)t.ph[s].forEach(function(x){if(x.w!==t.ow)hl[x.w]=true});
+    var hn=Object.keys(hl).map(function(k){return P[k].n});
+    var tl=t.tp==='photo'?'📷 拍照型':'📋 直接判定';
+    h+='<div class="tc"><div class="tch" onclick="tap(\''+t.id+'\')">';
+    h+='<div class="tci" style="background:'+p.c+'">'+p.n[0]+'</div>';
+    h+='<div class="tcf"><div class="tcn">'+t.n;
+    if(t.tp==='photo'&&tp>0){var ds=0;t.slots.forEach(function(s){if(t.ph[s]&&t.ph[s].length)ds++});h+=' <span style="font-size:11px;color:var(--g400);font-weight:400">'+ds+'/'+t.slots.length+'</span>'}
+    h+='</div><div class="tcs">'+p.n+'负责';
+    if(hn.length)h+=' · '+hn.join('、')+'协助';
+    h+='</div><div style="font-size:10px;color:var(--g400);margin-top:2px">'+tl+'</div></div>';
+    h+='<span class="tcb '+bc+'">'+bt+'</span><span class="tca">›</span></div></div>';
+  });
+  EL('p2l').innerHTML=h;
+}
+function tap(id){var t=gt(id);if(t.tp==='photo')ec(id);else odj(id)}
+
+/* Cam */
+function ec(id){
+  cid=id;
+  var t=gt(id),mine=t.ow===me;
+  // 重置判定临时状态
+  jVal=t.j;jReasons=t.jr?t.jr.slice():[];jPhotos=t.jp?t.jp.slice():[];
+  EL('lm').classList.add('hid');EL('cm').classList.add('on');EL('ct').textContent=t.n;
+  var g=EL('cg');
+  if(mine){g.textContent='我负责';g.style.cssText='font-size:11px;padding:3px 8px;border-radius:4px;margin-right:12px;background:var(--pri-l);color:var(--pri-d)'}
+  else{g.textContent=P[t.ow].n+'负责';g.style.cssText='font-size:11px;padding:3px 8px;border-radius:4px;margin-right:12px;background:var(--g100);color:var(--g500)'}
+  csl=null;for(var i=0;i<t.slots.length;i++){if(slotCnt(t,t.slots[i])<1){csl=t.slots[i];break}}
+  rc();
+}
+function xc(){EL('cm').classList.remove('on');EL('lm').classList.remove('hid');cid=null;csl=null;ngMode=false;rL()}
+
+function rc(){
+  var t=gt(cid),done=allDone(t),mine=t.ow===me;
+  // Items
+  var h='';
+  t.slots.forEach(function(s){
+    var arr=t.ph[s]||[],sel=s===csl,has=arr.length>0;
+    var dc=has?'dd':sel?'dc':'dp';
+    h+='<div class="ci'+(sel?' sel':'')+'" onclick="ss(\''+esc(s)+'\')">';
+    h+='<div class="cid '+dc+'"></div><div class="cin">'+s+'</div>';
+    if(arr.length)h+='<div class="cic">'+arr.length+'/'+MAX_PH+'</div>';
+    h+='</div>';
+    // 选中且有照片时：展开照片网格
+    if(sel&&has){
+      h+='<div class="ci-photos">';
+      arr.forEach(function(p,i){
+        h+='<div class="ci-ph filled">';
+        h+='<div class="ph-idx">📷'+(i+1)+'</div>';
+        h+='<div class="ph-who">'+P[p.w].n+'</div>';
+        h+='<div class="ph-del" onclick="event.stopPropagation();delPhAt(\''+esc(s)+'\','+i+')">×</div>';
+        h+='</div>';
+      });
+      if(arr.length<MAX_PH){
+        h+='<div class="ci-ph add-ph" onclick="event.stopPropagation();snp()"><div style="font-size:16px">+</div><div style="font-size:8px">继续拍</div></div>';
+      }
+      h+='</div>';
+    }
+  });
+  EL('cis').innerHTML=h;
+  // VF
+  if(csl){
+    EL('vp').style.display='none';EL('vl').classList.add('vis');
+    var sc=slotCnt(t,csl);
+    EL('vd').style.background=sc?'var(--ok)':'var(--warn)';
+    EL('vt').textContent=csl;EL('vc').textContent=sc+'/'+MAX_PH;
+  } else if(done){
+    EL('vp').style.display='none';EL('vl').classList.add('vis');
+    EL('vd').style.background='var(--ok)';EL('vt').textContent='全部拍摄完成';EL('vc').textContent='';
+  } else {EL('vp').style.display='flex';EL('vl').classList.remove('vis')}
+  // Dots
+  var dots='',ds=0;t.slots.forEach(function(s){if((t.ph[s]||[]).length)ds++});
+  if(t.slots.length<=10){for(var i=0;i<t.slots.length;i++)dots+='<div class="cdd '+(i<ds?'cdf':'cde')+'"></div>'}
+  dots+='<span class="cdn">'+ds+'/'+t.slots.length+'</span>';
+  EL('cds').innerHTML=dots;
+  // Shutter
+  var sh=EL('sht');
+  if(csl&&slotCnt(t,csl)<MAX_PH)sh.classList.remove('dis');else sh.classList.add('dis');
+  var ce=sh.querySelector('.shc');var tp=totalPh(t);
+  if(tp>0){if(!ce){ce=document.createElement('div');ce.className='shc';sh.appendChild(ce)}ce.textContent=tp}
+  else if(ce)ce.remove();
+  // Bottom panels
+  var ctrl=EL('ccr'),jp=EL('cjp');
+  ctrl.style.display='none';jp.classList.remove('vis');
+
+  if(ngMode){
+    // 不合格留证拍照模式：快门重新激活，拍照存入jPhotos
+    ctrl.style.display='block';
+    // 取景窗显示红色标签
+    EL('vp').style.display='none';EL('vl').classList.add('vis');
+    EL('vd').style.background='var(--ng)';
+    EL('vt').textContent='不合格留证拍照';
+    EL('vc').textContent=jPhotos.length+'/'+MAX_PH;
+    // 快门可用（只要没拍满）
+    var nsh=EL('sht');
+    if(jPhotos.length<MAX_PH)nsh.classList.remove('dis');else nsh.classList.add('dis');
+    // 进度点阵显示留证照片
+    var ndots='';
+    for(var ni=0;ni<MAX_PH;ni++)ndots+='<div class="cdd '+(ni<jPhotos.length?'cdf':'cde')+'" style="'+(ni<jPhotos.length?'background:var(--ng)':'')+'"></div>';
+    ndots+='<span class="cdn">'+jPhotos.length+'/'+MAX_PH+'</span>';
+    EL('cds').innerHTML=ndots;
+    // 列表显示留证照片
+    var nh='<div style="padding:10px 14px 6px;font-size:13px;font-weight:600;color:var(--ng)">不合格留证照片（至少1张）</div>';
+    if(jPhotos.length>0){
+      nh+='<div class="ci-photos" style="background:var(--ng-l)">';
+      jPhotos.forEach(function(p,i){
+        nh+='<div class="ci-ph filled" style="border-color:var(--ng)"><div class="ph-idx">📷'+(i+1)+'</div><div class="ph-who">'+P[p.w].n+'</div>';
+        nh+='<div class="ph-del" onclick="delNgPh('+i+')">×</div></div>';
+      });
+      nh+='</div>';
+    }
+    nh+='<div style="padding:8px 14px;font-size:11px;color:var(--g400)">按快门拍摄留证照片，拍完点击下方"完成"</div>';
+    if(jPhotos.length>0){
+      nh+='<div style="padding:4px 14px 12px"><button class="cjp-btn cjp-submit" onclick="exitNgMode()">完成留证拍照（'+jPhotos.length+'张）</button></div>';
+    }
+    EL('cis').innerHTML=nh;
+    return; // ngMode下不执行后面的正常逻辑
+  }
+
+  if(!done){
+    ctrl.style.display='block';
+  } else {
+    jp.classList.add('vis');
+    renderJudgePanel(t,mine);
+  }
+}
+function ss(s){csl=s;rc()}
+function delPhAt(s,i){
+  var t=gt(cid);if(!t.ph[s])return;
+  var who=P[t.ph[s][i].w].n;
+  t.ph[s].splice(i,1);
+  if(!t.ph[s].length)delete t.ph[s];
+  toast('t1','已删除 '+s+' 第'+(i+1)+'张（'+who+'拍摄）');
+  rc();
+}
+function snp(){
+  if(!cid)return;
+  var fl=EL('vff');fl.classList.add('fire');setTimeout(function(){fl.classList.remove('fire')},120);
+
+  if(ngMode){
+    // 不合格留证拍照
+    if(jPhotos.length>=MAX_PH)return;
+    jPhotos.push({w:me});
+    toast('t1','留证照片 '+jPhotos.length+'/'+MAX_PH);
+    rc();return;
+  }
+
+  if(!csl)return;var t=gt(cid);if(slotCnt(t,csl)>=MAX_PH)return;
+  if(!t.ph[csl])t.ph[csl]=[];
+  t.ph[csl].push({w:me});
+  toast('t1',P[me].n+' 拍摄了 '+csl+' ('+t.ph[csl].length+'/'+MAX_PH+')');
+  if(slotCnt(t,csl)>=MAX_PH){
+    csl=null;for(var i=0;i<t.slots.length;i++){if(slotCnt(t,t.slots[i])<1){csl=t.slots[i];break}}
+  }
+  rc();
+}
+
+function delNgPh(i){jPhotos.splice(i,1);toast('t1','已删除留证照片');rc()}
+function exitNgMode(){ngMode=false;rc()}
+
+/* 判定面板（内嵌在拍照模式底部，只放radio+按钮，不合格详情用BS） */
+function renderJudgePanel(t,mine){
+  var jp=EL('cjp'),h='';
+  if(!mine){
+    h+='<div class="cjp-ok">✓ 你帮拍的照片已全部完成</div>';
+    h+='<div class="cjp-wait">等待 '+P[t.ow].n+' 进行判定</div>';
+    h+='<div class="cjp-btns"><button class="cjp-btn cjp-cancel" onclick="xc()" style="flex:1">返回任务列表</button></div>';
+  } else if(t.j){
+    h+='<div class="cjp-ok">✓ 已判定：'+(t.j==='ok'?'合格':'不合格')+'</div>';
+    h+='<div class="cjp-btns"><button class="cjp-btn cjp-cancel" onclick="xc()" style="flex:1">返回任务列表</button></div>';
+  } else {
+    h+='<div class="cjp-ok">✓ 所有拍照项已完成</div>';
+    h+='<div class="cjp-form"><div class="cjp-lbl">判定结果</div>';
+    h+='<div class="rg">';
+    h+='<div class="ri'+(jVal==='ok'?' on':'')+'" onclick="jv(\'ok\')"><div class="rir"></div><div class="rit">合格</div></div>';
+    h+='<div class="ri'+(jVal==='ng'?' on-ng':'')+'" onclick="jv(\'ng\')"><div class="rir"></div><div class="rit">不合格</div></div>';
+    h+='</div></div>';
+    // 不合格已填完信息时显示摘要
+    if(jVal==='ng'&&jReasons.length>0&&jPhotos.length>0){
+      h+='<div style="padding:8px 14px 0;font-size:11px;color:var(--ng)">已填：'+jReasons.length+'项原因 + '+jPhotos.length+'张留证照片 <span style="color:var(--g400);cursor:pointer;text-decoration:underline" onclick="openNgSheet()">修改</span></div>';
+    }
+    var canSubmit=jVal==='ok'||(jVal==='ng'&&jReasons.length>0&&jPhotos.length>0);
+    h+='<div class="cjp-btns">';
+    h+='<button class="cjp-btn cjp-cancel" onclick="xc()">取消</button>';
+    h+='<button class="cjp-btn cjp-submit'+(canSubmit?'':' dis')+'" onclick="submitJ()">提交判定</button>';
+    h+='</div>';
+  }
+  jp.innerHTML=h;
+}
+
+function jv(v){
+  jVal=v;
+  if(v==='ok'){jReasons=[];jPhotos=[];var t=gt(cid);renderJudgePanel(t,true)}
+  else if(v==='ng'){openNgSheet()}
+}
+
+/* 不合格详情 Bottom Sheet */
+function openNgSheet(){
+  var t=gt(cid);
+  renderNgSheet(t);
+  EL('ngbs').classList.add('vis');
+}
+function closeNgSheet(){EL('ngbs').classList.remove('vis')}
+function renderNgSheet(t){
+  var h='<div style="font-size:16px;font-weight:700;color:var(--g800);margin-bottom:4px">'+t.n+' — 不合格</div>';
+  h+='<div style="font-size:12px;color:var(--g500);margin-bottom:16px">请勾选原因，然后拍摄留证照片</div>';
+  // 原因
+  h+='<div style="font-size:13px;font-weight:600;color:var(--g700);margin-bottom:8px">不合格原因（至少选1项）</div>';
+  h+='<div class="cg" style="margin-bottom:16px">';
+  REASONS.forEach(function(r,i){
+    var on=jReasons.indexOf(r)!==-1;
+    h+='<div class="cgi'+(on?' on':'')+'" onclick="ngtr('+i+')"><div class="cgk"></div><div class="cgt">'+r+'</div></div>';
+  });
+  h+='</div>';
+  // 已拍留证照片预览（如果有）
+  if(jPhotos.length>0){
+    h+='<div style="font-size:13px;font-weight:600;color:var(--g700);margin-bottom:8px">已拍留证照片 '+jPhotos.length+'张</div>';
+    h+='<div class="ngp" style="margin-bottom:16px">';
+    jPhotos.forEach(function(p,i){h+='<div class="ngps fi">📷<div class="ngpw">'+P[p.w].n+'</div></div>'});
+    h+='</div>';
+  }
+  // 按钮
+  h+='<div style="display:flex;gap:10px">';
+  h+='<button class="cjp-btn cjp-cancel" onclick="cancelNg()">取消</button>';
+  if(jReasons.length>0){
+    if(jPhotos.length>0){
+      h+='<button class="cjp-btn cjp-submit" onclick="confirmNg()">确认不合格</button>';
+    } else {
+      h+='<button class="cjp-btn cjp-submit" onclick="goNgPhoto()">去拍摄留证照片 →</button>';
+    }
+  } else {
+    h+='<button class="cjp-btn cjp-submit dis">请先勾选原因</button>';
+  }
+  h+='</div>';
+  EL('ngbsc').innerHTML=h;
+}
+function ngtr(i){var r=REASONS[i],idx=jReasons.indexOf(r);if(idx===-1)jReasons.push(r);else jReasons.splice(idx,1);renderNgSheet(gt(cid))}
+function cancelNg(){jVal=null;jReasons=[];jPhotos=[];closeNgSheet();var t=gt(cid);renderJudgePanel(t,true)}
+function goNgPhoto(){
+  // 关闭BS，进入留证拍照模式
+  closeNgSheet();
+  ngMode=true;
+  rc();
+}
+function confirmNg(){
+  if(jReasons.length===0||jPhotos.length===0)return;
+  closeNgSheet();
+  var t=gt(cid);renderJudgePanel(t,true);
+}
+
+function submitJ(){
+  if(!jVal)return;
+  if(jVal==='ng'&&(jReasons.length===0||jPhotos.length===0)){openNgSheet();return}
+  var t=gt(cid);t.j=jVal;t.jr=jReasons.slice();t.jp=jPhotos.slice();
+  toast('t1',t.n+'：'+(jVal==='ok'?'✓ 合格':'✗ 不合格'));
+  rc();
+}
+
+/* Direct judge BS */
+function odj(id){
+  djid=id;var t=gt(id),mine=t.ow===me;
+  EL('djt').textContent=t.n;
+  // 里面放简化的判定表单
+  var h='';
+  if(!mine){h='<div style="font-size:13px;color:var(--g500);padding:10px 0">'+P[t.ow].n+'负责此项判定</div>'}
+  else {
+    h+='<div style="font-size:13px;color:var(--g500);margin-bottom:12px">你是负责人，请判定</div>';
+    h+='<div class="rg" style="margin-bottom:12px">';
+    h+='<div class="ri'+(t.j==='ok'?' on':'')+'" onclick="djv(\'ok\')"><div class="rir"></div><div class="rit">合格</div></div>';
+    h+='<div class="ri'+(t.j==='ng'?' on-ng':'')+'" onclick="djv(\'ng\')"><div class="rir"></div><div class="rit">不合格</div></div>';
+    h+='</div>';
+    // 如果已选不合格
+    if(t.j==='ng'){
+      h+='<div style="font-size:13px;font-weight:600;color:var(--g700);margin-bottom:8px">不合格原因</div><div class="cg" style="margin-bottom:12px">';
+      REASONS.forEach(function(r,i){
+        var on=t.jr&&t.jr.indexOf(r)!==-1;
+        h+='<div class="cgi'+(on?' on':'')+'" onclick="djtr('+i+')"><div class="cgk"></div><div class="cgt">'+r+'</div></div>';
+      });
+      h+='</div>';
+      h+='<div style="font-size:13px;font-weight:600;color:var(--g700);margin-bottom:4px">留证照片 <span style="font-weight:400;color:var(--g400)">'+(t.jp?t.jp.length:0)+'/5（至少1张）</span></div>';
+      h+='<div style="font-size:11px;color:var(--g400);margin-bottom:8px">点击拍照将调用系统相机</div>';
+      h+='<div class="ngp" style="margin-bottom:12px">';
+      if(t.jp)t.jp.forEach(function(p,i){h+='<div class="ngps fi" onclick="djdp('+i+')" title="点击删除">📷<div class="ngpw">'+P[p.w].n+'</div><div style="font-size:7px;color:var(--ng);margin-top:1px">删除</div></div>'});
+      if(!t.jp||t.jp.length<5)h+='<div class="ngps ad" onclick="djap()" title="调用系统相机拍照"><span style="font-size:16px">📷</span><div style="font-size:8px;color:var(--g400);margin-top:1px">拍照</div></div>';
+      h+='</div>';
+    }
+    // 提交按钮
+    var canSubmit=t.j==='ok'||(t.j==='ng'&&t.jr&&t.jr.length>0&&t.jp&&t.jp.length>0);
+    h+='<button style="width:100%;padding:14px;border:none;border-radius:var(--r);font-size:15px;font-weight:600;cursor:pointer;'+(canSubmit?'background:var(--pri);color:#fff':'background:var(--g200);color:var(--g400);pointer-events:none')+'" onclick="djs()">提交判定</button>';
+  }
+  EL('djc').innerHTML=h;
+  EL('djs').classList.add('vis');
+}
+function cdj(){EL('djs').classList.remove('vis');djid=null;rL()}
+function djv(v){var t=gt(djid);t.j=v;if(v==='ok'){t.jr=[];t.jp=[]}odj(djid)}
+function djtr(i){var t=gt(djid),r=REASONS[i];if(!t.jr)t.jr=[];var idx=t.jr.indexOf(r);if(idx===-1)t.jr.push(r);else t.jr.splice(idx,1);odj(djid)}
+function djap(){var t=gt(djid);if(!t.jp)t.jp=[];if(t.jp.length>=5)return;t.jp.push({w:me});toast('t1','已拍摄留证照片');odj(djid)}
+function djdp(i){var t=gt(djid);t.jp.splice(i,1);toast('t1','已删除留证照片');odj(djid)}
+function djs(){var t=gt(djid);toast('t1',t.n+'：'+(t.j==='ok'?'✓ 合格':'✗ 不合格'));cdj()}
+
+/* Utils */
+function esc(s){return s.replace(/'/g,"\\'")}
+function sp(i){document.querySelectorAll('.ptab').forEach(function(e,j){e.classList.toggle('on',j===i)});document.querySelectorAll('.pw').forEach(function(e,j){e.classList.toggle('on',j===i)});if(cid)xc()}
+var tts={};function toast(id,m){var e=EL(id);e.textContent=m;e.className='toast show';clearTimeout(tts[id]);tts[id]=setTimeout(function(){e.className='toast'},2200)}
+
+rP1();rL();
+</script>
+</body>
+</html>

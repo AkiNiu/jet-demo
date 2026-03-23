@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>产品 Demo 演示大厅 | JET2.5</title>
+    <style>
+        :root {
+            --primary-color: #0052D9;
+            --bg-color: #F3F5F8;
+            --card-bg: #FFFFFF;
+            --text-main: #181818;
+            --text-sub: #666666;
+            --border-radius: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        .header {
+            background-color: var(--card-bg);
+            padding: 40px 0;
+            text-align: center;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .header p {
+            margin: 12px 0 0;
+            font-size: 16px;
+            color: var(--text-sub);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px 60px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 32px 24px;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+            transition: var(--transition);
+            border: 1px solid rgba(0,0,0,0.04);
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 82, 217, 0.1);
+            border-color: rgba(0, 82, 217, 0.2);
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(0, 82, 217, 0.08);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+
+        .card-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 8px;
+        }
+
+        .card-desc {
+            font-size: 14px;
+            color: var(--text-sub);
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        .card-footer {
+            margin-top: 24px;
+            font-size: 14px;
+            color: var(--primary-color);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+
+        .card-footer svg {
+            width: 16px;
+            height: 16px;
+            margin-left: 4px;
+            transition: var(--transition);
+        }
+
+        .card:hover .card-footer svg {
+            transform: translateX(4px);
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 40px 0 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>JET 产品线前端演示体验大厅</h1>
+        <p>提供核心场景的高拟真交互演示与设计规范参考</p>
+    </div>
+
+    <div class="container">
+        
+        <div class="section-title">核心业务流程</div>
+        <div class="grid">
+            <a href="demo_轻量工单创建与派发.html" class="card" target="_blank">
+                <div class="card-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                </div>
+                <h3 class="card-title">轻量工单创建与派发</h3>
+                <p class="card-desc">工单新建、信息填写及自动化派发至相关处理环节的流程体验。</p>
+                <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+            </a>
+
+            <a href="demo_核查分工.html" class="card" target="_blank">
+                <div class="card-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                </div>
+                <h3 class="card-title">核查分工</h3>
+                <p class="card-desc">展现团队协作、人员指派以及核查任务分配的全方位视点。</p>
+                <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+            </a>
+
+            <a href="demo_作业前准备.html" class="card" target="_blank">
+                <div class="card-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                </div>
+                <h3 class="card-title">作业前准备</h3>
+                <p class="card-desc">进入实地作业前所需的重要资源和材料的归档与准备。</p>
+                <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+            </a>
+
+            <a href="demo_现场准备.html" class="card" target="_blank">
+                <div class="card-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path></svg>
+                </div>
+                <h3 class="card-title">现场准备</h3>
+                <p class="card-desc">现场相关数据的核对及准备工作的最终确认节点。</p>
+                <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+            </a>
+
+            <a href="demo_现场核查_全流程_V2.html" class="card" target="_blank">
+                <div class="card-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <h3 class="card-title">现场核查_全流程_V2 (全新交互版)</h3>
+                <p class="card-desc">已修复交互 Bug 的最新版本，展示从下站到签退的全套流程动作。</p>
+                <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+            </a>
+
+            <a href="demo_建设情况核实_轻量建站.html" class="card" target="_blank">
+                <div class="card-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                </div>
+                <h3 class="card-title">建设情况核实 (轻量建站)</h3>
+                <p class="card-desc">站址快速核实、建站情况确认和对应数据反馈页面。</p>
+                <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+            </a>
+        </div>
+
+        <div class="section-title">规范与资源</div>
+        <div class="grid">
+            <a href="demo_设计规范_组件库.html" class="card" target="_blank" style="border-top: 3px solid var(--primary-color);">
+                <div class="card-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path></svg>
+                </div>
+                <h3 class="card-title">系统设计规范与组件库</h3>
+                <p class="card-desc">全局设计资产与前端UI组件指南，开发与设计的统一语言。</p>
+                <div class="card-footer">查阅规范 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
