@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>建设情况确认 — 检e通V3.0 Demo</title>
+<link rel="stylesheet" href="demo_shared_base.css">
+<style>
+/* 左右布局 */
+.demo-layout{display:flex;gap:40px;max-width:1100px;margin:0 auto;padding:32px 24px;align-items:flex-start}
+.demo-left{flex-shrink:0;position:sticky;top:24px}
+.demo-right{flex:1;min-width:0}
+.demo-right h2{font-size:18px;font-weight:700;color:#374151;margin-bottom:16px}
+.demo-right h3{font-size:14px;font-weight:600;color:#4B5563;margin:20px 0 8px}
+.demo-right p,.demo-right li{font-size:13px;color:#6B7280;line-height:1.8}
+.demo-right ul{padding-left:20px}
+.demo-right table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0 16px}
+.demo-right th{background:#F3F4F6;padding:8px 10px;text-align:left;font-weight:600;color:#4B5563;border-bottom:1px solid #E5E7EB}
+.demo-right td{padding:8px 10px;border-bottom:1px solid #F3F4F6;color:#6B7280}
+.demo-right td:first-child{color:#374151;font-weight:500}
+.demo-right .tag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:11px;font-weight:600}
+.tag-ok{background:rgba(52,199,89,.1);color:#16a34a}
+.tag-wait{background:rgba(255,149,0,.1);color:#B86E00}
+.tag-info{background:rgba(60,200,180,.1);color:#2BA89A}
+
+/* ===== 手机壳内部样式 ===== */
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--g50)}
+.grp{padding:14px var(--sp) 4px;font-size:13px;font-weight:600;color:var(--g600)}
+.rlist{margin:0 var(--sp);background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm);overflow:hidden;margin-bottom:8px}
+.rm{display:flex;align-items:center;border-bottom:1px solid var(--g100);min-height:56px;cursor:default;-webkit-tap-highlight-color:transparent;transition:background .15s}
+.rm:last-child{border-bottom:none}
+.rm.ok{background:rgba(52,199,89,0.08)}
+.rm.pending{background:rgba(255,149,0,0.06)}
+.rm-bar{width:4px;align-self:stretch;flex-shrink:0}
+.rm.ok .rm-bar{background:var(--ok)}
+.rm.pending .rm-bar{background:var(--warn)}
+.rm-num{min-width:48px;min-height:48px;display:flex;align-items:baseline;justify-content:flex-end;gap:1px;cursor:pointer;padding:0 4px 0 12px;-webkit-tap-highlight-color:transparent}
+.rm-num:active .rm-val{border-bottom-color:var(--pri)}
+.rm-val{font-size:18px;font-weight:700;color:var(--g800);border-bottom:2px dashed var(--g300);min-width:14px;text-align:center;transition:all .15s}
+.rm.pending .rm-val{color:var(--warn);border-color:var(--warn)}
+.rm-hint{font-size:11px;color:var(--warn);padding-left:4px;white-space:nowrap}
+.rm-suf{font-size:13px;color:var(--g500);white-space:nowrap;padding-left:1px}
+.rm-space{flex:1}
+.rm-type{min-width:48px;min-height:48px;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;flex-shrink:0;padding:0 8px}
+.rm-type:active{opacity:.6}
+.rm-tag{font-size:11px;padding:3px 8px;border-radius:4px;font-weight:500;white-space:nowrap}
+.add-bar{margin:4px var(--sp) 8px}
+.add-btn{width:100%;padding:12px;border:1.5px dashed var(--g300);border-radius:var(--rs);background:#fff;font-size:13px;color:var(--g500);cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent}
+.add-btn:active{background:var(--pri-l);border-color:var(--pri);color:var(--pri-d)}
+/* 左滑删除 */
+.rm-wrap{position:relative;overflow:hidden;border-bottom:1px solid var(--g100)}
+.rm-wrap:last-child{border-bottom:none}
+.rm-wrap .rm{border-bottom:none;transition:transform .2s ease-out}
+.rm-del-bg{position:absolute;right:0;top:0;bottom:0;width:72px;background:var(--ng);display:none;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:600}
+.rm-del-bg.visible{display:flex}
+
+/* 室外配套区域 */
+.outdoor-section{margin:12px var(--sp) 4px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm);overflow:hidden}
+.outdoor-title{padding:12px 14px 4px;font-size:13px;font-weight:600;color:var(--g600)}
+.outdoor-row{display:flex;align-items:center;padding:12px 14px;min-height:48px;border-bottom:1px solid var(--g100);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s}
+.outdoor-row:last-child{border-bottom:none}
+.outdoor-row:active{background:var(--g50)}
+.outdoor-check{width:22px;height:22px;border-radius:4px;border:2px solid var(--g300);margin-right:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.outdoor-check.checked{background:var(--pri);border-color:var(--pri)}
+.outdoor-check.checked::after{content:'✓';color:#fff;font-size:14px;font-weight:700}
+.outdoor-label{font-size:14px;color:var(--g700);flex:1}
+.outdoor-hint{font-size:11px;color:var(--g400)}
+/* 有/无 双按钮 */
+.yn-row{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--g100);min-height:48px;gap:10px}
+.yn-label{font-size:14px;color:var(--g700);flex:1}
+.yn-toggle{display:flex;gap:6px}
+.yn-btn{padding:6px 16px;border:1.5px solid var(--g200);border-radius:6px;background:#fff;font-size:13px;font-weight:500;color:var(--g400);cursor:pointer;transition:all .15s;min-width:44px;min-height:36px}
+.yn-btn:active{background:var(--g50)}
+.yn-btn.yes{background:rgba(52,199,89,.1);border-color:rgba(52,199,89,.4);color:var(--ok)}
+.yn-btn.no{background:var(--g100);border-color:var(--g300);color:var(--g600)}
+/* Radio circle */
+.radio-circle{width:20px;height:20px;border-radius:50%;border:2px solid var(--g300);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;margin-right:8px}
+.radio-circle.on{border-color:var(--pri);background:var(--pri)}
+.radio-circle.on::after{content:'';width:8px;height:8px;border-radius:50%;background:#fff}
+.bot{padding:8px var(--sp) 12px;background:#fff;border-top:1px solid var(--g200);flex-shrink:0}
+.bot-info{font-size:11px;color:var(--g400);text-align:center;margin-bottom:8px}
+.bot-info b{color:var(--g700)}
+.bot-btn{width:100%;padding:14px;border:none;border-radius:var(--r);font-size:16px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.bot-btn.ready{background:var(--pri);color:#fff}
+.bot-btn.ready:active{background:var(--pri-d)}
+.bot-btn.wait{background:var(--g100);color:var(--g400)}
+
+/* Toast */
+.toast{display:none;position:fixed;top:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;padding:10px 20px;border-radius:var(--r-pill);font-size:13px;z-index:999;max-width:280px;text-align:center}
+.toast.show{display:block;animation:ti .25s ease-out}
+@keyframes ti{from{opacity:0;transform:translateX(-50%) translateY(8px)}}
+
+/* Bottom Sheet */
+.sh-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:800;align-items:flex-end;justify-content:center}
+.sh-bg.show{display:flex}
+.sh-panel{width:100%;max-width:360px;background:#fff;border-radius:16px 16px 0 0;padding:16px var(--sp) 24px;animation:su .2s ease-out}
+@keyframes su{from{transform:translateY(100%)}}
+.sh-title{font-size:14px;font-weight:600;text-align:center;margin-bottom:12px;color:var(--g700)}
+.sh-item{padding:14px;border-bottom:1px solid var(--g100);font-size:14px;color:var(--g700);cursor:pointer;display:flex;align-items:center;gap:10px;-webkit-tap-highlight-color:transparent}
+.sh-item:last-child{border-bottom:none}
+.sh-item:active{background:var(--g50)}
+.sh-item.danger{color:var(--ng)}
+.sh-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sh-cancel{margin-top:8px;padding:14px;text-align:center;font-size:14px;color:var(--g500);cursor:pointer;border-top:1px solid var(--g200)}
+.pk-sub{font-size:12px;color:var(--g400);text-align:center;margin-bottom:12px}
+.pk-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px}
+.pk-n{padding:14px 0;text-align:center;font-size:18px;font-weight:700;color:var(--g700);border-radius:var(--rs);background:var(--g50);border:2px solid transparent;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .12s}
+.pk-n:active{background:var(--pri-l);border-color:var(--pri)}
+.pk-n.on{background:var(--pri-l);border-color:var(--pri);color:var(--pri-d)}
+.pk-extra{padding:12px;text-align:center;font-size:13px;color:var(--pri-d);cursor:pointer;border-top:1px solid var(--g100)}
+.pk-extra:active{opacity:.5}
+.pk-irow{display:none;padding:10px 0;align-items:center;gap:8px;border-top:1px solid var(--g100);margin-top:4px}
+.pk-irow.show{display:flex}
+.pk-inp{flex:1;padding:10px 12px;border:1.5px solid var(--g200);border-radius:var(--rs);font-size:15px;outline:none;-webkit-appearance:none}
+.pk-inp:focus{border-color:var(--pri)}
+.pk-ok-btn{padding:10px 16px;background:var(--pri);color:#fff;border:none;border-radius:var(--rs);font-size:14px;font-weight:600;cursor:pointer}
+.d-sub{font-size:13px;color:var(--g500);text-align:center;margin:4px 0 16px}
+.d-body{background:var(--g50);border-radius:var(--rs);padding:12px;margin-bottom:16px;font-size:13px;line-height:2;color:var(--g600)}
+.d-body b{color:var(--g800)}
+.d-btns{display:flex;gap:10px}
+.d-btns button{flex:1;padding:14px;border:none;border-radius:var(--r);font-size:15px;font-weight:600;cursor:pointer}
+.d-sec{background:var(--g100);color:var(--g600)}
+.d-pri{background:var(--pri);color:#fff}
+</style>
+</head>
+<body>
+
+<div class="demo-layout">
+  <!-- ===== 左侧：手机壳 ===== -->
+  <div class="demo-left">
+    <div class="phone">
+      <div class="sbar">9:41</div>
+      <div class="nbar"><div class="back">←</div><div class="title">建设情况确认</div></div>
+      <div class="scroll" id="scroll">
+        <!-- 项目摘要 -->
+        <div style="margin:8px 12px 4px;padding:10px 14px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm)">
+          <div style="font-size:14px;font-weight:600;color:var(--g800)">建湖复兴花园一期</div>
+          <div style="font-size:12px;color:var(--g500);margin-top:2px">江苏省盐城市建湖县 · 2026-03-20</div>
+        </div>
+        <div id="list"></div>
+        <div class="add-bar"><div class="add-btn" onclick="openSh('addSh')">+ 新增站房</div></div>
+
+        <!-- 室外配套设施（有/无 必选） -->
+        <div class="outdoor-section" id="outdoorSection">
+          <div class="outdoor-title">室外配套设施</div>
+          <div class="yn-row">
+            <span class="yn-label">充电桩设施</span>
+            <div class="yn-toggle">
+              <button class="yn-btn" id="chgYes" onclick="setOutdoor('charging',true)">有</button>
+              <button class="yn-btn" id="chgNo" onclick="setOutdoor('charging',false)">无</button>
+            </div>
+          </div>
+          <div class="yn-row" style="border-bottom:none">
+            <span class="yn-label">居民配套设施</span>
+            <div class="yn-toggle">
+              <button class="yn-btn" id="resYes" onclick="setOutdoor('residential',true)">有</button>
+              <button class="yn-btn" id="resNo" onclick="setOutdoor('residential',false)">无</button>
+            </div>
+          </div>
+          <div style="padding:0 14px 8px;font-size:11px;color:var(--g400)">选"有"后，核查分工中将出现对应核查任务</div>
+        </div>
+
+        <!-- 进线电缆段数（radio勾选） -->
+        <div class="outdoor-section" id="inlineSection">
+          <div class="outdoor-title">进线电缆段数</div>
+          <div class="yn-row" onclick="pickInline(1)" style="cursor:pointer">
+            <div class="radio-circle" id="inlR1"></div>
+            <span class="yn-label">1段</span>
+          </div>
+          <div class="yn-row" onclick="pickInline(2)" style="cursor:pointer">
+            <div class="radio-circle" id="inlR2"></div>
+            <span class="yn-label">2段</span>
+          </div>
+          <div class="yn-row" onclick="pickInline(3)" style="cursor:pointer;border-bottom:none">
+            <div class="radio-circle" id="inlR3"></div>
+            <span class="yn-label">3段</span>
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+      </div>
+      <div class="bot">
+        <div class="bot-info" id="botInfo"></div>
+        <button class="bot-btn wait" id="botBtn" onclick="doSubmit()"></button>
+      </div>
+      <div class="toast" id="toastEl"></div>
+    </div>
+  </div>
+
+  <!-- ===== 右侧：设计说明 ===== -->
+  <div class="demo-right">
+    <h2>建设情况确认</h2>
+
+    <h3>这个页面做什么</h3>
+    <p>三件事：<strong>确认站房信息</strong>、<strong>确认配套设施</strong>、<strong>确认进线电缆段数</strong>。</p>
+    <p>工单创建时系统已按项目规模（如2个开关站+4个配电室）自动生成了站房记录，编号默认是1、2、3...。工作负责人到了现场后，对照实际情况：①核实站房数量/类型/编号是否正确 ②确认现场是否有充电桩和居民配套设施 ③确认进线电缆段数（影响电源核查拍照数量）。</p>
+
+    <h3>请试试以下操作</h3>
+    <table>
+      <tr><th style="width:30%">做什么</th><th>怎么做</th></tr>
+      <tr><td><strong>确认编号</strong></td><td>编号正确时，<strong>点击该行空白区域</strong> → 橙色变绿色（已确认）</td></tr>
+      <tr><td><strong>改一个编号</strong></td><td>点击行内的<strong>数字</strong>（有虚线下划线）→ 底部弹出数字面板 → 选完自动确认</td></tr>
+      <tr><td><strong>删除一个站房</strong></td><td>在一行上<strong>向左滑动</strong>（鼠标按住向左拖）→ 露出红色"删除"按钮 → 点击后二次确认</td></tr>
+      <tr><td><strong>新增一个站房</strong></td><td>点击<strong>"+ 新增站房"</strong> → 选择类型 → 新行橙色出现，自动弹出数字面板让你选编号</td></tr>
+      <tr><td><strong>确认配套设施</strong></td><td>站房列表下方，每项必须选<strong>"有"或"无"</strong>（不选不能提交）</td></tr>
+      <tr><td><strong>选进线段数</strong></td><td>底部<strong>"进线电缆段数"</strong>区域，勾选1段/2段/3段（无默认值，必须选）</td></tr>
+      <tr><td><strong>提交</strong></td><td>全部站房编号确认后，底部按钮变绿 → 点击提交 → 弹出确认面板</td></tr>
+    </table>
+
+    <h3>页面里看到的元素</h3>
+    <table>
+      <tr><th style="width:30%">元素</th><th>含义</th></tr>
+      <tr><td>左侧<span class="tag tag-ok">绿色</span>竖条</td><td>该站房编号已确认</td></tr>
+      <tr><td>左侧<span class="tag tag-wait">橙色</span>竖条</td><td>待确认，点击行空白区域确认，或点数字改编号（改完自动确认）</td></tr>
+      <tr><td>数字下方的虚线</td><td>表示可以点击修改编号</td></tr>
+      <tr><td>"开关站（2）"</td><td>按类型分组，括号里是数量</td></tr>
+      <tr><td>底部"已确认 X/Y 个站房"</td><td>仅统计站房确认进度（不含配套和进线），全部完成后按钮变绿</td></tr>
+      <tr><td>充电桩/居民设施 "有/无"</td><td>必须选（不是勾选框），选"有"后核查分工出现对应任务</td></tr>
+      <tr><td>进线电缆段数 ○1段 ○2段 ○3段</td><td>Radio勾选，无默认值，影响电源核查照片数量</td></tr>
+    </table>
+
+    <h3>为什么这样设计</h3>
+    <ul>
+      <li><strong>站房需逐个确认</strong> — 编号正确点击行确认，需要改则点数字选新编号（选完自动确认）</li>
+      <li><strong>新增站房自动弹出数字面板</strong> — 不需要猜该点哪里，新增完直接选编号</li>
+      <li><strong>编号用数字面板，不用打字</strong> — 90%以上是1-10的数字，点一下就好</li>
+      <li><strong>标签颜色统一</strong> — 不同站房类型用文字区分，不用颜色区分，减少视觉干扰</li>
+    </ul>
+
+    <h3>不在这里做的事</h3>
+    <ul>
+      <li>抽检规则和抽中标记 — 后续环节处理</li>
+      <li>高压柜类型、PT类型等设备详情 — 抽检对象确认时再填</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 数字选择器 -->
+<div class="sh-bg" id="pickerSh"><div class="sh-panel">
+  <div class="sh-title" id="pkTitle">选择编号</div>
+  <div class="pk-sub" id="pkSub"></div>
+  <div class="pk-grid" id="pkGrid"></div>
+  <div class="pk-irow" id="pkIRow">
+    <input class="pk-inp" id="pkInp" placeholder="输入自定义编号">
+    <button class="pk-ok-btn" onclick="applyCustom()">确定</button>
+  </div>
+  <div class="pk-extra" onclick="showCustom()">输入其他编号（字母/汉字）</div>
+  <div class="sh-cancel" onclick="closeSh('pickerSh')">取消</div>
+</div></div>
+
+<!-- 删除确认 -->
+<div class="sh-bg" id="delSh"><div class="sh-panel">
+  <div class="sh-title" id="delTitle">确认删除？</div>
+  <div class="d-btns">
+    <button class="d-sec" onclick="closeSh('delSh')">取消</button>
+    <button class="d-pri" style="background:var(--ng)" onclick="doDelConfirm()">确认删除</button>
+  </div>
+</div></div>
+
+<!-- 新增 -->
+<div class="sh-bg" id="addSh"><div class="sh-panel">
+  <div class="sh-title">选择站房类型</div>
+  <div class="sh-item" onclick="doAdd('station')"><div class="sh-dot" style="background:#3B82F6"></div>开关站</div>
+  <div class="sh-item" onclick="doAdd('room')"><div class="sh-dot" style="background:#D97706"></div>配电室</div>
+  <div class="sh-item" onclick="doAdd('join')"><div class="sh-dot" style="background:#6366F1"></div>合建开关站</div>
+  <div class="sh-item" onclick="doAdd('box')"><div class="sh-dot" style="background:#6B7280"></div>箱式变电站</div>
+  <div class="sh-cancel" onclick="closeSh('addSh')">取消</div>
+</div></div>
+
+<!-- 提交确认 -->
+<div class="sh-bg" id="subSh"><div class="sh-panel">
+  <div class="sh-title">确认提交</div>
+  <div class="d-sub">提交后进入核查分工</div>
+  <div class="d-body" id="dBody"></div>
+  <div class="d-btns">
+    <button class="d-sec" onclick="closeSh('subSh')">返回修改</button>
+    <button class="d-pri" onclick="closeSh('subSh');toast('✓ 确认完成，进入核查分工')">确认</button>
+  </div>
+</div></div>
+
+<script>
+var T={
+  station:{l:'开关站',s:'#开关站',c:'var(--g600)',bg:'var(--g100)'},
+  room:{l:'配电室',s:'#配电室',c:'var(--g600)',bg:'var(--g100)'},
+  join:{l:'合建开关站',s:'#合建站',c:'var(--g600)',bg:'var(--g100)'},
+  box:{l:'箱式变电站',s:'#箱变',c:'var(--g600)',bg:'var(--g100)'}
+};
+var rooms=[
+  {id:1,tp:'station',n:'1',ok:false},{id:2,tp:'station',n:'2',ok:false},
+  {id:3,tp:'room',n:'1',ok:false},{id:4,tp:'room',n:'2',ok:false},
+  {id:5,tp:'room',n:'3',ok:false},{id:6,tp:'room',n:'4',ok:false}
+];
+var nid=7,pickId=null,actionId=null;
+
+function render(){
+  var g={};rooms.forEach(function(r){if(!g[r.tp])g[r.tp]=[];g[r.tp].push(r)});
+  var h='';
+  ['station','room','join','box'].forEach(function(tp){
+    var ls=g[tp]||[];if(!ls.length)return;
+    var allOk=ls.every(function(r){return r.ok});
+    var countStyle=allOk?' style="color:var(--ok)"':'';
+    h+='<div class="grp">'+T[tp].l+'（<span'+countStyle+'>'+ls.length+'</span>）</div><div class="rlist">';
+    ls.forEach(function(r){h+=rowHtml(r)});
+    h+='</div>';
+  });
+  document.getElementById('list').innerHTML=h;
+  bindSwipeAndTap();
+  updBot();
+}
+
+function rowHtml(r){
+  var t=T[r.tp],cls=r.ok?'ok':'pending';
+  return '<div class="rm-wrap" id="wrap'+r.id+'" data-id="'+r.id+'">'
+    +'<div class="rm-del-bg" onclick="confirmDel('+r.id+')">删除</div>'
+    +'<div class="rm '+cls+'" id="rm'+r.id+'" data-id="'+r.id+'">'
+    +'<div class="rm-bar"></div>'
+    +'<div class="rm-num" onclick="openPk('+r.id+')">'
+    +'<span class="rm-val">'+esc(r.n)+'</span>'
+    +'</div>'
+    +'<span class="rm-suf">'+t.s+'</span>'
+    +'<span class="rm-space"></span>'
+    +'<div class="rm-type">'
+    +'<span class="rm-tag" style="background:'+t.bg+';color:'+t.c+'">'+t.l+'</span>'
+    +'</div>'
+    +'</div>'
+    +'</div>';
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+
+function bindSwipeAndTap(){
+  document.querySelectorAll('.rm-wrap').forEach(function(wrap){
+    var startX=0,swiping=false,opened=false;
+    var rm=wrap.querySelector('.rm');
+    var delBg=wrap.querySelector('.rm-del-bg');
+    var id=parseInt(wrap.dataset.id);
+
+    function showDel(){delBg.classList.add('visible')}
+    function hideDel(){delBg.classList.remove('visible')}
+    function setPos(tx){rm.style.transform=tx?'translateX('+tx+'px)':'';rm.style.transition='none'}
+    function animateTo(tx){rm.style.transition='transform .2s ease-out';rm.style.transform=tx?'translateX('+tx+'px)':'';if(!tx)setTimeout(hideDel,200)}
+
+    // Touch
+    wrap.addEventListener('touchstart',function(e){startX=e.touches[0].clientX;swiping=false},{passive:true});
+    wrap.addEventListener('touchmove',function(e){
+      var dx=e.touches[0].clientX-startX;
+      if(dx<-10){swiping=true;showDel()}
+      if(swiping){setPos(Math.max(-72,Math.min(0,dx+(opened?-72:0))))}
+    },{passive:true});
+    wrap.addEventListener('touchend',function(e){
+      if(swiping){var dx=e.changedTouches[0].clientX-startX+(opened?-72:0);if(dx<-36){animateTo(-72);opened=true}else{animateTo(0);opened=false}}
+      else if(!e.target.closest('.rm-num')&&!e.target.closest('.rm-del-bg')){
+        var r=find(id);if(r&&!r.ok){r.ok=true;render();toast('已确认 '+r.n+T[r.tp].s)}
+      }
+    });
+
+    // Mouse (for demo in browser)
+    wrap.addEventListener('mousedown',function(e){
+      if(e.target.closest('.rm-num')||e.target.closest('.rm-del-bg'))return;
+      startX=e.clientX;swiping=false;
+      var onMove=function(ev){
+        var dx=ev.clientX-startX;
+        if(dx<-10){swiping=true;showDel()}
+        if(swiping){setPos(Math.max(-72,Math.min(0,dx+(opened?-72:0))))}
+      };
+      var onUp=function(ev){
+        document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);
+        if(swiping){var dx=ev.clientX-startX+(opened?-72:0);if(dx<-36){animateTo(-72);opened=true}else{animateTo(0);opened=false}}
+        else if(!ev.target.closest('.rm-num')&&!ev.target.closest('.rm-del-bg')){
+          var r=find(id);if(r&&!r.ok){r.ok=true;render();toast('已确认 '+r.n+T[r.tp].s)}
+        }
+      };
+      document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);
+    });
+  });
+}
+
+/* 删除二次确认 */
+var delId=null;
+function confirmDel(id){
+  if(rooms.length<=1){toast('至少保留一个站房');return}
+  delId=id;var r=find(id);
+  document.getElementById('delTitle').textContent='确认删除 '+r.n+T[r.tp].s+'？';
+  openSh('delSh');
+}
+function doDelConfirm(){
+  closeSh('delSh');if(delId===null)return;
+  rooms=rooms.filter(function(r){return r.id!==delId});delId=null;render();toast('已删除');
+}
+
+function openPk(id){
+  pickId=id;var r=find(id);
+  document.getElementById('pkTitle').textContent='选择编号';
+  document.getElementById('pkSub').textContent='当前：'+r.n+T[r.tp].s;
+  var h='';for(var i=1;i<=10;i++){var on=String(i)===String(r.n)?' on':'';h+='<div class="pk-n'+on+'" onclick="pickN('+i+')">'+i+'</div>'}
+  document.getElementById('pkGrid').innerHTML=h;
+  document.getElementById('pkIRow').classList.remove('show');
+  openSh('pickerSh');
+}
+function pickN(v){
+  if(pickId===null)return;
+  var r=find(pickId);var sn=String(v);
+  // 同类型编号唯一性校验
+  var dup=rooms.find(function(x){return x.id!==pickId&&x.tp===r.tp&&x.n===sn});
+  if(dup){toast('编号 '+sn+' 在'+T[r.tp].l+'中已存在');return}
+  r.n=sn;r.ok=true;closeSh('pickerSh');render();toast('编号已更新为 '+sn+T[r.tp].s);
+}
+function showCustom(){document.getElementById('pkIRow').classList.add('show');document.getElementById('pkInp').value='';document.getElementById('pkInp').focus()}
+function applyCustom(){
+  var v=document.getElementById('pkInp').value.trim();if(!v){toast('请输入编号');return}if(pickId===null)return;
+  var r=find(pickId);
+  var dup=rooms.find(function(x){return x.id!==pickId&&x.tp===r.tp&&x.n===v});
+  if(dup){toast('编号 '+v+' 在'+T[r.tp].l+'中已存在');return}
+  r.n=v;r.ok=true;closeSh('pickerSh');render();toast('编号已更新为 '+v+T[r.tp].s);
+}
+
+
+function doAdd(tp){closeSh('addSh');var c=rooms.filter(function(r){return r.tp===tp}).length;var newId=nid++;rooms.push({id:newId,tp:tp,n:String(c+1),ok:false});render();setTimeout(function(){var el=document.getElementById('rm'+newId);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(function(){openPk(newId)},300)},150)}
+
+function openSh(id){document.getElementById(id).classList.add('show')}
+function closeSh(id){document.getElementById(id).classList.remove('show')}
+
+function updBot(){
+  var total=rooms.length,done=rooms.filter(function(r){return r.ok}).length;
+  document.getElementById('botInfo').innerHTML='已确认 <b>'+done+'</b> / '+total+' 个站房';
+  var btn=document.getElementById('botBtn');
+  var outdoorDone = outdoor.charging !== null && outdoor.residential !== null;
+  var allReady = done===total && inlineNum > 0 && outdoorDone;
+  if(allReady){btn.className='bot-btn ready';btn.textContent='确认完成，进入核查分工 →'}
+  else if(done<total){btn.className='bot-btn wait';btn.textContent='还有 '+(total-done)+' 个站房待确认'}
+  else if(!outdoorDone){btn.className='bot-btn wait';btn.textContent='请确认室外配套设施'}
+  else{btn.className='bot-btn wait';btn.textContent='请选择进线电缆段数'}
+}
+
+function doSubmit(){
+  var total=rooms.length,done=rooms.filter(function(r){return r.ok}).length;
+  var outdoorDone = outdoor.charging !== null && outdoor.residential !== null;
+  if(done<total||!outdoorDone||inlineNum===0){
+    if(done<total){
+      toast('请先确认全部站房编号');
+      for(var i=0;i<rooms.length;i++){if(!rooms[i].ok){var el=document.getElementById('rm'+rooms[i].id);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.style.background='rgba(255,149,0,.15)';setTimeout(function(e){return function(){e.style.background=''}}(el),1500)}break}}
+    } else if(!outdoorDone){
+      toast('请确认室外配套设施');
+      document.getElementById('outdoorSection').scrollIntoView({behavior:'smooth',block:'center'});
+    } else {
+      toast('请选择进线电缆段数');
+      document.getElementById('inlineSection').scrollIntoView({behavior:'smooth',block:'center'});
+    }
+    return;
+  }
+  var byT={};rooms.forEach(function(r){if(!byT[r.tp])byT[r.tp]=[];byT[r.tp].push(r.n+T[r.tp].s)});
+  var lines=[];for(var t in byT)lines.push('<b>'+T[t].l+'</b>：'+byT[t].join('、'));
+  var outdoorLines=[];
+  outdoorLines.push('充电桩设施：'+(outdoor.charging?'有':'无'));
+  outdoorLines.push('居民配套设施：'+(outdoor.residential?'有':'无'));
+  lines.push('<b>室外配套</b>：'+outdoorLines.join('、'));
+  lines.push('<b>进线电缆</b>：'+inlineNum+'段（每站房'+inlinePhotoMap[inlineNum]+'张电源核查照片）');
+  document.getElementById('dBody').innerHTML='共 <b>'+total+'</b> 个站房<br>'+lines.join('<br>');
+  openSh('subSh');
+}
+
+function find(id){return rooms.find(function(r){return r.id===id})}
+var tt;function toast(m){var el=document.getElementById('toastEl');el.textContent=m;el.className='toast show';clearTimeout(tt);tt=setTimeout(function(){el.className='toast'},2000)}
+
+/* 站房确认 */
+function confirmRoom(id){
+  find(id).ok=true;
+  render();
+  toast('已确认');
+}
+
+/* 室外配套（有/无 必选） */
+var outdoor={charging:null,residential:null}; // null=未选，true=有，false=无
+function setOutdoor(key,val){
+  outdoor[key]=val;
+  if(key==='charging'){
+    document.getElementById('chgYes').className='yn-btn'+(val?' yes':'');
+    document.getElementById('chgNo').className='yn-btn'+(val?'':' no');
+  } else {
+    document.getElementById('resYes').className='yn-btn'+(val?' yes':'');
+    document.getElementById('resNo').className='yn-btn'+(val?'':' no');
+  }
+  var taskName=key==='charging'?'充电设施':'居民设施';
+  toast(val?'选择"有"：核查分工将包含"'+taskName+'"':'选择"无"');
+  updBot();
+}
+
+/* 进线电缆段数（radio） */
+var inlineNum = 0;
+var inlinePhotoMap = {1:4, 2:6, 3:8};
+function pickInline(n) {
+  inlineNum = n;
+  for(var i=1;i<=3;i++){document.getElementById('inlR'+i).className='radio-circle'+(i===n?' on':'')}
+  toast('进线电缆段数：' + n + ' 段（每站房' + inlinePhotoMap[n] + '张照片）');
+  updBot();
+}
+
+render();
+</script>
+</body>
+</html>
