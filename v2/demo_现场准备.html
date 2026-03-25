@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>现场准备 — 检e通V3.0 Demo</title>
+<link rel="stylesheet" href="demo_shared_base.css">
+<style>
+  /* 左右布局容器 */
+  .demo-layout {
+    display: flex; gap: 40px; max-width: 1100px;
+    margin: 0 auto; padding: 32px 24px; align-items: flex-start;
+  }
+  .demo-left { flex-shrink: 0; position: sticky; top: 24px; }
+  .demo-right { flex: 1; min-width: 0; }
+  .demo-right h2 { font-size: 18px; font-weight: 700; color: #374151; margin-bottom: 16px; }
+  .demo-right h3 { font-size: 14px; font-weight: 600; color: #4B5563; margin: 20px 0 8px; }
+  .demo-right p, .demo-right li { font-size: 13px; color: #6B7280; line-height: 1.8; }
+  .demo-right ul { padding-left: 20px; }
+  .demo-right .callout { border-radius: var(--rs); padding: 10px 12px; margin: 10px 0; font-size: 12px; line-height: 1.6; }
+  .demo-right .c-pri { background: var(--pri-l); color: #2A6B60; }
+  .demo-right .c-warn { background: #FFF9E6; color: #6B5900; }
+  .demo-right .c-gray { background: var(--g50); color: var(--g600); }
+
+  /* ========== Hero 定位卡片 ========== */
+  .loc-card {
+    margin: 10px 12px 4px;
+    border-radius: var(--r);
+    border: 1.5px dashed var(--pri);
+    background: var(--pri-l);
+    padding: 16px;
+    text-align: center;
+    transition: all .3s;
+  }
+  .loc-card.done {
+    border-style: solid;
+    border-color: var(--ok);
+    background: rgba(52,199,89,0.06);
+    text-align: left;
+    padding: 12px 14px;
+  }
+  .loc-hint { font-size: 12px; color: var(--g500); margin-bottom: 10px; }
+  .loc-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--pri); color: #fff; border: none; border-radius: var(--rs);
+    padding: 10px 28px; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all .15s;
+  }
+  .loc-btn:active { background: var(--pri-d); }
+  .loc-icon { font-size: 16px; }
+  .loc-done-row { display: flex; align-items: center; gap: 8px; }
+  .loc-done-icon { width: 24px; height: 24px; border-radius: 50%; background: var(--ok); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+  .loc-done-info { flex: 1; }
+  .loc-done-label { font-size: 13px; font-weight: 600; color: var(--g800); }
+  .loc-done-addr { font-size: 11px; color: var(--g500); margin-top: 2px; }
+  .loc-done-time { font-size: 11px; color: var(--g400); margin-top: 1px; }
+  .loc-redo { font-size: 11px; color: var(--pri); background: none; border: none; cursor: pointer; padding: 4px 8px; flex-shrink: 0; }
+
+  /* 定位文本编辑 */
+  .loc-text-row { margin-top: 8px; border-top: 1px solid rgba(52,199,89,0.15); padding-top: 8px; }
+  .loc-text-label { font-size: 10px; color: var(--g400); margin-bottom: 4px; }
+  .loc-text-display { display: flex; align-items: flex-start; gap: 6px; }
+  .loc-text-content { flex: 1; font-size: 12px; color: var(--g700); line-height: 1.5; word-break: break-all; }
+  .loc-text-edit-btn { font-size: 11px; color: var(--pri); background: none; border: none; cursor: pointer; padding: 2px 6px; flex-shrink: 0; white-space: nowrap; }
+  .loc-text-input { width: 100%; font-size: 12px; color: var(--g800); border: 1.5px solid var(--pri); border-radius: 6px; padding: 6px 8px; line-height: 1.5; resize: none; font-family: inherit; outline: none; }
+  .loc-text-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 6px; }
+  .loc-text-actions button { font-size: 11px; padding: 4px 12px; border-radius: 4px; cursor: pointer; border: none; }
+  .loc-text-save { background: var(--pri); color: #fff; font-weight: 500; }
+  .loc-text-cancel { background: var(--g100); color: var(--g600); }
+
+  /* ========== 检查行（复用作业前准备样式） ========== */
+  .check-row { padding: 12px 14px; border-bottom: 0.5px solid var(--g100); }
+  .check-row:last-child { border-bottom: none; }
+  .check-top { display: flex; align-items: center; gap: 8px; }
+  .check-label { flex: 1; font-size: 14px; font-weight: 500; color: var(--g800); }
+
+  /* 合格/不合格 toggle（与作业前准备一致） */
+  .judge-toggle { display: flex; border-radius: 6px; overflow: hidden; flex-shrink: 0; }
+  .judge-toggle label { display: flex; align-items: center; justify-content: center; padding: 5px 14px; font-size: 12px; font-weight: 500; border: 1.5px solid var(--g200); cursor: pointer; color: var(--g400); background: #fff; transition: all .15s; user-select: none; }
+  .judge-toggle label:first-child { border-radius: 6px 0 0 6px; border-right: none; }
+  .judge-toggle label:last-child { border-radius: 0 6px 6px 0; }
+  .judge-toggle input { display: none; }
+  .judge-toggle label:has(input[value="pass"]:checked) { background: rgba(52,199,89,0.1); border-color: rgba(52,199,89,0.4); color: var(--ok); }
+  .judge-toggle label:has(input[value="fail"]:checked) { background: var(--ng); border-color: var(--ng); color: #fff; }
+
+  /* ========== 拍照区域 ========== */
+  .photo-area {
+    margin: 6px 0 2px;
+    display: flex; gap: 8px; align-items: center;
+  }
+  .photo-placeholder {
+    width: 72px; height: 72px; border-radius: var(--rs);
+    border: 1.5px dashed var(--g300); background: var(--g50);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; transition: all .15s; gap: 2px;
+  }
+  .photo-placeholder:active { border-color: var(--pri); background: var(--pri-l); }
+  .photo-placeholder .cam-icon { font-size: 20px; color: var(--g400); }
+  .photo-placeholder .cam-text { font-size: 10px; color: var(--g400); }
+  .photo-preview {
+    width: 72px; height: 72px; border-radius: var(--rs);
+    background: var(--g200); display: none; position: relative;
+    overflow: hidden;
+  }
+  .photo-preview.show { display: block; }
+  .photo-preview .preview-img {
+    width: 100%; height: 100%; object-fit: cover;
+    background: linear-gradient(135deg, var(--g200), var(--g300));
+  }
+  .photo-preview .preview-del {
+    position: absolute; top: 2px; right: 2px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: rgba(0,0,0,0.5); color: #fff; border: none;
+    font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ========== 枚举选择器 ========== */
+  .enum-select {
+    appearance: none; -webkit-appearance: none;
+    width: 120px; padding: 5px 28px 5px 10px; font-size: 12px;
+    border: 1.5px solid var(--g200); border-radius: 6px;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239CA3AF'/%3E%3C/svg%3E") no-repeat right 8px center;
+    color: var(--g500); cursor: pointer; flex-shrink: 0;
+    transition: border-color .15s;
+  }
+  .enum-select:focus { outline: none; border-color: var(--pri); }
+  .enum-select.selected { color: var(--g800); border-color: var(--pri); }
+
+  /* ========== 不合格横幅 ========== */
+  .fail-bar { display: none; margin: 8px 12px 0; }
+  .fail-bar.show { display: block; }
+
+  /* ========== 底部操作区 ========== */
+  .foot-bar { flex-shrink: 0; background: #fff; border-top: 1px solid var(--g100); padding: 10px 16px 20px; }
+  .batch-row { text-align: center; margin-bottom: 8px; }
+  .batch-link { font-size: 13px; color: var(--pri); background: none; border: none; cursor: pointer; padding: 6px 12px; border-radius: 6px; font-weight: 500; transition: all .15s; }
+  .batch-link:active { background: var(--pri-l); }
+  .batch-link.done { color: var(--ok); cursor: default; }
+</style>
+</head>
+<body>
+
+<div class="demo-layout">
+  <div class="demo-left">
+    <div class="phone">
+      <div class="sbar">9:41</div>
+      <div class="nbar"><div class="back">←</div><div class="title">现场准备</div></div>
+
+      <div class="scroll-area" style="padding-bottom:8px;">
+
+        <!-- 项目摘要 -->
+        <div style="margin:8px 12px 4px;padding:10px 14px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm);">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:14px;font-weight:600;color:var(--g800)">建湖复兴花园一期</span>
+            <span style="font-size:12px;color:var(--g500)">2026-03-20</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+            <span style="font-size:12px;color:var(--g500)">江苏省盐城市建湖县</span>
+            <span style="font-size:11px;color:var(--g400)">工单规模 1-2-0-1</span>
+          </div>
+        </div>
+
+        <!-- ===== Hero: 到场定位 ===== -->
+        <div class="loc-card" id="locCard">
+          <div class="loc-hint">请确认已到达项目现场</div>
+          <button class="loc-btn" id="locBtn" onclick="doLocate()">
+            <span class="loc-icon">&#128205;</span> 确认到场定位
+          </button>
+        </div>
+
+        <!-- 不合格横幅 -->
+        <div class="fail-bar" id="failBar">
+          <div class="alert alert-ng">
+            <span class="alert-icon">!</span>
+            <span class="alert-content">存在 <b id="failNum">0</b> 项不合格</span>
+          </div>
+        </div>
+
+        <!-- ===== 项目准备（拍照+枚举前置，toggle在后） ===== -->
+        <div class="group-card" style="margin:8px 12px;">
+          <div class="group-hd"><span class="gh-title">项目准备</span><span class="gh-count" id="cProj">0/4</span></div>
+          <div class="group-bd">
+            <!-- 工程车辆（拍照项）— 独特交互前置 -->
+            <div class="check-row">
+              <div class="check-top">
+                <span class="check-label">工程车辆</span>
+              </div>
+              <div class="photo-area" id="photoArea">
+                <div class="photo-placeholder" id="photoPlaceholder" onclick="takePhoto()">
+                  <span class="cam-icon">&#128247;</span>
+                  <span class="cam-text">拍照</span>
+                </div>
+              </div>
+              <div style="padding:0 14px 4px;font-size:10px;color:var(--g400)" id="photoCount"></div>
+            </div>
+            <!-- 电压等级（枚举选择）— 独特交互前置 -->
+            <div class="check-row">
+              <div class="check-top">
+                <span class="check-label">电压等级</span>
+                <select class="enum-select" id="selVolt" onchange="onEnumChange(this)">
+                  <option value="">请选择</option>
+                  <option value="10">10kV</option>
+                  <option value="20">20kV</option>
+                </select>
+              </div>
+            </div>
+            <!-- 执法设备状态（toggle） -->
+            <div class="check-row">
+              <div class="check-top">
+                <span class="check-label">执法设备状态</span>
+                <div class="judge-toggle"><label><input type="radio" name="t1" value="pass" onchange="calc()">合格</label><label><input type="radio" name="t1" value="fail" onchange="calc()">不合格</label></div>
+              </div>
+            </div>
+            <!-- 配合事项要求（toggle） -->
+            <div class="check-row">
+              <div class="check-top">
+                <span class="check-label">配合事项要求</span>
+                <div class="judge-toggle"><label><input type="radio" name="t2" value="pass" onchange="calc()">合格</label><label><input type="radio" name="t2" value="fail" onchange="calc()">不合格</label></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 主业人员准备 ===== -->
+        <div class="group-card" style="margin:8px 12px;">
+          <div class="group-hd"><span class="gh-title">主业人员准备</span><span class="gh-count" id="cZhu">0/2</span></div>
+          <div class="group-bd">
+            <div class="check-row"><div class="check-top"><span class="check-label">主业已到</span><div class="judge-toggle"><label><input type="radio" name="t3" value="pass" onchange="calc()">合格</label><label><input type="radio" name="t3" value="fail" onchange="calc()">不合格</label></div></div></div>
+            <div class="check-row"><div class="check-top"><span class="check-label">工作票已开具</span><div class="judge-toggle"><label><input type="radio" name="t4" value="pass" onchange="calc()">合格</label><label><input type="radio" name="t4" value="fail" onchange="calc()">不合格</label></div></div></div>
+          </div>
+        </div>
+
+        <!-- ===== 配合人员准备 ===== -->
+        <div class="group-card" style="margin:8px 12px;">
+          <div class="group-hd"><span class="gh-title">配合人员准备</span><span class="gh-count" id="cPei">0/3</span></div>
+          <div class="group-bd">
+            <div class="check-row"><div class="check-top"><span class="check-label">配合人员已到</span><div class="judge-toggle"><label><input type="radio" name="t5" value="pass" onchange="calc()">合格</label><label><input type="radio" name="t5" value="fail" onchange="calc()">不合格</label></div></div></div>
+            <div class="check-row"><div class="check-top"><span class="check-label">上级电源搭接情况</span><div class="judge-toggle"><label><input type="radio" name="t6" value="pass" onchange="calc()">合格</label><label><input type="radio" name="t6" value="fail" onchange="calc()">不合格</label></div></div></div>
+            <div class="check-row"><div class="check-top"><span class="check-label">试验电源准备情况</span><div class="judge-toggle"><label><input type="radio" name="t7" value="pass" onchange="calc()">合格</label><label><input type="radio" name="t7" value="fail" onchange="calc()">不合格</label></div></div></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 底部操作区（与作业前准备一致） -->
+      <div class="foot-bar">
+        <div class="batch-row">
+          <button class="batch-link" id="batchBtn" onclick="batchPass()">一键全部合格</button>
+        </div>
+        <button class="btn btn-primary btn-block" id="subBtn" disabled onclick="doSubmit()">提交</button>
+      </div>
+
+      <!-- 不合格确认弹窗 -->
+      <div class="confirm-dialog" id="cfm">
+        <div class="confirm-box">
+          <div class="title">存在不合格项</div>
+          <div class="desc" id="cfmDesc">有 <b style="color:var(--ng)">1</b> 项不合格，确认提交？</div>
+          <div class="actions">
+            <button class="btn-cancel" onclick="hideCfm()">再检查一下</button>
+            <button class="btn-primary" onclick="confirmSubmit()">确认提交</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="toast" id="toast"></div>
+    </div>
+  </div>
+
+  <div class="demo-right">
+    <h2>现场准备 — 到场确认</h2>
+    <p>工作负责人到达现场后，确认到场定位、人员到位情况、项目基础信息。</p>
+
+    <div class="callout c-pri"><strong>流程位置</strong>：作业前准备 → <strong>现场准备</strong> → 建设情况确认 → 核查分工 → ...</div>
+
+    <h3>页面核心定位</h3>
+    <ul>
+      <li>这个页面的核心语义是<strong>"你到场了"</strong>，不是"填表"</li>
+      <li>定位确认是页面存在的首要理由，因此从分组中提出，做成顶部 Hero Card</li>
+      <li>定位同时承担<strong>照片水印数据源</strong>职责 — 定位文本将用于全项目所有后续检测照片的水印</li>
+      <li>其他表单项由低代码配置驱动，具体内容可随时调整</li>
+    </ul>
+
+    <h3>定位 = 到场确认 + 照片水印基准</h3>
+    <ul>
+      <li><strong>为什么一次定位全局沿用？</strong>站房内部GPS信号极差，在室外锁定一次准确定位是唯一可行方案</li>
+      <li><strong>默认规则</strong>：定位成功后，系统自动拼接"定位地址 + 项目名称"生成水印文本</li>
+      <li><strong>可编辑</strong>：用户可点击"编辑"修改水印文本内容</li>
+      <li><strong>提交后不可修改</strong>：水印文本提交后锁死，保证全项目照片水印一致性</li>
+      <li><strong>定位失败兜底</strong>：GPS失败时提供"重试"+"手动输入地址"，不阻塞业务</li>
+      <li><strong>重新定位</strong>：会覆盖已编辑的水印文本</li>
+    </ul>
+
+    <h3>三层视觉重量设计</h3>
+    <ul>
+      <li><strong>第一层（Hero Card）</strong>：到场定位 — 独立卡片，虚线边框+主色背景，最醒目</li>
+      <li><strong>第二层（需动手的项）</strong>：拍照（工程车辆）、枚举选择（电压等级）— 控件形态自带视觉重量，不用额外标注</li>
+      <li><strong>第三层（状态确认项）</strong>：合格/不合格 toggle — 最轻量，可一键批量操作</li>
+    </ul>
+
+    <h3>排列顺序（强调定位，突出不同）</h3>
+    <ul>
+      <li><strong>组间</strong>：定位卡片（Hero）→ 项目准备 → 主业人员 → 配合人员，操作重量从重到轻</li>
+      <li><strong>组内</strong>（项目准备）：独特交互前置（拍照→枚举），相同toggle后置（执法设备→配合事项）</li>
+      <li>用户做完重操作后，一键全部合格收尾</li>
+    </ul>
+
+    <h3>"一键全部合格"（与作业前准备一致）</h3>
+    <ul>
+      <li>位置：底部操作区，提交按钮上方</li>
+      <li>样式：文字链，视觉比提交按钮轻</li>
+      <li>作用范围：<strong>仅作用于 toggle 项</strong>（7个状态确认项）</li>
+      <li>不影响：拍照、枚举选择、定位 — 这些需要用户手动完成</li>
+      <li>点击后文字变为"全部已确认合格"，颜色变绿</li>
+    </ul>
+
+    <h3>主路径</h3>
+    <ul>
+      <li>打开页面 → 点击"确认到场定位" → 定位成功</li>
+      <li>拍摄工程车辆照片</li>
+      <li>选择电压等级</li>
+      <li>点击"一键全部合格" → 7个toggle项翻绿</li>
+      <li>点击"提交" → 完成</li>
+      <li>约4-5步操作</li>
+    </ul>
+
+    <h3>已确认设计决策</h3>
+    <ul>
+      <li><strong>安措模式已移除</strong>：不再在现场准备页面选择安措模式。3.0采用"逐站房独立解锁"机制，安措完成即解锁该站房检测，无需预选模式。该设计属于项目站房安措环节。</li>
+      <li><strong>闭环设计保留</strong>：工程车辆拍照（证明到场）、配合事项验收（确认对方已完成），与作业前准备形成"发出→验收"闭环。</li>
+    </ul>
+
+    <h3>评审确认项</h3>
+    <ul>
+      <li><strong>电压等级</strong>：保留，无默认值，必须到现场手动确认</li>
+      <li><strong>工程车辆照片</strong>：必拍（1-5张），打水印留痕</li>
+      <li><strong>中断不保留</strong>：退出页面后定位/照片/选择全丢，需重新操作</li>
+      <li><strong>提交后不可修改</strong>：强制要求，一以贯之</li>
+    </ul>
+
+    <div class="callout c-warn"><strong>vs 2.4系统</strong>：2.4系统所有项逐项提交（11项 × 3步 = 33次操作）。3.0定位+拍照+选择+一键合格+提交，约4-5步完成。安措模式选择从现场准备移除，改为项目站房安措环节的逐站房解锁机制。</div>
+
+    <div class="callout c-gray"><strong>设计原则</strong>：页面体验是"到场打卡"，不是"填表"。控件形态自己说话，不用标签/红星人为强调特殊项。</div>
+  </div>
+</div>
+
+<script>
+/* ============ 状态 ============ */
+const TOGGLE_NAMES = ['t1','t2','t3','t4','t5','t6','t7'];  // 7个toggle项
+let located = false;
+let photoCount = 0;
+const MAX_PHOTOS = 5;
+
+// 模拟项目名称（实际从工单数据获取）
+const PROJECT_NAME = '康乐家园一期居配工程';
+const GPS_ADDR = '南京市江宁区康乐家园东侧';
+let watermarkText = '';  // 最终水印文本
+
+/* ============ 定位 ============ */
+function doLocate() {
+  const card = document.getElementById('locCard');
+  const btn = document.getElementById('locBtn');
+  btn.textContent = '定位中...';
+  btn.disabled = true;
+  setTimeout(() => {
+    located = true;
+    // 默认规则：定位地址 + 项目名称
+    watermarkText = GPS_ADDR + ' ' + PROJECT_NAME;
+    const now = new Date();
+    const timeStr = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+    card.classList.add('done');
+    renderLocDone(timeStr);
+    showToast('定位成功，已自动拼接项目名称');
+    checkSubmit();
+  }, 800);
+}
+
+function renderLocDone(timeStr) {
+  const card = document.getElementById('locCard');
+  card.innerHTML = `
+    <div class="loc-done-row">
+      <div class="loc-done-icon">✓</div>
+      <div class="loc-done-info">
+        <div class="loc-done-label">已到场</div>
+        <div class="loc-done-addr">${GPS_ADDR}</div>
+        <div class="loc-done-time">${timeStr} 定位成功</div>
+      </div>
+      <button class="loc-redo" onclick="redoLocate()">重新定位</button>
+    </div>
+    <div class="loc-text-row">
+      <div class="loc-text-label">照片水印文本（将用于全部检测照片）</div>
+      <div class="loc-text-display" id="locTextDisplay">
+        <div class="loc-text-content" id="locTextContent">${watermarkText}</div>
+        <button class="loc-text-edit-btn" onclick="editWatermark()">编辑</button>
+      </div>
+    </div>`;
+}
+
+function editWatermark() {
+  const display = document.getElementById('locTextDisplay');
+  display.innerHTML = `
+    <div style="width:100%">
+      <textarea class="loc-text-input" id="locTextArea" rows="2">${watermarkText}</textarea>
+      <div class="loc-text-actions">
+        <button class="loc-text-cancel" onclick="cancelEditWatermark()">取消</button>
+        <button class="loc-text-save" onclick="saveWatermark()">确认</button>
+      </div>
+    </div>`;
+  document.getElementById('locTextArea').focus();
+}
+
+function saveWatermark() {
+  const val = document.getElementById('locTextArea').value.trim();
+  if (val) {
+    watermarkText = val;
+    showToast('水印文本已更新');
+  }
+  const now = new Date();
+  const timeStr = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+  renderLocDone(timeStr);
+}
+
+function cancelEditWatermark() {
+  const now = new Date();
+  const timeStr = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+  renderLocDone(timeStr);
+}
+
+function redoLocate() {
+  located = false;
+  watermarkText = '';
+  const card = document.getElementById('locCard');
+  card.classList.remove('done');
+  card.innerHTML = `
+    <div class="loc-hint">请确认已到达项目现场</div>
+    <button class="loc-btn" id="locBtn" onclick="doLocate()">
+      <span class="loc-icon">&#128205;</span> 确认到场定位
+    </button>`;
+  checkSubmit();
+}
+
+/* ============ 拍照（支持多张，上限5张） ============ */
+function takePhoto() {
+  if (photoCount >= MAX_PHOTOS) { showToast('最多拍摄' + MAX_PHOTOS + '张'); return; }
+  photoCount++;
+  renderPhotos();
+  showToast('已拍摄第' + photoCount + '张');
+  checkSubmit();
+}
+function delOnePhoto(idx) {
+  photoCount = Math.max(0, photoCount - 1);
+  renderPhotos();
+  checkSubmit();
+}
+function renderPhotos() {
+  const area = document.getElementById('photoArea');
+  let html = '';
+  for (let i = 0; i < photoCount; i++) {
+    html += '<div class="photo-preview show"><div class="preview-img"></div><button class="preview-del" onclick="delOnePhoto(' + i + ')">×</button></div>';
+  }
+  if (photoCount < MAX_PHOTOS) {
+    html += '<div class="photo-placeholder" onclick="takePhoto()"><span class="cam-icon">&#128247;</span><span class="cam-text">拍照</span></div>';
+  }
+  area.innerHTML = html;
+  document.getElementById('photoCount').textContent = photoCount > 0 ? photoCount + '/' + MAX_PHOTOS : '';
+}
+
+/* ============ 枚举选择 ============ */
+function onEnumChange(sel) {
+  if (sel.value) {
+    sel.classList.add('selected');
+  } else {
+    sel.classList.remove('selected');
+  }
+  calc();
+}
+
+/* ============ 计算状态 ============ */
+function calc() {
+  let filled = 0, passed = 0, failed = 0;
+  TOGGLE_NAMES.forEach(name => {
+    const sel = document.querySelector(`input[name="${name}"]:checked`);
+    if (sel) { filled++; if (sel.value === 'pass') passed++; else failed++; }
+  });
+
+  // 分组计数
+  // 项目准备: t1(执法设备), t2(配合事项) + 拍照 + 1枚举(电压等级) = 4项
+  const projToggleFilled = ['t1','t2'].filter(n => document.querySelector(`input[name="${n}"]:checked`)).length;
+  const projEnumFilled = (document.getElementById('selVolt').value ? 1 : 0);
+  const projPhotoFilled = (photoCount > 0) ? 1 : 0;
+  const projTotal = projToggleFilled + projEnumFilled + projPhotoFilled;
+  const cProj = document.getElementById('cProj');
+  cProj.textContent = projTotal + '/4';
+  cProj.style.color = (projTotal === 4) ? 'var(--ok)' : '';
+
+  // 主业人员准备: t3, t4
+  const zhuFilled = ['t3','t4'].filter(n => document.querySelector(`input[name="${n}"]:checked`)).length;
+  const cZhu = document.getElementById('cZhu');
+  cZhu.textContent = zhuFilled + '/2';
+  cZhu.style.color = (zhuFilled === 2) ? 'var(--ok)' : '';
+
+  // 配合人员准备: t5, t6, t7
+  const peiFilled = ['t5','t6','t7'].filter(n => document.querySelector(`input[name="${n}"]:checked`)).length;
+  const cPei = document.getElementById('cPei');
+  cPei.textContent = peiFilled + '/3';
+  cPei.style.color = (peiFilled === 3) ? 'var(--ok)' : '';
+
+  // 不合格横幅
+  const bar = document.getElementById('failBar');
+  if (failed > 0) { bar.classList.add('show'); document.getElementById('failNum').textContent = failed; }
+  else { bar.classList.remove('show'); }
+
+  // 一键按钮状态
+  const batchBtn = document.getElementById('batchBtn');
+  if (passed === TOGGLE_NAMES.length) {
+    batchBtn.classList.add('done');
+    batchBtn.textContent = '全部已确认合格';
+  } else {
+    batchBtn.classList.remove('done');
+    batchBtn.textContent = '一键全部合格';
+  }
+
+  checkSubmit();
+}
+
+/* ============ 提交条件检查 ============ */
+function checkSubmit() {
+  let allToggleFilled = true;
+  TOGGLE_NAMES.forEach(name => {
+    if (!document.querySelector(`input[name="${name}"]:checked`)) allToggleFilled = false;
+  });
+  const enumsFilled = !!document.getElementById('selVolt').value;
+  const ready = located && (photoCount > 0) && allToggleFilled && enumsFilled;
+  document.getElementById('subBtn').disabled = !ready;
+}
+
+/* ============ 一键全部合格（仅toggle项，与作业前准备一致） ============ */
+function batchPass() {
+  if (document.getElementById('batchBtn').classList.contains('done')) return;
+  TOGGLE_NAMES.forEach(name => {
+    const r = document.querySelector(`input[name="${name}"][value="pass"]`);
+    if (r) r.checked = true;
+  });
+  calc();
+  showToast('已全部标记为合格');
+}
+
+/* ============ 提交 ============ */
+function doSubmit() {
+  let failed = 0;
+  TOGGLE_NAMES.forEach(name => {
+    const sel = document.querySelector(`input[name="${name}"]:checked`);
+    if (sel && sel.value === 'fail') failed++;
+  });
+  if (failed > 0) {
+    document.getElementById('cfmDesc').innerHTML = '有 <b style="color:var(--ng)">' + failed + '</b> 项不合格，确认提交？';
+    document.getElementById('cfm').classList.add('show');
+    return;
+  }
+  confirmSubmit();
+}
+function confirmSubmit() {
+  hideCfm();
+  showToast('提交成功，进入建设情况确认');
+  document.getElementById('subBtn').disabled = true;
+  document.getElementById('subBtn').textContent = '已提交';
+  document.getElementById('batchBtn').style.display = 'none';
+}
+function hideCfm() { document.getElementById('cfm').classList.remove('show'); }
+
+/* ============ Toast ============ */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+calc();
+</script>
+</body>
+</html>

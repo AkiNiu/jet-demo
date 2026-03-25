@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>核查分工 — 检e通V3.0 Demo</title>
+<link rel="stylesheet" href="demo_shared_base.css">
+<style>
+/* 左右布局 */
+.demo-layout{display:flex;gap:40px;max-width:1100px;margin:0 auto;padding:32px 24px;align-items:flex-start}
+.demo-left{flex-shrink:0;position:sticky;top:24px}
+.demo-right{flex:1;min-width:0}
+.demo-right h2{font-size:18px;font-weight:700;color:#374151;margin-bottom:16px}
+.demo-right h3{font-size:14px;font-weight:600;color:#4B5563;margin:20px 0 8px}
+.demo-right p,.demo-right li{font-size:13px;color:#6B7280;line-height:1.8}
+.demo-right ul{padding-left:20px}
+.demo-right table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0 16px}
+.demo-right th{background:#F3F4F6;padding:8px 10px;text-align:left;font-weight:600;color:#4B5563;border-bottom:1px solid #E5E7EB}
+.demo-right td{padding:8px 10px;border-bottom:1px solid #F3F4F6;color:#6B7280}
+.demo-right td:first-child{color:#374151;font-weight:500}
+.demo-right .tag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:11px;font-weight:600}
+.tag-ok{background:rgba(52,199,89,.1);color:#16a34a}
+.tag-wait{background:rgba(255,149,0,.1);color:#B86E00}
+.tag-info{background:rgba(60,200,180,.1);color:#2BA89A}
+
+/* ===== 手机壳内部样式 ===== */
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--g50);padding-bottom:12px}
+
+/* 人员卡片 */
+.person-card{margin:12px var(--sp) 0;background:#fff;border-radius:var(--r);box-shadow:var(--shadow-sm);overflow:hidden}
+.person-header{display:flex;align-items:center;padding:14px 14px 8px;gap:10px}
+.person-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
+.person-name{font-size:15px;font-weight:600;color:var(--g800);flex:1}
+.person-count{font-size:12px;color:var(--g400)}
+.person-tasks{display:flex;flex-wrap:wrap;gap:8px;padding:4px 14px 14px;min-height:40px;align-items:center}
+.task-chip{display:inline-flex;align-items:center;padding:6px 12px;border-radius:var(--r-pill);font-size:13px;font-weight:500;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;gap:4px}
+.task-chip:active{opacity:.7}
+.task-chip.indoor{background:#DBEAFE;color:#1D4ED8}
+.task-chip.outdoor{background:#FEF3C7;color:#92400E}
+.task-chip.mixed{background:#E0E7FF;color:#4338CA}
+.add-chip{display:inline-flex;align-items:center;padding:6px 14px;border-radius:var(--r-pill);font-size:13px;color:var(--pri-d);background:var(--pri-l);border:1.5px dashed var(--pri);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.add-chip:active{background:var(--pri);color:#fff}
+.empty-hint{font-size:12px;color:var(--g400);padding:4px 0}
+
+/* 未分配提示 */
+.unassigned-bar{margin:16px var(--sp) 0;padding:10px 14px;background:var(--warn-l);border-radius:var(--rs);font-size:12px;color:#92400E;display:flex;align-items:center;gap:6px}
+.unassigned-bar .dot{width:6px;height:6px;border-radius:50%;background:var(--warn);flex-shrink:0}
+
+/* 底部 */
+.bot{padding:8px var(--sp) 12px;background:#fff;border-top:1px solid var(--g200);flex-shrink:0}
+.bot-info{font-size:11px;color:var(--g400);text-align:center;margin-bottom:8px}
+.bot-info b{color:var(--g700)}
+.bot-btn{width:100%;padding:14px;border:none;border-radius:var(--r);font-size:16px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.bot-btn.ready{background:var(--pri);color:#fff}
+.bot-btn.ready:active{background:var(--pri-d)}
+.bot-btn.wait{background:var(--g100);color:var(--g400)}
+
+/* Toast */
+.toast{display:none;position:fixed;top:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;padding:10px 20px;border-radius:var(--r-pill);font-size:13px;z-index:999;max-width:300px;text-align:center}
+.toast.show{display:block;animation:ti .25s ease-out}
+@keyframes ti{from{opacity:0;transform:translateX(-50%) translateY(8px)}}
+
+/* Bottom Sheet */
+.sh-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:800;align-items:flex-end;justify-content:center}
+.sh-bg.show{display:flex}
+.sh-panel{width:100%;max-width:360px;background:#fff;border-radius:16px 16px 0 0;padding:16px var(--sp) 24px;animation:su .2s ease-out}
+@keyframes su{from{transform:translateY(100%)}}
+.sh-title{font-size:14px;font-weight:600;text-align:center;margin-bottom:12px;color:var(--g700)}
+.sh-item{padding:14px;border-bottom:1px solid var(--g100);font-size:14px;color:var(--g700);cursor:pointer;display:flex;align-items:center;gap:10px;-webkit-tap-highlight-color:transparent;min-height:48px}
+.sh-item:last-child{border-bottom:none}
+.sh-item:active{background:var(--g50)}
+.sh-item.danger{color:var(--ng)}
+.sh-cancel{margin-top:8px;padding:14px;text-align:center;font-size:14px;color:var(--g500);cursor:pointer;border-top:1px solid var(--g200)}
+.sh-check{width:20px;height:20px;border-radius:4px;border:2px solid var(--g300);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.sh-check.on{background:var(--pri);border-color:var(--pri)}
+.sh-check.on::after{content:'✓';color:#fff;font-size:12px;font-weight:700}
+.sh-task-name{flex:1}
+.sh-task-owner{font-size:11px;color:var(--g400)}
+.sh-confirm-btn{width:100%;padding:14px;border:none;border-radius:var(--r);font-size:15px;font-weight:600;background:var(--pri);color:#fff;cursor:pointer;margin-top:12px}
+.sh-confirm-btn:active{background:var(--pri-d)}
+
+/* 确认提交弹窗 */
+.confirm-sub{font-size:13px;color:var(--g500);text-align:center;margin-bottom:16px}
+.confirm-summary{background:var(--g50);border-radius:var(--rs);padding:14px;margin-bottom:16px}
+.confirm-summary .cs-title{font-size:13px;font-weight:600;color:var(--g800);margin-bottom:10px}
+.confirm-summary .cs-row{font-size:12px;color:var(--g600);line-height:2;display:flex;gap:4px}
+.confirm-summary .cs-row b{color:var(--g800);font-weight:600;flex-shrink:0}
+.confirm-btns{display:flex;gap:10px;margin-top:4px}
+.confirm-btns .btn-back{flex:1;padding:14px;border:1.5px solid var(--g300);border-radius:var(--r);font-size:15px;font-weight:600;color:var(--g700);background:#fff;cursor:pointer}
+.confirm-btns .btn-back:active{background:var(--g50)}
+.confirm-btns .btn-go{flex:1;padding:14px;border:none;border-radius:var(--r);font-size:15px;font-weight:600;color:#fff;background:var(--pri);cursor:pointer}
+.confirm-btns .btn-go:active{background:var(--pri-d)}
+</style>
+</head>
+<body>
+
+<div class="demo-layout">
+  <!-- ===== 左侧：手机壳 ===== -->
+  <div class="demo-left">
+    <div class="phone">
+      <div class="sbar">9:41</div>
+      <div class="nbar"><div class="back">←</div><div class="title">核查分工</div></div>
+      <div class="scroll" id="scroll">
+        <!-- 项目摘要 -->
+        <div style="margin:8px 12px 4px;padding:10px 14px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm)">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:14px;font-weight:600;color:var(--g800)">建湖复兴花园一期</span>
+            <span style="font-size:12px;color:var(--g500)">2026-03-20</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+            <span style="font-size:12px;color:var(--g500)">江苏省盐城市建湖县</span>
+            <span style="font-size:11px;color:var(--g400)">工单规模 2-4-0-0</span>
+          </div>
+        </div>
+        <!-- 未分配提示（方案B：项目概览下方） -->
+        <div class="unassigned-bar" id="topHint"><div class="dot"></div><span id="topHintText"></span></div>
+        <div id="listContent"></div>
+      </div>
+      <div class="bot">
+        <div class="bot-info" id="botInfo"></div>
+        <button class="bot-btn wait" id="botBtn" onclick="doSubmit()"></button>
+      </div>
+      <div class="toast" id="toastEl"></div>
+    </div>
+  </div>
+
+  <!-- ===== 右侧：设计说明 ===== -->
+  <div class="demo-right">
+    <h2>核查分工 — "先想人，再分活"</h2>
+
+    <h3>这个页面做什么</h3>
+    <p>工作负责人到达现场后，把6~8项核查任务分配给4名检测人员。每项任务必须有1个负责人，全部分完才能开始核查。</p>
+
+    <h3>请试试以下操作</h3>
+    <table>
+      <tr><th style="width:30%">做什么</th><th>怎么做</th></tr>
+      <tr><td><strong>给人分配任务</strong></td><td>点击某人下方的 <strong>"+ 添加"</strong> → 底部弹出未分配的任务列表 → 勾选要分配的任务 → 点"确认分配"</td></tr>
+      <tr><td><strong>移动任务给其他人</strong></td><td><strong>点击</strong>某人卡片下已分配的<strong>任务标签</strong>（如"电源核查"）→ 弹出操作菜单 → 选择"移给其他人"→ 选人</td></tr>
+      <tr><td><strong>取消分配</strong></td><td><strong>点击</strong>任务标签 → 选"取消分配" → 任务回到未分配状态</td></tr>
+      <tr><td><strong>提交分工</strong></td><td>全部任务分配完后，底部按钮变绿 → 点击提交</td></tr>
+    </table>
+
+    <h3>设计要点</h3>
+    <ul>
+      <li><strong>先想人，再分活</strong> — 页面以人为主轴，不是以任务为主轴。因为工作负责人脑子里先想的是"这个人在哪、擅长什么"</li>
+      <li><strong>任务标签按颜色区分位置</strong> — <span class="tag tag-info">蓝色</span>站房内、<span class="tag tag-wait">黄色</span>站房外，方便"站房外的人分站房外的活"</li>
+      <li><strong>必须全部分配才能提交</strong> — 现场的人容易点漏或不操心，系统强制让每项任务都有人负责</li>
+      <li><strong>每项任务只有1个负责人</strong> — 分给谁就是谁负责。实际操作时其他人可以帮忙（全员可见），但负责人明确</li>
+      <li><strong>V3.0不做默认推荐</strong> — 每次从零分配，让用户先熟悉交互。V3.1做后台配置默认分工模板</li>
+    </ul>
+
+    <h3>任务列表来源</h3>
+    <table>
+      <tr><th>任务</th><th>来源</th></tr>
+      <tr><td>电源核查、建设情况、送电痕迹、临电电源、居民入住、安全风险</td><td>固定6项，始终存在</td></tr>
+      <tr><td>充电设施</td><td>建设情况确认中勾选"有充电桩设施"后出现</td></tr>
+      <tr><td>居民设施</td><td>建设情况确认中勾选"有居民配套设施"后出现</td></tr>
+    </table>
+
+    <h3>与上下游的关系</h3>
+    <ul>
+      <li><strong>上游</strong>：建设情况确认的室外配套勾选 → 决定核查任务列表是6项还是8项</li>
+      <li><strong>上游</strong>：工单派发时确认的队伍人员 → 决定候选人列表（4名检测人员）</li>
+      <li><strong>下游</strong>：现场核查执行 → 每个人看到全部任务，"我负责的"高亮显示，可进入任何任务协同</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 添加任务 Bottom Sheet -->
+<div class="sh-bg" id="addSh"><div class="sh-panel">
+  <div class="sh-title" id="addShTitle">分配任务</div>
+  <div id="addShList"></div>
+  <button class="sh-confirm-btn" id="addShBtn" onclick="confirmAdd()">确认分配</button>
+  <div class="sh-cancel" onclick="closeSh('addSh')">取消</div>
+</div></div>
+
+<!-- 长按操作菜单 -->
+<div class="sh-bg" id="actionSh"><div class="sh-panel">
+  <div class="sh-title" id="actionShTitle">电源核查</div>
+  <div class="sh-item" onclick="actionMove()">移给其他人</div>
+  <div class="sh-item danger" onclick="actionUnassign()">取消分配</div>
+  <div class="sh-cancel" onclick="closeSh('actionSh')">取消</div>
+</div></div>
+
+<!-- 移给其他人 -->
+<div class="sh-bg" id="moveSh"><div class="sh-panel">
+  <div class="sh-title">移给谁？</div>
+  <div id="moveShList"></div>
+  <div class="sh-cancel" onclick="closeSh('moveSh')">取消</div>
+</div></div>
+
+<!-- 确认提交 -->
+<div class="sh-bg" id="confirmSh"><div class="sh-panel">
+  <div class="sh-title">确认提交</div>
+  <div class="confirm-sub">提交后进入现场核查</div>
+  <div class="confirm-summary" id="confirmBody"></div>
+  <div class="confirm-btns">
+    <button class="btn-back" onclick="closeSh('confirmSh')">返回修改</button>
+    <button class="btn-go" onclick="doConfirm()">确认</button>
+  </div>
+</div></div>
+
+<script>
+/* ===== 数据 ===== */
+var people = [
+  {id:'p1', name:'张三', color:'#3B82F6'},
+  {id:'p2', name:'李四', color:'#D97706'},
+  {id:'p3', name:'王五', color:'#6366F1'},
+  {id:'p4', name:'赵六', color:'#059669'}
+];
+
+var tasks = [
+  {id:'t1', name:'电源核查', loc:'indoor', owner:null},
+  {id:'t2', name:'建设情况', loc:'indoor', owner:null},
+  {id:'t3', name:'送电痕迹', loc:'indoor', owner:null},
+  {id:'t4', name:'临电电源', loc:'mixed', owner:null},
+  {id:'t5', name:'居民入住', loc:'outdoor', owner:null},
+  {id:'t6', name:'充电设施', loc:'outdoor', owner:null},
+  {id:'t7', name:'居民设施', loc:'outdoor', owner:null},
+  {id:'t8', name:'安全风险', loc:'outdoor', owner:null}
+];
+
+var addTarget = null;   // 当前在给谁添加
+var addChecked = [];     // 勾选的任务id
+var actionTask = null;   // 长按的任务id
+
+/* ===== 渲染 ===== */
+function render() {
+  var h = '';
+  people.forEach(function(p) {
+    var myTasks = tasks.filter(function(t){ return t.owner === p.id; });
+    h += '<div class="person-card">';
+    h += '<div class="person-header">';
+    h += '<div class="person-avatar" style="background:'+p.color+'">'+p.name.charAt(0)+'</div>';
+    h += '<div class="person-name">'+p.name+'</div>';
+    h += '<div class="person-count">'+myTasks.length+'项</div>';
+    h += '</div>';
+    h += '<div class="person-tasks">';
+    if (myTasks.length === 0) {
+      h += '<span class="empty-hint">尚未分配任务</span>';
+    }
+    myTasks.forEach(function(t) {
+      h += '<div class="task-chip '+t.loc+'" data-task="'+t.id+'" data-person="'+p.id+'">'+t.name+'</div>';
+    });
+    h += '<div class="add-chip" onclick="openAdd(\''+p.id+'\')">+ 添加</div>';
+    h += '</div></div>';
+  });
+
+  document.getElementById('listContent').innerHTML = h;
+
+  // 顶部未分配提示（方案B）
+  var unassigned = tasks.filter(function(t){ return t.owner === null; });
+  var hint = document.getElementById('topHint');
+  if (unassigned.length > 0) {
+    document.getElementById('topHintText').textContent = '还有 '+unassigned.length+' 项未分配';
+    hint.style.display = 'flex';
+  } else {
+    hint.style.display = 'none';
+  }
+  // 点击任务标签直接弹出操作菜单（替代长按）
+  document.querySelectorAll('.task-chip').forEach(function(chip) {
+    chip.addEventListener('click', function(){ openAction(chip.dataset.task); });
+  });
+  updBot();
+}
+
+function updBot() {
+  var total = tasks.length;
+  var done = tasks.filter(function(t){ return t.owner !== null; }).length;
+  document.getElementById('botInfo').innerHTML = '已分配 <b>'+done+'</b> / '+total;
+  var btn = document.getElementById('botBtn');
+  if (done === total) {
+    btn.className = 'bot-btn ready';
+    btn.textContent = '确认分工，开始核查 →';
+  } else {
+    btn.className = 'bot-btn wait';
+    btn.textContent = '还有 '+(total - done)+' 项未分配';
+  }
+}
+
+/* ===== 添加任务 ===== */
+function openAdd(personId) {
+  addTarget = personId;
+  addChecked = [];
+  var p = findPerson(personId);
+  document.getElementById('addShTitle').textContent = '给 '+p.name+' 分配任务';
+
+  var unassigned = tasks.filter(function(t){ return t.owner === null; });
+  var assigned = tasks.filter(function(t){ return t.owner !== null && t.owner !== personId; });
+
+  var h = '';
+  if (unassigned.length > 0) {
+    unassigned.forEach(function(t) {
+      h += '<div class="sh-item" onclick="toggleCheck(\''+t.id+'\', this)">';
+      h += '<div class="sh-check" id="chk_'+t.id+'"></div>';
+      h += '<div class="sh-task-name">'+t.name+'</div>';
+      h += '<div class="sh-task-owner" style="color:var(--ok)">未分配</div>';
+      h += '</div>';
+    });
+  }
+  if (assigned.length > 0) {
+    assigned.forEach(function(t) {
+      var owner = findPerson(t.owner);
+      h += '<div class="sh-item" onclick="toggleCheck(\''+t.id+'\', this)">';
+      h += '<div class="sh-check" id="chk_'+t.id+'"></div>';
+      h += '<div class="sh-task-name">'+t.name+'</div>';
+      h += '<div class="sh-task-owner">现在：'+owner.name+'</div>';
+      h += '</div>';
+    });
+  }
+
+  if (unassigned.length === 0 && assigned.length === 0) {
+    h = '<div style="padding:20px;text-align:center;color:var(--g400);font-size:13px">所有任务已分配给此人</div>';
+  }
+
+  document.getElementById('addShList').innerHTML = h;
+  openSh('addSh');
+}
+
+function toggleCheck(taskId, el) {
+  var idx = addChecked.indexOf(taskId);
+  var chk = document.getElementById('chk_'+taskId);
+  if (idx === -1) {
+    addChecked.push(taskId);
+    chk.className = 'sh-check on';
+  } else {
+    addChecked.splice(idx, 1);
+    chk.className = 'sh-check';
+  }
+}
+
+function confirmAdd() {
+  if (addChecked.length === 0) { toast('请至少选择一项任务'); return; }
+  var moved = [];
+  addChecked.forEach(function(tid) {
+    var t = findTask(tid);
+    if (t.owner && t.owner !== addTarget) {
+      moved.push(t.name + '（从'+findPerson(t.owner).name+'移来）');
+    }
+    t.owner = addTarget;
+  });
+  closeSh('addSh');
+  var p = findPerson(addTarget);
+  if (moved.length > 0) {
+    toast('已分配给'+p.name+'，'+moved.join('、'));
+  } else {
+    toast('已分配 '+addChecked.length+' 项给 '+p.name);
+  }
+  render();
+}
+
+/* ===== 长按操作 ===== */
+function openAction(taskId) {
+  actionTask = taskId;
+  var t = findTask(taskId);
+  document.getElementById('actionShTitle').textContent = t.name;
+  openSh('actionSh');
+}
+
+function actionMove() {
+  closeSh('actionSh');
+  var t = findTask(actionTask);
+  var h = '';
+  people.forEach(function(p) {
+    if (p.id === t.owner) return;
+    h += '<div class="sh-item" onclick="doMove(\''+p.id+'\')">';
+    h += '<div class="person-avatar" style="background:'+p.color+';width:28px;height:28px;font-size:12px">'+p.name.charAt(0)+'</div>';
+    h += '<div>'+p.name+'</div>';
+    h += '</div>';
+  });
+  document.getElementById('moveShList').innerHTML = h;
+  openSh('moveSh');
+}
+
+function doMove(personId) {
+  var t = findTask(actionTask);
+  var from = findPerson(t.owner);
+  var to = findPerson(personId);
+  t.owner = personId;
+  closeSh('moveSh');
+  toast(t.name+'：'+from.name+' → '+to.name);
+  render();
+}
+
+function actionUnassign() {
+  var t = findTask(actionTask);
+  var owner = findPerson(t.owner);
+  t.owner = null;
+  closeSh('actionSh');
+  toast(t.name+' 已取消分配（原：'+owner.name+'）');
+  render();
+}
+
+/* ===== 提交 ===== */
+function doSubmit() {
+  var unassigned = tasks.filter(function(t){ return t.owner === null; });
+  if (unassigned.length > 0) {
+    toast('还有 '+unassigned.length+' 项未分配：'+unassigned.map(function(t){return t.name}).join('、'));
+    return;
+  }
+  // 构建确认弹窗内容
+  var h = '<div class="cs-title">共 '+tasks.length+' 项核查任务</div>';
+  people.forEach(function(p) {
+    var myTasks = tasks.filter(function(t){ return t.owner === p.id; });
+    if (myTasks.length > 0) {
+      h += '<div class="cs-row"><b>'+p.name+'：</b><span>'+myTasks.map(function(t){return t.name}).join('、')+'</span></div>';
+    }
+  });
+  document.getElementById('confirmBody').innerHTML = h;
+  openSh('confirmSh');
+}
+
+function doConfirm() {
+  closeSh('confirmSh');
+  toast('✓ 分工确认完成，进入现场核查');
+}
+
+/* ===== 工具函数 ===== */
+function findPerson(id) { return people.find(function(p){ return p.id === id; }); }
+function findTask(id) { return tasks.find(function(t){ return t.id === id; }); }
+function openSh(id) { document.getElementById(id).classList.add('show'); }
+function closeSh(id) { document.getElementById(id).classList.remove('show'); }
+var tt;
+function toast(m) {
+  var el = document.getElementById('toastEl');
+  el.textContent = m;
+  el.className = 'toast show';
+  clearTimeout(tt);
+  tt = setTimeout(function(){ el.className = 'toast'; }, 2500);
+}
+
+render();
+</script>
+</body>
+</html>
