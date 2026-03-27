@@ -255,7 +255,7 @@
                 <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
             </a>
 
-            <a href="demo_抽检对象确认.html" class="card" target="_blank">
+            <a href="v1/demo_抽检对象确认.html" class="card" target="_blank">
                 <div style="font-size:11px;font-weight:700;color:var(--primary-color);letter-spacing:1px;margin-bottom:8px;opacity:0.7">STEP 07</div>
                 <div class="card-icon">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
@@ -289,7 +289,7 @@
     <script>
         function initAuth() {
             // 一旦验证成功，本次浏览器会话免验证
-            if(sessionStorage.getItem('jet_demo_auth') === 'true') {
+            if(localStorage.getItem('jet_demo_auth') === 'true') {
                 document.getElementById('authOverlay').style.display = 'none';
             }
         }
@@ -297,7 +297,7 @@
             const pwd = document.getElementById('authPwd').value;
             // 访问密码设置为 jet2026 或直接大写均可
             if(pwd.toLowerCase() === 'jet2026' || pwd.toLowerCase() === 'jet3.0') {
-                sessionStorage.setItem('jet_demo_auth', 'true');
+                localStorage.setItem('jet_demo_auth', 'true');
                 document.getElementById('authOverlay').style.opacity = '0';
                 setTimeout(() => { document.getElementById('authOverlay').style.display = 'none'; }, 300);
             } else {

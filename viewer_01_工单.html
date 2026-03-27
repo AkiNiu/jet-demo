@@ -144,7 +144,7 @@
 <body>
 
     <div class="topbar">
-        <a href="index.html" class="back-btn">
+        <a href="#" class="back-btn" onclick="window.close(); if(!window.closed) window.location.href='index.html'; return false;">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
             返回大厅
         </a>
@@ -180,7 +180,7 @@
     </div>
 
     <script>
-        const V1 = 'demo_轻量工单创建与派发.html';
+        const V1 = 'v1/demo_轻量工单创建与派发.html';
         const V2 = 'v2/demo_轻量工单创建与派发.html';
 
         let loaded = { v1: true, v2: false, compare: false };
