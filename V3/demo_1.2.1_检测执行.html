@@ -1,0 +1,2194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>检测执行 — 检e通V3.0 Demo</title>
+<link rel="stylesheet" href="demo_shared_base.css">
+<style>
+/* 左右布局 */
+.demo-layout{display:flex;gap:40px;max-width:1100px;margin:0 auto;padding:32px 24px;align-items:flex-start}
+.demo-left{flex-shrink:0;position:sticky;top:24px}
+.demo-right{flex:1;min-width:0}
+.demo-right h2{font-size:18px;font-weight:700;color:#374151;margin-bottom:16px}
+.demo-right h3{font-size:14px;font-weight:600;color:#4B5563;margin:20px 0 8px}
+.demo-right p,.demo-right li{font-size:13px;color:#6B7280;line-height:1.8}
+.demo-right ul{padding-left:20px}
+.demo-right table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0 16px}
+.demo-right th{background:#F3F4F6;padding:8px 10px;text-align:left;font-weight:600;color:#4B5563;border-bottom:1px solid #E5E7EB}
+.demo-right td{padding:8px 10px;border-bottom:1px solid #F3F4F6;color:#6B7280}
+.demo-right td:first-child{color:#374151;font-weight:500}
+.demo-right .highlight{background:#FEF3C7;padding:2px 6px;border-radius:3px;font-size:11px;font-weight:600;color:#92400E}
+
+/* ===== 页面容器 ===== */
+.page{display:none;flex-direction:column;flex:1;min-height:0;overflow:hidden}
+.page.active{display:flex}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--g50);padding-bottom:12px;min-height:0}
+
+/* 项目摘要 */
+.proj-card{margin:8px 12px 4px;padding:10px 14px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm)}
+.proj-row{display:flex;justify-content:space-between;align-items:center}
+.proj-name{font-size:14px;font-weight:600;color:var(--g800)}
+.proj-date{font-size:12px;color:var(--g500)}
+.proj-addr{font-size:12px;color:var(--g500)}
+.proj-scale{font-size:11px;color:var(--g400)}
+
+/* 站房卡片 */
+.room-card{margin:6px 12px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm);overflow:hidden;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;border-left:3px solid var(--pri)}
+.room-card:active{background:var(--g50)}
+.room-card.locked{border-left-color:var(--g300);opacity:.6;cursor:not-allowed}
+.room-card.locked:active{background:#fff}
+.room-inner{padding:12px 14px;display:flex;align-items:center;gap:10px;min-height:56px}
+.room-info{flex:1}
+.room-name{font-size:14px;font-weight:600;color:var(--g800)}
+.room-meta{font-size:11px;color:var(--g400);margin-top:3px}
+.room-tag{font-size:10px;padding:2px 8px;border-radius:var(--r-pill);font-weight:600}
+.room-tag.ready{background:var(--pri-l);color:var(--pri-d)}
+.room-tag.wait{background:var(--g100);color:var(--g400)}
+.room-tag.done{background:var(--ok-l);color:#16a34a}
+.room-chevron{color:var(--g300);font-size:14px}
+
+/* Segmented Control */
+.seg-ctrl{display:flex;margin:10px 12px;border-radius:var(--r);overflow:hidden;border:1.5px solid var(--g200);background:var(--g50)}
+.seg-btn{flex:1;padding:10px 0;text-align:center;font-size:13px;font-weight:600;cursor:pointer;color:var(--g400);background:var(--g50);border:none;transition:.15s;min-height:44px;display:flex;align-items:center;justify-content:center}
+.seg-btn+.seg-btn{border-left:1.5px solid var(--g200)}
+.seg-btn.sel{background:var(--pri);color:#fff}
+.seg-btn:active{opacity:.8}
+
+/* 设备分组 */
+.group-header{display:flex;align-items:center;padding:14px 14px 6px;gap:8px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.group-arrow{font-size:10px;color:var(--g400);transition:transform .2s;width:16px}
+.group-arrow.collapsed{transform:rotate(-90deg)}
+.group-label{font-size:12px;font-weight:600;color:var(--g500);flex:1}
+.group-count{font-size:11px;color:var(--g400)}
+.group-items{overflow:hidden;transition:max-height .25s ease}
+.group-items.collapsed{display:none}
+
+/* 设备行 */
+.dev-row{margin:0 12px 5px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;overflow:hidden;border-left:3px solid var(--g300)}
+.dev-row:active{background:var(--g50)}
+.dev-row.partial{border-left-color:var(--warn)}
+.dev-row.done{border-left-color:var(--ok)}
+.dev-row-inner{display:flex;align-items:center;padding:10px 12px;gap:8px;min-height:48px}
+.dev-row-name{flex:1;font-size:13px;font-weight:500;color:var(--g700)}
+.dev-row-prog{font-size:11px;color:var(--g400)}
+.dev-row-tag{font-size:10px;padding:2px 7px;border-radius:var(--r-pill);font-weight:600}
+.dev-row-tag.wait{background:var(--pri-l);color:var(--pri-d)}
+.dev-row-tag.doing{background:var(--warn-l);color:var(--warn)}
+.dev-row-tag.ok{background:var(--ok-l);color:#16a34a}
+.dev-row-chevron{color:var(--g300);font-size:14px}
+
+/* 批量视图 */
+.batch-item{margin:0 12px 5px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm);cursor:pointer;-webkit-tap-highlight-color:transparent;overflow:hidden}
+.batch-item:active{background:var(--g50)}
+.batch-inner{display:flex;align-items:center;padding:10px 12px;gap:8px;min-height:48px}
+.batch-name{flex:1;font-size:13px;font-weight:500;color:var(--g700)}
+.batch-scope{font-size:11px;color:var(--g400)}
+.batch-chevron{color:var(--g300);font-size:14px}
+
+/* 底部 */
+.bot{padding:8px 12px 12px;background:#fff;border-top:1px solid var(--g200);flex-shrink:0;position:relative;z-index:10}
+.bot-info{font-size:11px;color:var(--g400);text-align:center;margin-bottom:8px}
+.bot-info b{color:var(--g700)}
+.bot-btn{width:100%;padding:14px;border:none;border-radius:var(--r);font-size:16px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.bot-btn.ready{background:var(--pri);color:#fff}
+.bot-btn.ready:active{background:var(--pri-d)}
+.bot-btn.wait{background:var(--g100);color:var(--g400);pointer-events:none}
+
+/* 导航栏右侧进度/提交 */
+.nav-right{font-size:12px;color:var(--g400);min-width:48px;text-align:right;transition:all .2s}
+.nav-right.ready{background:var(--pri);color:#fff;padding:6px 12px;border-radius:var(--rs);font-size:13px;font-weight:600;cursor:pointer}
+.nav-right.ready:active{background:var(--pri-d)}
+
+/* ===== 页面3：设备详情 ===== */
+.detail-body{display:flex;flex:1;min-height:0;overflow:hidden}
+.side-nav{width:72px;background:#fff;border-right:1px solid var(--g200);overflow-y:auto;flex-shrink:0;padding:4px 0}
+.side-item{padding:10px 6px;text-align:center;font-size:11px;font-weight:500;color:var(--g400);cursor:pointer;border-left:3px solid transparent;transition:all .15s;line-height:1.3}
+.side-item:active{background:var(--g50)}
+.side-item.active{color:var(--pri-d);font-weight:600;border-left-color:var(--pri);background:var(--pri-l)}
+.side-item .si-count{font-size:10px;color:var(--g400);display:block;margin-top:2px}
+.side-item .si-confirmed{font-size:10px;color:var(--ok);display:block;margin-top:2px;font-weight:600}
+.side-divider{height:1px;background:var(--g200);margin:4px 8px}
+
+.detail-content{flex:1;overflow-y:auto;background:var(--g50);padding-bottom:8px}
+
+/* 试验集标题 */
+.test-group-hd{display:flex;align-items:center;padding:10px 12px;background:#fff;border-bottom:1px solid var(--g100);cursor:pointer;-webkit-tap-highlight-color:transparent;margin-top:4px;gap:8px}
+.test-group-hd:first-child{margin-top:0}
+.test-group-arrow{font-size:10px;color:var(--g400);transition:transform .2s;width:14px}
+.test-group-arrow.collapsed{transform:rotate(-90deg)}
+.test-group-title{flex:1;font-size:13px;font-weight:600;color:var(--pri-d)}
+.test-group-count{font-size:11px;color:var(--g400)}
+.test-group-items{overflow:hidden}
+.test-group-items.collapsed{display:none}
+
+/* 组确认按钮 */
+.group-confirm-btn{padding:2px 0;font-size:12px;font-weight:500;background:none;color:var(--pri);border:none;cursor:pointer}
+.group-confirm-btn:active{opacity:.6}
+
+/* 已确认状态 */
+.test-group-hd.confirmed{background:rgba(52,199,89,0.06)}
+.test-group-hd.confirmed .test-group-title{color:var(--ok)}
+.group-confirmed-tag{font-size:12px;color:var(--ok);font-weight:600}
+
+/* 已确认组内的试验项变为只读 */
+.test-row.readonly{opacity:0.6;pointer-events:none}
+
+/* 试验项行 */
+.test-row{display:flex;align-items:center;padding:10px 12px;background:#fff;border-bottom:1px solid var(--g50);cursor:pointer;-webkit-tap-highlight-color:transparent;min-height:44px;transition:background .12s;gap:8px}
+.test-row:active{background:var(--g50)}
+.test-row.selected{background:var(--pri-l)}
+.test-row.filled{border-left:3px solid var(--ok)}
+.test-row-dot{width:8px;height:8px;border-radius:50%;border:2px solid var(--g300);flex-shrink:0}
+.test-row-dot.done{border-color:var(--ok);background:var(--ok)}
+.test-row-dot.ng{border-color:var(--ng);background:var(--ng)}
+.test-row-name{flex:1;font-size:13px;color:var(--g700)}
+.test-row-val{font-size:12px;color:var(--g400);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.test-row-val.ok{color:var(--ok)}
+.test-row-val.ng{color:var(--ng)}
+.test-row-camera{font-size:14px;color:var(--g300)}
+.test-row-bt{font-size:10px;color:var(--pri);opacity:.5}
+
+/* 底部操作区 */
+.detail-bot{background:#fff;border-top:1px solid var(--g200);flex-shrink:0;min-height:80px;max-height:45%;overflow-y:auto}
+.bot-hint{padding:16px;text-align:center;font-size:13px;color:var(--g400)}
+.bot-action{padding:10px 12px}
+.bot-action-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.bot-action-label{font-size:13px;font-weight:500;color:var(--g700)}
+.bot-action-info{font-size:16px;color:var(--pri);cursor:pointer}
+.bot-action-std{font-size:11px;color:#2D5BC4;margin-bottom:6px;padding:4px 8px;background:rgba(60,200,180,.08);border-radius:var(--rs);border:1px solid rgba(60,200,180,.15)}
+.bot-input-row{display:flex;gap:8px;align-items:center}
+.bot-input{flex:1;padding:10px 12px;border:1.5px solid var(--g200);border-radius:var(--rs);font-size:14px;color:var(--g800)}
+.bot-input:focus{border-color:var(--pri);outline:none}
+.bot-unit{font-size:12px;color:var(--g500);padding:8px 6px;background:var(--g100);border-radius:var(--rs);flex-shrink:0}
+.bot-bt{width:36px;height:36px;border-radius:50%;background:var(--pri-l);color:var(--pri);border:none;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bot-bt:active{background:var(--pri);color:#fff}
+.bot-submit{padding:10px 20px;border:none;border-radius:var(--r);font-size:14px;font-weight:600;background:var(--pri);color:#fff;cursor:pointer;flex-shrink:0;min-height:44px}
+.bot-submit:active{background:var(--pri-d)}
+.bot-submit.disabled{background:var(--g200);color:var(--g400);pointer-events:none}
+
+/* Toggle合格/不合格（选择即确认） */
+.toggle-row{display:flex;gap:10px;padding:8px 0}
+.toggle-btn{flex:1;padding:14px;border-radius:var(--r);font-size:15px;font-weight:600;cursor:pointer;text-align:center;border:2px solid var(--g200);color:var(--g500);background:#fff;min-height:48px;transition:all .15s;user-select:none}
+.toggle-btn:active{opacity:.8}
+.toggle-btn.pass-on{border-color:var(--ok);background:rgba(52,199,89,0.1);color:var(--ok)}
+.toggle-btn.fail-on{border-color:var(--ng);background:rgba(255,59,48,0.1);color:var(--ng)}
+
+/* calc显示 */
+.calc-display{padding:10px;background:var(--g50);border-radius:var(--rs);border:1px solid var(--g200)}
+.calc-result{font-size:14px;font-weight:600;color:var(--g700)}
+.calc-judge{font-size:12px;margin-top:4px}
+.calc-judge.ok{color:var(--ok)}
+.calc-judge.ng{color:var(--ng)}
+.calc-pending{font-size:13px;color:var(--g400);font-style:italic}
+
+/* ===== 拍照模式页面 ===== */
+.vf{position:relative;height:200px;background:#1a1a1a;flex-shrink:0;overflow:hidden}
+.vf-grid{position:absolute;inset:0;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);pointer-events:none}
+.vf-grid span{border:0.5px solid rgba(255,255,255,.15)}
+.vf-flash{position:absolute;inset:0;background:#fff;opacity:0;transition:opacity .1s;pointer-events:none}
+.vf-flash.fire{opacity:.7}
+.vfl{position:absolute;bottom:10px;left:10px;right:10px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);border-radius:var(--rs);padding:8px 12px;display:none;color:#fff;font-size:12px;align-items:center;justify-content:space-between}
+.vfl.vis{display:flex}
+
+.ci{display:flex;align-items:center;padding:12px 14px;border-bottom:1px solid var(--g100);min-height:48px;cursor:pointer}
+.ci.sel{background:var(--pri-l)}
+.cid{width:10px;height:10px;border-radius:50%;border:2px solid var(--g300);margin-right:12px;flex-shrink:0}
+.cid.dc{border-color:var(--pri);background:var(--pri);box-shadow:0 0 0 3px var(--pri-l)}
+.cid.dd{border-color:var(--ok);background:var(--ok)}
+.ci-name{flex:1;font-size:14px;color:var(--g700)}
+.cic{font-size:11px;color:var(--g400);background:var(--g100);padding:2px 8px;border-radius:10px}
+
+.ci-photos{display:flex;gap:6px;padding:6px 14px 10px 36px;flex-wrap:wrap;background:var(--pri-l);border-bottom:1px solid var(--g100)}
+.ci-ph{width:52px;height:52px;border-radius:var(--rs);display:flex;align-items:center;justify-content:center;font-size:13px;position:relative}
+.ci-ph.filled{background:#fff;color:var(--pri-d);border:1px solid var(--pri);box-shadow:var(--shadow-sm)}
+.ci-ph .ph-del{position:absolute;top:-5px;right:-5px;width:18px;height:18px;border-radius:50%;background:var(--ng);color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+
+.cc{padding:6px 16px 12px;background:#fff;border-top:1px solid var(--g200);display:flex;flex-direction:column;align-items:center;gap:8px}
+.cc-dots{display:flex;gap:6px}
+.pd{width:8px;height:8px;border-radius:50%}
+.pd.empty{background:var(--g200)}
+.pd.full{background:var(--pri)}
+.sh-btn{width:60px;height:60px;border-radius:50%;border:3.5px solid var(--pri);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.shi{width:46px;height:46px;border-radius:50%;background:var(--pri)}
+.sh-btn.dis{opacity:.2;pointer-events:none}
+.sh-btn:active .shi{background:var(--pri-d)}
+
+.cam-scroll{flex:1;overflow-y:auto;background:var(--g50)}
+
+/* ===== Page5：批量录入 ===== */
+.batch-card{margin:8px 12px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm);overflow:hidden;border-left:3px solid var(--g300);transition:border-color .3s}
+.batch-card.ok{border-left-color:var(--ok)}
+.batch-card.ng{border-left-color:var(--ng)}
+.batch-card-hd{display:flex;align-items:center;padding:10px 12px;border-bottom:1px solid var(--g100);gap:8px}
+.batch-card-name{flex:1;font-size:13px;font-weight:600;color:var(--g700)}
+.batch-card-prog{font-size:11px;color:var(--g400)}
+.batch-card-prog.done{color:var(--ok)}
+.batch-card-body{padding:8px 12px}
+.batch-field{display:flex;align-items:center;gap:6px;padding:4px 0}
+.batch-field-label{font-size:12px;color:var(--g500);width:50px;flex-shrink:0}
+.batch-field-input{flex:1;padding:8px;border:1.5px solid var(--g200);border-radius:var(--rs);font-size:13px;color:var(--g800)}
+.batch-field-input:focus{border-color:var(--pri);outline:none}
+.batch-field-unit{font-size:11px;color:var(--g500);width:28px;flex-shrink:0}
+.batch-field-bt{width:30px;height:30px;border-radius:50%;background:var(--pri-l);color:var(--pri);border:none;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.batch-field-bt:active{background:var(--pri);color:#fff}
+.batch-card-actions{display:flex;justify-content:flex-end;padding:6px 0}
+.batch-card-confirm{padding:8px 20px;border:none;border-radius:var(--r);font-size:13px;font-weight:600;background:var(--pri);color:#fff;cursor:pointer;min-height:36px}
+.batch-card-confirm:active{background:var(--pri-d)}
+.batch-card-confirm.disabled{background:var(--g200);color:var(--g400);pointer-events:none}
+.batch-card-result{display:none;padding:6px 0;font-size:12px;font-weight:500}
+.batch-card-result.show{display:block}
+.batch-card-result.ok{color:var(--ok)}
+.batch-card-result.ng{color:var(--ng)}
+
+/* 进度条 */
+.progress-bar-wrap{height:4px;background:var(--g200);border-radius:2px;overflow:hidden;margin-top:8px}
+.progress-bar-fill{height:100%;background:var(--pri);border-radius:2px;transition:width .3s}
+
+/* Bottom Sheet */
+.sh-bg{display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.35);z-index:800;align-items:flex-end;justify-content:center}
+.sh-bg.show{display:flex}
+.sh-panel{width:100%;max-width:360px;background:#fff;border-radius:16px 16px 0 0;padding:16px 16px 24px;animation:su .2s ease-out;max-height:80vh;overflow-y:auto}
+@keyframes su{from{transform:translateY(100%)}}
+.sh-title{font-size:15px;font-weight:600;text-align:center;margin-bottom:14px;color:var(--g800)}
+
+/* 确认弹窗 */
+.cd-mask{display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);z-index:900;justify-content:center;align-items:center}
+.cd-mask.show{display:flex}
+.cd-box{width:280px;background:#fff;border-radius:16px;padding:24px 20px 16px;text-align:center}
+.cd-box h3{font-size:16px;font-weight:700;color:var(--g800);margin-bottom:8px}
+.cd-box p{font-size:14px;color:var(--g500);margin-bottom:20px;line-height:1.6}
+.cd-btns{display:flex;gap:8px}
+.cd-btns button{flex:1;padding:12px;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;border:none;min-height:44px}
+.cd-btns .btn-cancel{background:var(--g100);color:var(--g600)}
+.cd-btns .btn-ok{background:var(--pri);color:#fff}
+.cd-btns .btn-ok:active{background:var(--pri-d)}
+
+/* Toast */
+#toastEl{display:none;position:absolute;left:50%;bottom:80px;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;z-index:999;max-width:280px;text-align:center;pointer-events:none;width:auto;height:auto;top:auto;right:auto;flex:none;align-self:auto}
+#toastEl.show{display:block;animation:fadeInUp .3s}
+@keyframes fadeInUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}}
+
+/* 不合格处理 issue checkbox */
+.issue-check{display:flex;align-items:center;padding:12px 0;border-bottom:1px solid var(--g100);gap:10px;cursor:pointer;min-height:48px}
+.issue-cb{width:20px;height:20px;border-radius:4px;border:2px solid var(--g300);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff}
+.issue-check.on .issue-cb{background:var(--ng);border-color:var(--ng)}
+.issue-check.on .issue-cb::after{content:'\2713'}
+.issue-label{flex:1;font-size:14px;color:var(--g700)}
+.issue-level{font-size:11px;padding:2px 8px;border-radius:10px}
+.issue-level.normal{background:var(--warn-l);color:#92400E}
+.issue-level.severe{background:var(--ng-l);color:var(--ng)}
+</style>
+</head>
+<body>
+
+<div class="demo-layout">
+  <!-- ===== 左侧：手机壳 ===== -->
+  <div class="demo-left">
+    <div class="phone">
+      <div class="sbar">9:41</div>
+
+      <!-- ========== Page1：我的任务（站房列表） ========== -->
+      <div class="page active" id="page1">
+        <div class="nbar"><div class="title" style="margin-right:0">检测执行</div></div>
+        <div class="scroll">
+          <div class="proj-card">
+            <div class="proj-row"><span class="proj-name">建湖复兴花园一期</span><span class="proj-date">2026-03-28</span></div>
+            <div class="proj-row" style="margin-top:6px"><span class="proj-addr">江苏省盐城市建湖县</span><span class="proj-scale">规模 2-0-4-1</span></div>
+          </div>
+          <div style="margin:6px 12px 0">
+            <div class="alert alert-info">已解锁 1/2 个站房</div>
+          </div>
+          <div style="margin-top:8px">
+            <div class="room-card" id="room1Card" onclick="goPage(2)">
+              <div class="room-inner">
+                <div class="room-info">
+                  <div class="room-name">1#开关站</div>
+                  <div class="room-meta">进度 <span id="p1RoomProg">0</span>/8</div>
+                </div>
+                <span class="room-tag ready" id="p1RoomTag">待检测</span>
+                <span class="room-chevron">&#8250;</span>
+              </div>
+            </div>
+            <div class="room-card locked" onclick="showToast('安措未完成，暂不可进入')">
+              <div class="room-inner">
+                <div class="room-info">
+                  <div class="room-name">3#配电室</div>
+                  <div class="room-meta">等待安措完成</div>
+                </div>
+                <span class="room-tag wait">未解锁</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== Page2：站房内 ========== -->
+      <div class="page" id="page2">
+        <div class="nbar"><div class="back" onclick="goPage(1)">&#8592;</div><div class="title">1#开关站</div></div>
+        <div class="scroll" id="page2scroll">
+          <div class="proj-card">
+            <div class="proj-row"><span class="proj-name">建湖复兴花园一期</span><span class="proj-date">2026-03-28</span></div>
+            <div class="proj-row" style="margin-top:6px"><span class="proj-addr">江苏省盐城市建湖县</span><span class="proj-scale">规模 2-0-4-1</span></div>
+          </div>
+          <div id="envBanner" style="margin:6px 12px;padding:10px 14px;background:rgba(255,149,0,0.08);border-left:3px solid var(--warn);border-radius:var(--rs);display:flex;align-items:center;gap:10px;cursor:pointer" onclick="goEnvPage()">
+            <span style="font-size:16px">🌡</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:600;color:#92400E">环境数据未采集</div>
+              <div style="font-size:11px;color:var(--g500);margin-top:2px">点击录入站房温湿度和天气</div>
+            </div>
+            <span style="color:var(--g300);font-size:14px">›</span>
+          </div>
+          <div class="seg-ctrl">
+            <button class="seg-btn sel" id="segDev" onclick="switchView('dev')">按设备逐个做</button>
+            <button class="seg-btn" id="segBatch" onclick="switchView('batch')">按试验项批量做</button>
+          </div>
+
+          <!-- 按设备视图 -->
+          <div id="viewDev">
+            <div class="group-header" onclick="toggleGroup(this)">
+              <span class="group-arrow">&#9660;</span>
+              <span class="group-label">断路器</span>
+              <span class="group-count" id="gcBreaker">0/2</span>
+            </div>
+            <div class="group-items" id="giBreaker">
+              <div class="dev-row" id="devBreaker1" onclick="goBreaker()">
+                <div class="dev-row-inner">
+                  <span class="dev-row-name">断路器 #1</span>
+                  <span class="dev-row-prog" id="breakerProg">0/32</span>
+                  <span class="dev-row-tag wait" id="breakerTag">待检测</span>
+                  <span class="dev-row-chevron">&#8250;</span>
+                </div>
+              </div>
+              <div class="dev-row" onclick="showToast('进入断路器 #2 详情')">
+                <div class="dev-row-inner">
+                  <span class="dev-row-name">断路器 #2</span>
+                  <span class="dev-row-prog">0/32</span>
+                  <span class="dev-row-tag wait">待检测</span>
+                  <span class="dev-row-chevron">&#8250;</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="group-header" onclick="toggleGroup(this)">
+              <span class="group-arrow">&#9660;</span>
+              <span class="group-label">低压电缆</span>
+              <span class="group-count" id="gcCable">0/5</span>
+            </div>
+            <div class="group-items" id="giCable">
+              <div class="dev-row" onclick="showToast('进入低压电缆 #1 详情')"><div class="dev-row-inner"><span class="dev-row-name">低压电缆 #1</span><span class="dev-row-prog">0/15</span><span class="dev-row-tag wait">待检测</span><span class="dev-row-chevron">&#8250;</span></div></div>
+              <div class="dev-row" onclick="showToast('进入低压电缆 #2 详情')"><div class="dev-row-inner"><span class="dev-row-name">低压电缆 #2</span><span class="dev-row-prog">0/15</span><span class="dev-row-tag wait">待检测</span><span class="dev-row-chevron">&#8250;</span></div></div>
+              <div class="dev-row" onclick="showToast('进入低压电缆 #3 详情')"><div class="dev-row-inner"><span class="dev-row-name">低压电缆 #3</span><span class="dev-row-prog">0/15</span><span class="dev-row-tag wait">待检测</span><span class="dev-row-chevron">&#8250;</span></div></div>
+              <div class="dev-row" onclick="showToast('进入低压电缆 #4 详情')"><div class="dev-row-inner"><span class="dev-row-name">低压电缆 #4</span><span class="dev-row-prog">0/15</span><span class="dev-row-tag wait">待检测</span><span class="dev-row-chevron">&#8250;</span></div></div>
+              <div class="dev-row" onclick="showToast('进入低压电缆 #5 详情')"><div class="dev-row-inner"><span class="dev-row-name">低压电缆 #5</span><span class="dev-row-prog">0/15</span><span class="dev-row-tag wait">待检测</span><span class="dev-row-chevron">&#8250;</span></div></div>
+            </div>
+
+            <div class="group-header" onclick="toggleGroup(this)">
+              <span class="group-arrow">&#9660;</span>
+              <span class="group-label">干式变压器</span>
+              <span class="group-count">0/1</span>
+            </div>
+            <div class="group-items">
+              <div class="dev-row" onclick="showToast('进入干式变压器 #1 详情')"><div class="dev-row-inner"><span class="dev-row-name">干式变压器 #1</span><span class="dev-row-prog">0/20</span><span class="dev-row-tag wait">待检测</span><span class="dev-row-chevron">&#8250;</span></div></div>
+            </div>
+          </div>
+
+          <!-- 按试验项批量做视图 -->
+          <div id="viewBatch" style="display:none">
+            <div class="group-header" onclick="toggleGroup(this)">
+              <span class="group-arrow">&#9660;</span>
+              <span class="group-label">非电气 — 外观检查</span>
+              <span class="group-count">涉及断路器×2</span>
+            </div>
+            <div class="group-items">
+              <div class="batch-item" onclick="showToast('进入批量外观拍照')"><div class="batch-inner"><span class="batch-name">整体外观拍照</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
+              <div class="batch-item" onclick="showToast('进入批量判定')"><div class="batch-inner"><span class="batch-name">外观无破损</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
+              <div class="batch-item" onclick="showToast('进入批量判定')"><div class="batch-inner"><span class="batch-name">配件干净</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
+              <div class="batch-item" onclick="showToast('进入批量判定')"><div class="batch-inner"><span class="batch-name">紧固件连接牢固</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
+              <div class="batch-item" onclick="showToast('进入批量判定')"><div class="batch-inner"><span class="batch-name">检查结论</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
+            </div>
+
+            <div class="group-header" onclick="toggleGroup(this)">
+              <span class="group-arrow">&#9660;</span>
+              <span class="group-label">非电气 — 铭牌信息</span>
+              <span class="group-count">涉及断路器×2</span>
+            </div>
+            <div class="group-items">
+              <div class="batch-item" onclick="showToast('进入批量录入')"><div class="batch-inner"><span class="batch-name">生产厂家</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
+              <div class="batch-item" onclick="showToast('进入批量录入')"><div class="batch-inner"><span class="batch-name">规格型号</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
+              <div class="batch-item" onclick="showToast('进入批量录入')"><div class="batch-inner"><span class="batch-name">生产日期</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
+            </div>
+
+            <div class="group-header" onclick="toggleGroup(this)">
+              <span class="group-arrow">&#9660;</span>
+              <span class="group-label">电气 — 回路电阻测量</span>
+              <span class="group-count">涉及断路器×2</span>
+            </div>
+            <div class="group-items">
+              <div class="batch-item" onclick="goBatchDC()"><div class="batch-inner"><span class="batch-name">回路电阻 (A/B/C三相)</span><span class="batch-scope">2 台断路器 · 可蓝牙采集</span><span class="batch-chevron">&#8250;</span></div></div>
+            </div>
+
+            <div class="group-header" onclick="toggleGroup(this)">
+              <span class="group-arrow">&#9660;</span>
+              <span class="group-label">电气 — 开关特性试验</span>
+              <span class="group-count">涉及断路器×2</span>
+            </div>
+            <div class="group-items">
+              <div class="batch-item" onclick="showToast('进入批量录入')"><div class="batch-inner"><span class="batch-name">A/B/C相合闸时间</span><span class="batch-scope">2 台断路器 · 可蓝牙采集</span><span class="batch-chevron">&#8250;</span></div></div>
+            </div>
+
+            <div class="group-header" onclick="toggleGroup(this)">
+              <span class="group-arrow">&#9660;</span>
+              <span class="group-label">五防 — 联锁功能检查</span>
+              <span class="group-count">涉及断路器×2</span>
+            </div>
+            <div class="group-items">
+              <div class="batch-item" onclick="showToast('进入批量判定')"><div class="batch-inner"><span class="batch-name">防跳功能</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
+              <div class="batch-item" onclick="showToast('进入批量判定')"><div class="batch-inner"><span class="batch-name">带电显示器联锁</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
+              <div class="batch-item" onclick="showToast('进入批量判定')"><div class="batch-inner"><span class="batch-name">接地开关联锁</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="bot">
+          <div class="bot-info">已完成 <b id="p2Done">0</b>/8 · 未完成 <span id="p2Left">8</span></div>
+          <button class="bot-btn wait" id="p2Btn" onclick="showSubmitRoom()">提交此站房</button>
+        </div>
+      </div>
+
+      <!-- ========== Page3：断路器 #1 检测详情 ========== -->
+      <div class="page" id="page3">
+        <div class="nbar"><div class="back" onclick="goPage(2)">&#8592;</div><div class="title">断路器 #1</div><div class="nav-right" id="navRight">0/8 组</div></div>
+        <div class="seg-ctrl" style="margin:6px 12px">
+          <button class="seg-btn sel" id="segNonElec" onclick="switchTab('non-elec')">非电气 <span id="nonElecCount">0/11</span></button>
+          <button class="seg-btn" id="segElec" onclick="switchTab('elec')">电气 <span id="elecCount">0/12</span></button>
+          <button class="seg-btn" id="segWufang" onclick="switchTab('wufang')">五防 <span id="wufangCount">0/9</span></button>
+        </div>
+        <div class="detail-body">
+          <div class="side-nav" id="sideNav"></div>
+          <div class="detail-content" id="detailContent"></div>
+        </div>
+        <div class="detail-bot" id="detailBot">
+          <div class="bot-hint" id="botDefault">点击上方试验项开始录入</div>
+          <div class="bot-action" id="botActionArea" style="display:none">
+            <div class="bot-action-title">
+              <span class="bot-action-label" id="botActionLabel"></span>
+              <span class="bot-action-info" id="botActionInfo" onclick="showStdSheet()" style="display:none">&#9432;</span>
+            </div>
+            <div class="bot-action-std" id="botActionStd" style="display:none"></div>
+            <div id="botInputRow"></div>
+          </div>
+          <!-- 已确认组的只读提示 -->
+          <div class="bot-hint" id="botLockedHint" style="display:none">此组已确认锁定，数据不可修改</div>
+        </div>
+      </div>
+
+      <!-- ========== Page4：拍照模式 ========== -->
+      <div class="page" id="page4">
+        <div class="nbar"><div class="back" onclick="exitCameraMode()">&#8592;</div><div class="title" id="p4Title">设备外观检查</div></div>
+        <div class="vf" id="camVf">
+          <div class="vf-grid"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+          <div class="vf-flash" id="camFlash"></div>
+          <div class="vfl" id="camVfl"><span id="camVflText"></span></div>
+        </div>
+        <div class="cam-scroll" id="camItemList"></div>
+        <div class="cc">
+          <div class="cc-dots" id="camDots"></div>
+          <div class="sh-btn" id="camShutter" onclick="camTakePhoto()"><div class="shi"></div></div>
+        </div>
+      </div>
+
+      <!-- ========== Page5：回路电阻批量录入（断路器×2） ========== -->
+      <div class="page" id="page5">
+        <div class="nbar"><div class="back" onclick="exitBatchDC()">&#8592;</div><div class="title">回路电阻测量</div></div>
+        <div class="scroll" id="page5scroll">
+          <div style="margin:6px 12px 0">
+            <div class="alert alert-info">标准值：&#8804; 200 &#956;&#937;（每相独立判定）</div>
+          </div>
+          <div id="batchDCList"></div>
+        </div>
+        <div class="bot">
+          <div class="bot-info">已完成 <b id="p5Done">0</b>/2 · 未完成 <span id="p5Left">2</span></div>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" id="p5Bar" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <!-- ========== Page6：环境数据录入 ========== -->
+      <div class="page" id="page6">
+        <div class="nbar"><div class="back" onclick="saveEnvAndBack()">←</div><div class="title">环境温湿度采集</div></div>
+        <div class="scroll">
+          <div style="margin:8px 12px;padding:8px 12px;background:rgba(255,149,0,0.06);border-radius:var(--rs);font-size:12px;color:var(--g500);line-height:1.5">
+            湿度≥80%时，部分耐压/绝缘类试验项将自动跳过
+          </div>
+
+          <!-- 必填区：站房温湿度+天气 -->
+          <div style="margin:8px 12px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm);overflow:hidden">
+            <div style="padding:12px 14px;font-size:13px;font-weight:600;color:var(--g700);border-bottom:1px solid var(--g100)">站房环境（必填）</div>
+
+            <div style="padding:14px;border-bottom:1px solid var(--g100)">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:14px;color:var(--g700)">站房温度 <span style="color:var(--ng);font-weight:700">*</span></span>
+                <span style="font-size:11px;color:var(--g400)">站房内部</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <input type="number" step="any" id="envTemp1" placeholder="请输入" style="flex:1;padding:10px 12px;border:1.5px solid var(--g200);border-radius:var(--rs);font-size:14px;color:var(--g800)">
+                <span style="font-size:13px;color:var(--g500)">℃</span>
+              </div>
+            </div>
+
+            <div style="padding:14px;border-bottom:1px solid var(--g100)">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:14px;color:var(--g700)">站房湿度 <span style="color:var(--ng);font-weight:700">*</span></span>
+                <span style="font-size:11px;color:var(--g400)">≥80%将跳过耐压试验</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <input type="number" step="any" id="envHumidity" placeholder="请输入" style="flex:1;padding:10px 12px;border:1.5px solid var(--g200);border-radius:var(--rs);font-size:14px;color:var(--g800)">
+                <span style="font-size:13px;color:var(--g500)">%RH</span>
+              </div>
+            </div>
+
+            <div style="padding:14px">
+              <div style="font-size:14px;color:var(--g700);margin-bottom:8px">天气 <span style="color:var(--ng);font-weight:700">*</span></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="env-weather-btn" onclick="selectWeather(this,'晴')" style="padding:8px 16px;border-radius:20px;font-size:14px;border:1.5px solid var(--g200);color:var(--g600);background:#fff;cursor:pointer;min-height:40px">☀ 晴</button>
+                <button class="env-weather-btn" onclick="selectWeather(this,'多云')" style="padding:8px 16px;border-radius:20px;font-size:14px;border:1.5px solid var(--g200);color:var(--g600);background:#fff;cursor:pointer;min-height:40px">⛅ 多云</button>
+                <button class="env-weather-btn" onclick="selectWeather(this,'阴')" style="padding:8px 16px;border-radius:20px;font-size:14px;border:1.5px solid var(--g200);color:var(--g600);background:#fff;cursor:pointer;min-height:40px">☁ 阴</button>
+                <button class="env-weather-btn" onclick="selectWeather(this,'雨')" style="padding:8px 16px;border-radius:20px;font-size:14px;border:1.5px solid var(--g200);color:var(--g600);background:#fff;cursor:pointer;min-height:40px">🌧 雨</button>
+                <button class="env-weather-btn" onclick="selectWeather(this,'雪')" style="padding:8px 16px;border-radius:20px;font-size:14px;border:1.5px solid var(--g200);color:var(--g600);background:#fff;cursor:pointer;min-height:40px">❄ 雪</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 选填区：电缆直阻温度 -->
+          <div style="margin:8px 12px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm);overflow:hidden">
+            <div style="padding:12px 14px;font-size:13px;font-weight:600;color:var(--g700);border-bottom:1px solid var(--g100)">电缆直阻温度（选填）<span style="font-size:11px;font-weight:400;color:var(--g400);margin-left:6px">用于直阻偏差计算</span></div>
+
+            <div style="padding:14px;border-bottom:1px solid var(--g100)">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:14px;color:var(--g700)">电缆沟温度</span>
+                <span style="font-size:11px;color:var(--g400)">地下电缆沟/中间井</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <input type="number" step="any" id="envTemp2" placeholder="选填" style="flex:1;padding:10px 12px;border:1.5px solid var(--g200);border-radius:var(--rs);font-size:14px;color:var(--g800)">
+                <span style="font-size:13px;color:var(--g500)">℃</span>
+              </div>
+            </div>
+
+            <div style="padding:14px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:14px;color:var(--g700)">对侧温度</span>
+                <span style="font-size:11px;color:var(--g400)">室外电缆井（电缆另一端）</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <input type="number" step="any" id="envTemp3" placeholder="选填" style="flex:1;padding:10px 12px;border:1.5px solid var(--g200);border-radius:var(--rs);font-size:14px;color:var(--g800)">
+                <span style="font-size:13px;color:var(--g500)">℃</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 湿度>80%警告（动态显示） -->
+          <div id="envHumidityWarn" style="display:none;margin:8px 12px;padding:10px 14px;background:var(--ng-l);border-radius:var(--rs);font-size:12px;color:var(--ng);line-height:1.6">
+            ⚠ 湿度≥80%，以下试验项将被自动跳过：中置柜/断路器/PT/充气柜/环网柜/变压器的绝缘电阻和工频耐压试验（共13项）
+          </div>
+        </div>
+
+        <!-- 底部确认按钮 -->
+        <div class="bot">
+          <button class="bot-btn wait" id="envConfirmBtn" onclick="confirmEnvData()">确认保存</button>
+        </div>
+      </div>
+
+      <!-- 确认弹窗 -->
+      <div class="cd-mask" id="confirmDialog">
+        <div class="cd-box">
+          <h3 id="cdTitle">提交确认</h3>
+          <p id="cdDesc">确认提交？</p>
+          <div class="cd-btns">
+            <button class="btn-cancel" onclick="hideConfirm()">再检查一下</button>
+            <button class="btn-ok" id="cdOkBtn" onclick="doConfirmAction()">确认提交</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Sheet -->
+      <div class="sh-bg" id="stdSheet" onclick="hideStdSheet()">
+        <div class="sh-panel" onclick="event.stopPropagation()">
+          <div class="sh-title">标准值说明</div>
+          <div style="padding:0 4px;font-size:13px;color:var(--g600);line-height:1.8" id="stdContent"></div>
+          <div style="margin-top:16px;text-align:center">
+            <button style="padding:12px 40px;border:none;border-radius:var(--r);background:var(--g100);color:var(--g600);font-size:14px;font-weight:600;cursor:pointer" onclick="hideStdSheet()">知道了</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 不合格处理 Bottom Sheet -->
+      <div class="sh-bg" id="issueSheet" onclick="if(event.target===this)this.classList.remove('show')">
+        <div class="sh-panel" onclick="event.stopPropagation()" style="max-height:85vh">
+          <div class="sh-title">检测问题</div>
+          <div id="issueHeader" style="padding:0 4px 12px;font-size:13px;color:var(--g600);line-height:1.8"></div>
+          <div style="padding:0 4px">
+            <div style="font-size:13px;font-weight:600;color:var(--g700);margin-bottom:8px">选择问题类型（至少选1个）</div>
+            <div id="issueCheckList"></div>
+          </div>
+          <div style="padding:12px 4px 0">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:13px;color:var(--g500)">补拍留证照片（选填）</span>
+              <button id="issuePhotoBtn" onclick="issueAddPhoto()" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--g300);background:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">&#128247;</button>
+            </div>
+            <div id="issuePhotoArea" style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"></div>
+          </div>
+          <div style="padding:12px 4px 0">
+            <div style="font-size:13px;color:var(--g500);margin-bottom:6px">备注说明（选填）</div>
+            <textarea id="issueRemark" placeholder="补充说明..." style="width:100%;padding:10px 12px;border:1.5px solid var(--g200);border-radius:8px;font-size:13px;color:var(--g800);resize:none;height:60px;font-family:inherit"></textarea>
+          </div>
+          <div style="padding:16px 4px 0;display:flex;gap:10px">
+            <button id="issueRevokeBtn" onclick="revokeIssue()" style="display:none;width:40%;padding:14px;border:1.5px solid var(--g200);border-radius:12px;font-size:15px;font-weight:600;background:#fff;color:var(--g700);cursor:pointer">重新标为合格</button>
+            <button id="issueConfirmBtn" onclick="confirmIssue()" style="flex:1;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:600;background:var(--g200);color:var(--g400);cursor:pointer;pointer-events:none">确认提交</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="toastEl"></div>
+    </div>
+  </div>
+
+  <!-- ===== 右侧：设计说明 ===== -->
+  <div class="demo-right">
+    <h2>检测执行 — 检e通V3.0 交互原型</h2>
+
+    <!-- ====== 上半区：业务说明（默认展开） ====== -->
+
+    <h3>设计决策说明</h3>
+    <p>试验人员（操作人）进入已解锁的站房，对分配给自己的检测对象逐项采集检测数据（拍照、数值、判定），系统自动执行标准判定。</p>
+    <table>
+      <tr><th>维度</th><th>2.4系统</th><th>3.0系统</th></tr>
+      <tr><td>Tab分类</td><td>非电气+电气（2个）</td><td>非电气+电气+五防（3个）</td></tr>
+      <tr><td>执行模式</td><td>两套独立页面，分工时锁死</td><td>一套页面两种视图，随时切换</td></tr>
+      <tr><td>判定层级</td><td>数据判定+照片判定（两层）</td><td>仅数据判定（单层）</td></tr>
+      <tr><td>合格/不合格操作</td><td>选择 → 确认（2步）</td><td>选择即确认（1步），合格自动跳下一项</td></tr>
+      <tr><td><span class="highlight">确认粒度</span></td><td>32项全做完才能提交设备</td><td>按组确认（每组做完即可锁定），分批完成</td></tr>
+      <tr><td><span class="highlight">提交入口</span></td><td>底部"完成"按钮（始终可见）</td><td>导航栏右侧组进度 → 全部确认后变"提交"按钮</td></tr>
+      <tr><td>底部操作区</td><td>当前项录入+设备提交（混合）</td><td>纯当前项录入（单一职责）</td></tr>
+      <tr><td>环境数据</td><td>5项全必填，仅集中模式同步</td><td>3必填+2选填，通用同步</td></tr>
+      <tr><td>不合格处理</td><td>仅弹问题选择，无拍照</td><td>问题勾选+选填补拍+选填备注</td></tr>
+      <tr><td>数据同步</td><td>两种模式数据隔离</td><td>共享底层数据，零损失切换</td></tr>
+    </table>
+
+    <h3>业务规则摘要</h3>
+    <table>
+      <tr><th>规则</th><th>说明</th></tr>
+      <tr><td>站房解锁</td><td>检测分工完成 + 安措执行完成 → 该站房检测入口解锁</td></tr>
+      <tr><td>组级确认</td><td>一个试验组（如"设备外观检查"5项）全部完成后出现"确认"文字链，确认后锁定不可修改</td></tr>
+      <tr><td>设备级提交</td><td>全部8组确认后导航栏右侧变为"提交"按钮，提交后数据锁定</td></tr>
+      <tr><td>自动计算</td><td>前置项填完后自动计算（如合闸同期性 = max-min），不合格自动标记</td></tr>
+      <tr><td>不合格处理</td><td>不合格时弹出问题面板：勾选问题类型（必选） + 补拍照片（选填） + 备注说明（选填）</td></tr>
+      <tr><td>拍照上限</td><td>统一默认5张</td></tr>
+      <tr><td>环境数据</td><td>站房温度+湿度+天气必填；湿度>=80%时部分耐压/绝缘试验自动跳过</td></tr>
+    </table>
+
+    <h3>版本边界</h3>
+    <ul>
+      <li><b>V3.0做</b>：组级确认+设备级提交、选择即确认、按设备/按试验项双视图共享数据、不合格处理面板、环境数据联动跳过、蓝牙采集</li>
+      <li><b>V3.0不做</b>：跨站房复制数据、试验项自定义排序、不合格自动生成整改单、多人并行同一设备</li>
+    </ul>
+
+    <h3>请试试以下操作</h3>
+    <table>
+      <tr><th style="width:30%">操作</th><th>做法</th></tr>
+      <tr><td>采集环境数据</td><td>Page2顶部橙色横幅 → 录入温度+湿度+天气 → 确认</td></tr>
+      <tr><td>进入设备检测</td><td>点击"断路器 #1" → 进入详情页</td></tr>
+      <tr><td>拍照</td><td>点击"整体外观" → 底部拍照按钮 → 拍照模式 → 快门</td></tr>
+      <tr><td>合格判定（1步）</td><td>点击"外观无破损" → 点"合格" → 自动保存并跳下一项</td></tr>
+      <tr><td>录入文本</td><td>点击"生产厂家" → 输入文字 → 确认</td></tr>
+      <tr><td>录入数值</td><td>电气Tab → "A相合闸时间" → 输入数值 → 确认</td></tr>
+      <tr><td>自动计算</td><td>A/B/C三相填完 → "合闸同期性"自动计算</td></tr>
+      <tr><td>蓝牙采集</td><td>点击&#128309;按钮 → 模拟仪器自动填入</td></tr>
+      <tr><td><span class="highlight">触发不合格</span></td><td>"A相回路电阻" → 输入250（标准<=200）→ 弹出问题面板</td></tr>
+      <tr><td><span class="highlight">确认一组</span></td><td>做完"设备外观检查"全部5项 → 组标题出现[确认]文字链 → 点击确认锁定</td></tr>
+      <tr><td>查看锁定</td><td>已确认的组变灰，点击试验项无响应，底部提示"此组已确认锁定"</td></tr>
+      <tr><td>看组进度</td><td>导航栏右侧显示"1/8 组"，每确认一组+1</td></tr>
+      <tr><td>提交设备</td><td>全部8组确认 → 导航栏出现绿色"提交"按钮 → 确认弹窗</td></tr>
+      <tr><td>数据同步</td><td>按设备做录入部分 → 切换按试验项做 → 看到已录入数据</td></tr>
+      <tr><td>批量录入</td><td>"按试验项批量做" → "回路电阻" → 2台断路器并排</td></tr>
+      <tr><td>湿度警告</td><td>环境数据页输入湿度>=80 → 查看自动跳过提示</td></tr>
+    </table>
+
+    <!-- ====== 下半区：技术说明（默认折叠） ====== -->
+    <details>
+      <summary style="font-size:14px;font-weight:600;color:#4B5563;margin:20px 0 8px;cursor:pointer">开发参考</summary>
+
+      <h3>核心设计决策</h3>
+      <table>
+        <tr><th>编号</th><th>决策</th><th>说明</th></tr>
+        <tr><td>D4</td><td>一套页面两种视图</td><td>按设备做/按试验项做共享底层数据模型breakerTests，通过syncBreakerToBatch/syncBatchToBreaker双向同步</td></tr>
+        <tr><td>D7</td><td>单层判定</td><td>砍掉2.4系统的照片判定层，仅保留数据判定，calc类型自动触发issueFlag</td></tr>
+        <tr><td>D8</td><td>组级确认+设备级提交</td><td>每组confirmed:false→true后readonly；全部8组confirmed后导航栏navRight变提交按钮</td></tr>
+        <tr><td>D10</td><td>三Tab分类</td><td>non-elec / elec / wufang，资料类不在现场界面展示</td></tr>
+        <tr><td>D12</td><td>环境数据</td><td>envData对象，temp1+humidity+weather必填，temp2/temp3选填</td></tr>
+        <tr><td>D13</td><td>不合格处理</td><td>issueSheet Bottom Sheet，issueTargetId标识当前项，confirmIssue()设置issueFlag</td></tr>
+        <tr><td>D20</td><td>四层保存机制</td><td>自动保存(项级) → 组级确认(组级) → 手动提交(设备级) → 报告生成(站房级)</td></tr>
+        <tr><td>D21</td><td>数据同步</td><td>batchDC[0].syncKeys映射e6/e7/e8，进入Page5调syncBreakerToBatch，返回调syncBatchToBreaker</td></tr>
+        <tr><td>D23</td><td>提交入口收敛</td><td>提交按钮仅在"按设备做"视图显示（switchView控制bot.style.display）</td></tr>
+        <tr><td>D24</td><td>拍照上限</td><td>maxPhoto字段控制，默认5张</td></tr>
+      </table>
+
+      <h3>交互效率对比</h3>
+      <table>
+        <tr><th>场景</th><th>原方案</th><th>优化后</th></tr>
+        <tr><td>1个toggle项（合格）</td><td>3次（选择+确认+等）</td><td>1次（选择即确认）</td></tr>
+        <tr><td>20个toggle项全合格</td><td>60次</td><td>20次</td></tr>
+        <tr><td>1个number项</td><td>2次（输入+确认）</td><td>2次（不变）</td></tr>
+        <tr><td>提交设备</td><td>1次（全做完才能点）</td><td>8次组确认+1次最终提交（分批完成，随时可停）</td></tr>
+      </table>
+
+      <h3>关键函数说明</h3>
+      <table>
+        <tr><th>函数</th><th>职责</th></tr>
+        <tr><td>togglePass(id)</td><td>toggle合格：设val='合格'，0.3s后跳下一项</td></tr>
+        <tr><td>toggleFail(id)</td><td>toggle不合格：弹issueSheet</td></tr>
+        <tr><td>confirmGroup(tab,idx)</td><td>组级确认：弹确认弹窗 → confirmed=true → 跳下一未确认组</td></tr>
+        <tr><td>updateNavProgress()</td><td>导航栏右侧：未全确认时显示"n/8 组"，全确认时变"提交"按钮</td></tr>
+        <tr><td>findNextItemId(id)</td><td>跳过已确认组，找下一个可操作的试验项</td></tr>
+        <tr><td>syncBreakerToBatch()</td><td>进入批量页前，将按设备视图数据同步到batchDC</td></tr>
+        <tr><td>syncBatchToBreaker()</td><td>从批量页返回时，将批量数据同步回breakerTests</td></tr>
+      </table>
+    </details>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   检测执行 Demo — 完整闭环交互逻辑
+   =====================================================================
+   两条链路：
+   A. 按设备做 → 断路器 #1（非电气11+电气12+五防9=32项）
+   B. 按试验项批量做 → 回路电阻测量（2台断路器 x 3相）
+   ===================================================================== */
+
+/* ===== 断路器试验项数据模型 ===== */
+var breakerTests = {
+  'non-elec': [
+    { group:'设备外观检查', confirmed:false, items:[
+      {id:'ne1', name:'整体外观', type:'photo', val:'', std:'', photoCount:0, maxPhoto:5},
+      {id:'ne2', name:'外观无破损', type:'toggle', val:'', std:'设备外壳无明显破损、变形'},
+      {id:'ne3', name:'配件干净', type:'toggle', val:'', std:'设备表面及配件清洁无杂物'},
+      {id:'ne4', name:'紧固件连接牢固', type:'toggle', val:'', std:'各紧固件连接可靠、无松动'},
+      {id:'ne5', name:'检查结论', type:'toggle', val:'', std:'外观检查总体判定'}
+    ]},
+    { group:'装配及施工检查', confirmed:false, items:[
+      {id:'ne6', name:'驱潮加热装置', type:'toggle', val:'', std:'驱潮加热装置安装正确并正常工作'},
+      {id:'ne7', name:'照明装置', type:'toggle', val:'', std:'照明装置安装正确、亮度正常'},
+      {id:'ne8', name:'接地导体', type:'toggle', val:'', std:'接地导体连接可靠，截面积满足要求'}
+    ]},
+    { group:'设备铭牌检查', confirmed:false, items:[
+      {id:'ne9', name:'生产厂家', type:'text', val:'', std:''},
+      {id:'ne10', name:'规格型号', type:'text', val:'', std:''},
+      {id:'ne11', name:'生产日期', type:'date', val:'', std:''}
+    ]}
+  ],
+  'elec': [
+    { group:'开关特性试验', confirmed:false, items:[
+      {id:'e1', name:'A相合闸时间(ms)', type:'number', val:'', std:'', unit:'ms', bt:true},
+      {id:'e2', name:'B相合闸时间(ms)', type:'number', val:'', std:'', unit:'ms', bt:true},
+      {id:'e3', name:'C相合闸时间(ms)', type:'number', val:'', std:'', unit:'ms', bt:true},
+      {id:'e4', name:'合闸同期性(ms)', type:'calc', val:'', std:'\u22645ms', unit:'ms', deps:['e1','e2','e3'], calcFn:'syncCalc'},
+      {id:'e5', name:'试验过程记录', type:'photo', val:'', std:'', photoCount:0, maxPhoto:5}
+    ]},
+    { group:'回路电阻测量', confirmed:false, items:[
+      {id:'e6', name:'A相回路电阻(\u03bc\u03a9)', type:'number', val:'', std:'\u2264200\u03bc\u03a9', unit:'\u03bc\u03a9', bt:true},
+      {id:'e7', name:'B相回路电阻(\u03bc\u03a9)', type:'number', val:'', std:'\u2264200\u03bc\u03a9', unit:'\u03bc\u03a9', bt:true},
+      {id:'e8', name:'C相回路电阻(\u03bc\u03a9)', type:'number', val:'', std:'\u2264200\u03bc\u03a9', unit:'\u03bc\u03a9', bt:true},
+      {id:'e9', name:'判定结果', type:'calc', val:'', std:'全部\u2264200\u03bc\u03a9\u2192合格', unit:'', deps:['e6','e7','e8'], calcFn:'resistCalc'}
+    ]},
+    { group:'工频耐压试验', confirmed:false, items:[
+      {id:'e10', name:'试验电压(kV)', type:'number', val:'', std:'', unit:'kV'},
+      {id:'e11', name:'持续时间(s)', type:'number', val:'', std:'\u226560s', unit:'s'},
+      {id:'e12', name:'试验结果', type:'toggle', val:'', std:'施加规定电压持续1分钟无击穿、无闪络'}
+    ]}
+  ],
+  'wufang': [
+    { group:'五防联锁功能检查', confirmed:false, items:[
+      {id:'w1', name:'防跳功能', type:'toggle', val:'', std:'断路器应具备防跳功能'},
+      {id:'w2', name:'带电显示器联锁', type:'toggle', val:'', std:'带电显示器指示正确时才能操作开关'},
+      {id:'w3', name:'接地开关联锁', type:'toggle', val:'', std:'接地开关与断路器之间联锁可靠'},
+      {id:'w4', name:'断路器操作联锁', type:'toggle', val:'', std:'断路器分闸后方可操作隔离开关'},
+      {id:'w5', name:'柜门联锁', type:'toggle', val:'', std:'断路器在合闸位时柜门不能打开'},
+      {id:'w6', name:'紧急解锁装置', type:'toggle', val:'', std:'紧急解锁装置可靠，钥匙齐全'}
+    ]},
+    { group:'机械操作验证', confirmed:false, items:[
+      {id:'w7', name:'远方电动操作', type:'toggle', val:'', std:'远方电动分合闸操作正常'},
+      {id:'w8', name:'就地电动操作', type:'toggle', val:'', std:'就地电动分合闸操作正常'},
+      {id:'w9', name:'手动操作', type:'toggle', val:'', std:'手动储能、手动分合闸操作正常'}
+    ]}
+  ]
+};
+
+/* ===== 批量回路电阻数据（与breakerTests共享底层数据） ===== */
+/* 断路器#1的回路电阻与breakerTests.elec中的e6/e7/e8双向同步 */
+/* 断路器#2有独立数据 */
+var batchDC = [
+  {name:'断路器 #1', vals:{A:'',B:'',C:''}, done:false, result:'', pass:null, syncKeys:{A:'e6',B:'e7',C:'e8'}},
+  {name:'断路器 #2', vals:{A:'',B:'',C:''}, done:false, result:'', pass:null, syncKeys:null}
+];
+
+/* 从breakerTests同步数据到batchDC[0]（进入Page5时调用） */
+function syncBreakerToBatch() {
+  var map = batchDC[0].syncKeys;
+  if(!map) return;
+  var allItems = breakerTests['elec'];
+  var phases = ['A','B','C'];
+  var filledCount = 0;
+  for(var p=0; p<phases.length; p++) {
+    var itemId = map[phases[p]];
+    for(var g=0; g<allItems.length; g++) {
+      for(var i=0; i<allItems[g].items.length; i++) {
+        if(allItems[g].items[i].id === itemId && allItems[g].items[i].val !== '') {
+          batchDC[0].vals[phases[p]] = allItems[g].items[i].val;
+          filledCount++;
+        }
+      }
+    }
+  }
+  /* 如果3相都已从按设备视图录入完成，自动标记done */
+  if(filledCount === 3 && !batchDC[0].done) {
+    var vals = [parseFloat(batchDC[0].vals.A), parseFloat(batchDC[0].vals.B), parseFloat(batchDC[0].vals.C)];
+    var allPass = vals[0] <= 200 && vals[1] <= 200 && vals[2] <= 200;
+    batchDC[0].done = true;
+    batchDC[0].pass = allPass;
+    batchDC[0].result = allPass
+      ? '\u5168\u90e8\u2264200\u03bc\u03a9 \u2192 \u5408\u683c \u2713 (A:'+vals[0]+' B:'+vals[1]+' C:'+vals[2]+' \u03bc\u03a9)'
+      : '\u8d85\u6807 \u2192 \u4e0d\u5408\u683c \u2717';
+  }
+}
+
+/* 从batchDC[0]同步数据回breakerTests（从Page5返回时调用） */
+function syncBatchToBreaker() {
+  var map = batchDC[0].syncKeys;
+  if(!map) return;
+  var allItems = breakerTests['elec'];
+  var phases = ['A','B','C'];
+  for(var p=0; p<phases.length; p++) {
+    var itemId = map[phases[p]];
+    var batchVal = batchDC[0].vals[phases[p]];
+    if(batchVal === '') continue;
+    for(var g=0; g<allItems.length; g++) {
+      for(var i=0; i<allItems[g].items.length; i++) {
+        if(allItems[g].items[i].id === itemId) {
+          allItems[g].items[i].val = batchVal;
+        }
+      }
+    }
+  }
+  /* 触发calc自动计算 */
+  tryAutoCalc();
+}
+
+/* ===== 全局状态 ===== */
+var currentPage = 1;
+var currentTab = 'non-elec';
+var selectedTestIdx = -1;
+var selectedTestId = '';
+var selectedToggleVal = '';
+var breakerSubmitted = false;
+var confirmAction = null;
+var confirmDialogCallback = null;
+var toastTimer = null;
+var issueTargetId = '';
+var issuePhotoCount = 0;
+
+/* ===== Toast ===== */
+function showToast(msg) {
+  var el = document.getElementById('toastEl');
+  el.textContent = msg;
+  el.classList.add('show');
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2000);
+}
+
+/* ===== 页面切换 ===== */
+function goPage(n) {
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('page'+n).classList.add('active');
+  currentPage = n;
+  if(n === 2) updateP2Progress();
+}
+
+function goBreaker() {
+  selectedTestIdx = -1;
+  selectedTestId = '';
+  currentTab = 'non-elec';
+  renderDetail();
+  goPage(3);
+}
+
+/* ===== 视图切换 ===== */
+function switchView(mode) {
+  document.getElementById('segDev').classList.toggle('sel', mode==='dev');
+  document.getElementById('segBatch').classList.toggle('sel', mode==='batch');
+  document.getElementById('viewDev').style.display = mode==='dev' ? 'block' : 'none';
+  document.getElementById('viewBatch').style.display = mode==='batch' ? 'block' : 'none';
+
+  /* D23：提交入口只在按设备视图 */
+  var p2Bot = document.querySelector('#page2 .bot');
+  if(mode === 'batch') {
+    p2Bot.style.display = 'none';
+  } else {
+    p2Bot.style.display = '';
+  }
+}
+
+/* ===== 分组折叠 ===== */
+function toggleGroup(hd) {
+  var arrow = hd.querySelector('.group-arrow');
+  var items = hd.nextElementSibling;
+  if(items && items.classList.contains('group-items')) {
+    arrow.classList.toggle('collapsed');
+    items.classList.toggle('collapsed');
+  }
+}
+
+/* ===== Tab切换 ===== */
+function switchTab(tab) {
+  currentTab = tab;
+  selectedTestIdx = -1;
+  selectedTestId = '';
+  document.getElementById('segNonElec').classList.toggle('sel', tab==='non-elec');
+  document.getElementById('segElec').classList.toggle('sel', tab==='elec');
+  document.getElementById('segWufang').classList.toggle('sel', tab==='wufang');
+  renderDetail();
+}
+
+/* ===== 辅助函数 ===== */
+function getFlatItems(tab) {
+  var flat = [];
+  var groups = breakerTests[tab] || [];
+  for(var g=0; g<groups.length; g++) {
+    for(var i=0; i<groups[g].items.length; i++) {
+      flat.push({groupIdx:g, itemIdx:i, group:groups[g].group, item:groups[g].items[i]});
+    }
+  }
+  return flat;
+}
+
+function isItemDone(it) {
+  if(it.type === 'photo') return it.photoCount > 0;
+  if(it.issueFlag) return true;
+  return it.val !== '';
+}
+
+function countDone(tab) {
+  var flat = getFlatItems(tab);
+  var n = 0;
+  for(var i=0; i<flat.length; i++) if(isItemDone(flat[i].item)) n++;
+  return n;
+}
+
+function countTotal(tab) {
+  return getFlatItems(tab).length;
+}
+
+function totalBreakerDone() {
+  return countDone('non-elec') + countDone('elec') + countDone('wufang');
+}
+
+function totalBreakerItems() {
+  return countTotal('non-elec') + countTotal('elec') + countTotal('wufang');
+}
+
+function findItemById(id) {
+  var tabs = ['non-elec','elec','wufang'];
+  for(var t=0; t<tabs.length; t++) {
+    var groups = breakerTests[tabs[t]];
+    for(var g=0; g<groups.length; g++) {
+      for(var i=0; i<groups[g].items.length; i++) {
+        if(groups[g].items[i].id === id) return groups[g].items[i];
+      }
+    }
+  }
+  return null;
+}
+
+/* 查找某id所在的组对象 */
+function findGroupByItemId(id) {
+  var tabs = ['non-elec','elec','wufang'];
+  for(var t=0; t<tabs.length; t++) {
+    var groups = breakerTests[tabs[t]];
+    for(var g=0; g<groups.length; g++) {
+      for(var i=0; i<groups[g].items.length; i++) {
+        if(groups[g].items[i].id === id) return groups[g];
+      }
+    }
+  }
+  return null;
+}
+
+/* 查找当前tab中某id的下一个未确认组内的item id */
+function findNextItemId(currentId) {
+  var flat = getFlatItems(currentTab);
+  var groups = breakerTests[currentTab];
+  for(var i=0; i<flat.length; i++) {
+    if(flat[i].item.id === currentId && i+1 < flat.length) {
+      var nextGroup = groups[flat[i+1].groupIdx];
+      if(nextGroup.confirmed) {
+        for(var j=i+2; j<flat.length; j++) {
+          var jGroup = groups[flat[j].groupIdx];
+          if(!jGroup.confirmed) return flat[j].item.id;
+        }
+        return null;
+      }
+      return flat[i+1].item.id;
+    }
+  }
+  return null;
+}
+
+/* 组级确认统计 */
+function countConfirmedGroups() {
+  var totalGroups = 0;
+  var confirmedGroups = 0;
+  var tabs = ['non-elec','elec','wufang'];
+  for(var t=0; t<tabs.length; t++) {
+    var groups = breakerTests[tabs[t]];
+    for(var g=0; g<groups.length; g++) {
+      totalGroups++;
+      if(groups[g].confirmed) confirmedGroups++;
+    }
+  }
+  return { total: totalGroups, confirmed: confirmedGroups };
+}
+
+/* 导航栏进度 -> 提交（组维度） */
+function updateNavProgress() {
+  var stats = countConfirmedGroups();
+  var navRight = document.getElementById('navRight');
+  if(!navRight) return;
+
+  if(stats.confirmed < stats.total) {
+    navRight.textContent = stats.confirmed + '/' + stats.total + ' 组';
+    navRight.className = 'nav-right';
+    navRight.onclick = null;
+  } else {
+    navRight.textContent = '提交';
+    navRight.className = 'nav-right ready';
+    navRight.onclick = function() { showSubmitConfirm(); };
+  }
+}
+
+/* ===== calc函数 ===== */
+function syncCalc(deps) {
+  var vals = [];
+  for(var i=0; i<deps.length; i++) {
+    var it = findItemById(deps[i]);
+    if(!it || it.val === '') return null;
+    vals.push(parseFloat(it.val));
+  }
+  var result = Math.max.apply(null, vals) - Math.min.apply(null, vals);
+  return { value: result.toFixed(1), pass: result <= 5 };
+}
+
+function resistCalc(deps) {
+  var vals = [];
+  for(var i=0; i<deps.length; i++) {
+    var it = findItemById(deps[i]);
+    if(!it || it.val === '') return null;
+    vals.push(parseFloat(it.val));
+  }
+  var allOk = vals.every(function(v){ return v <= 200; });
+  return { value: allOk ? '合格' : '不合格', pass: allOk };
+}
+
+var calcFns = { syncCalc: syncCalc, resistCalc: resistCalc };
+
+function tryAutoCalc() {
+  var tabs = ['non-elec','elec','wufang'];
+  for(var t=0; t<tabs.length; t++) {
+    var groups = breakerTests[tabs[t]];
+    for(var g=0; g<groups.length; g++) {
+      for(var i=0; i<groups[g].items.length; i++) {
+        var it = groups[g].items[i];
+        if(it.type === 'calc' && it.calcFn) {
+          var fn = calcFns[it.calcFn];
+          if(fn) {
+            var result = fn(it.deps);
+            if(result !== null) {
+              it.val = result.value;
+              it._pass = result.pass;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/* ===== 渲染设备详情 ===== */
+function renderDetail() {
+  tryAutoCalc();
+  renderSideNav();
+  renderContent();
+  renderBotAction();
+  updateDetailCounts();
+}
+
+function renderSideNav() {
+  var nav = document.getElementById('sideNav');
+  var groups = breakerTests[currentTab] || [];
+  var html = '';
+  for(var g=0; g<groups.length; g++) {
+    var done = 0, total = groups[g].items.length;
+    for(var i=0; i<total; i++) if(isItemDone(groups[g].items[i])) done++;
+    if(g > 0) html += '<div class="side-divider"></div>';
+    var active = false;
+    if(selectedTestId) {
+      for(var i=0; i<groups[g].items.length; i++) {
+        if(groups[g].items[i].id === selectedTestId) { active = true; break; }
+      }
+    }
+    html += '<div class="side-item'+(active?' active':'')+'" onclick="scrollToGroup('+g+')">';
+    html += groups[g].group.replace(/试验$/,'').replace(/检查$/,'').replace(/验证$/,'');
+    if(groups[g].confirmed) {
+      html += '<span class="si-confirmed">\u2713</span>';
+    } else {
+      html += '<span class="si-count">'+done+'/'+total+'</span>';
+    }
+    html += '</div>';
+  }
+  nav.innerHTML = html;
+}
+
+function renderContent() {
+  var content = document.getElementById('detailContent');
+  var groups = breakerTests[currentTab] || [];
+  var html = '';
+  for(var g=0; g<groups.length; g++) {
+    var grp = groups[g];
+    var gDone = 0, gTotal = grp.items.length;
+    for(var i=0; i<gTotal; i++) if(isItemDone(grp.items[i])) gDone++;
+    var allDone = (gDone === gTotal);
+    var confirmed = grp.confirmed;
+
+    /* 组标题 */
+    html += '<div class="test-group-hd'+(confirmed?' confirmed':'')+'" onclick="toggleTestGroup(this)" id="tg-'+g+'">';
+    html += '<span class="test-group-arrow">&#9660;</span>';
+    html += '<span class="test-group-title">'+grp.group+'</span>';
+
+    if(confirmed) {
+      html += '<span class="group-confirmed-tag">\u2713 已确认</span>';
+    } else if(allDone) {
+      html += '<span class="test-group-count">'+gDone+'/'+gTotal+'</span>';
+      html += '<button class="group-confirm-btn" onclick="event.stopPropagation();confirmGroup(\''+currentTab+'\','+g+')">确认</button>';
+    } else {
+      html += '<span class="test-group-count">'+gDone+'/'+gTotal+'</span>';
+    }
+    html += '</div>';
+
+    /* 组内试验项 */
+    html += '<div class="test-group-items">';
+    for(var i=0; i<grp.items.length; i++) {
+      var it = grp.items[i];
+      var done = isItemDone(it);
+      var isNg = it.val === '不合格' || it.issueFlag;
+      var sel = it.id === selectedTestId;
+      var cls = 'test-row';
+      if(sel) cls += ' selected';
+      if(done) cls += ' filled';
+      if(confirmed) cls += ' readonly';
+      html += '<div class="'+cls+'" onclick="selectItem(\''+it.id+'\')">';
+      /* dot */
+      var dotCls = 'test-row-dot';
+      if(done && !isNg) dotCls += ' done';
+      if(isNg) dotCls += ' ng';
+      html += '<span class="'+dotCls+'"></span>';
+      /* name */
+      html += '<span class="test-row-name">'+it.name+'</span>';
+      /* type indicators */
+      if(it.bt) html += '<span class="test-row-bt">BT</span>';
+      if(it.type === 'photo') html += '<span class="test-row-camera">&#128247;</span>';
+      /* value display */
+      if(done) {
+        var valCls = 'test-row-val';
+        if(it.val === '合格' || it._pass === true) valCls += ' ok';
+        if(it.val === '不合格' || it._pass === false || isNg) valCls += ' ng';
+        var displayVal = it.val;
+        if(it.type === 'photo') displayVal = it.photoCount + '张';
+        if(it.type === 'calc' && it._pass !== undefined) {
+          displayVal = it.val + (it.unit ? it.unit : '') + (it._pass ? ' \u2713' : ' \u2717');
+        }
+        html += '<span class="'+valCls+'">'+displayVal+'</span>';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+  content.innerHTML = html;
+}
+
+function toggleTestGroup(hd) {
+  var arrow = hd.querySelector('.test-group-arrow');
+  var items = hd.nextElementSibling;
+  if(items) {
+    arrow.classList.toggle('collapsed');
+    items.classList.toggle('collapsed');
+  }
+  /* 如果点击的是已确认组的标题，显示锁定提示 */
+  var gIdx = parseInt(hd.id.replace('tg-',''));
+  var groups = breakerTests[currentTab];
+  if(groups[gIdx] && groups[gIdx].confirmed) {
+    showLockedHint();
+  }
+}
+
+function scrollToGroup(g) {
+  var el = document.getElementById('tg-'+g);
+  if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* ===== 选中试验项 ===== */
+function selectItem(id) {
+  /* 检查该项所在组是否已确认 */
+  var grp = findGroupByItemId(id);
+  if(grp && grp.confirmed) {
+    return;
+  }
+  selectedTestId = id;
+  renderDetail();
+}
+
+/* ===== 显示已锁定提示 ===== */
+function showLockedHint() {
+  var defaultEl = document.getElementById('botDefault');
+  var actionEl = document.getElementById('botActionArea');
+  var lockedEl = document.getElementById('botLockedHint');
+  defaultEl.style.display = 'none';
+  actionEl.style.display = 'none';
+  lockedEl.style.display = 'block';
+}
+
+/* ===== 底部操作区渲染（改造核心） ===== */
+function renderBotAction() {
+  var defaultEl = document.getElementById('botDefault');
+  var actionEl = document.getElementById('botActionArea');
+  var lockedEl = document.getElementById('botLockedHint');
+
+  if(!selectedTestId) {
+    defaultEl.style.display = 'block';
+    actionEl.style.display = 'none';
+    lockedEl.style.display = 'none';
+    return;
+  }
+
+  /* 检查所选项是否在已确认组内 */
+  var grp = findGroupByItemId(selectedTestId);
+  if(grp && grp.confirmed) {
+    showLockedHint();
+    return;
+  }
+
+  defaultEl.style.display = 'none';
+  actionEl.style.display = 'block';
+  lockedEl.style.display = 'none';
+
+  var it = findItemById(selectedTestId);
+  if(!it) return;
+
+  document.getElementById('botActionLabel').textContent = it.name + (it.type === 'calc' ? '（自动计算）' : '');
+
+  var infoBtn = document.getElementById('botActionInfo');
+  if(it.std) {
+    infoBtn.style.display = '';
+  } else {
+    infoBtn.style.display = 'none';
+  }
+
+  var stdEl = document.getElementById('botActionStd');
+  if(it.std && (it.type === 'number' || it.type === 'calc')) {
+    stdEl.textContent = '标准值：' + it.std;
+    stdEl.style.display = 'block';
+  } else {
+    stdEl.style.display = 'none';
+  }
+
+  var inputRow = document.getElementById('botInputRow');
+
+  switch(it.type) {
+    case 'toggle': renderToggleBot(inputRow, it); break;
+    case 'number': renderNumberBot(inputRow, it); break;
+    case 'text': renderTextBot(inputRow, it); break;
+    case 'date': renderDateBot(inputRow, it); break;
+    case 'photo': renderPhotoBot(inputRow, it); break;
+    case 'calc': renderCalcBot(inputRow, it); break;
+  }
+}
+
+/* --- toggle：选择即确认 --- */
+function renderToggleBot(container, it) {
+  var passClass = it.val === '合格' ? ' pass-on' : '';
+  var failClass = it.val === '不合格' || it.issueFlag ? ' fail-on' : '';
+  container.innerHTML =
+    '<div class="toggle-row">' +
+      '<div class="toggle-btn'+passClass+'" onclick="togglePass(\''+it.id+'\')">合格 \u2713</div>' +
+      '<div class="toggle-btn'+failClass+'" onclick="toggleFail(\''+it.id+'\')">不合格 \u2717</div>' +
+    '</div>';
+}
+
+function togglePass(id) {
+  var it = findItemById(id);
+  if(!it) return;
+  it.val = '合格';
+  it.issueFlag = false;
+  renderDetail();
+  setTimeout(function() {
+    showToast('已保存');
+    var next = findNextItemId(id);
+    if(next) {
+      selectedTestId = next;
+      renderDetail();
+    }
+    updateP2Progress();
+  }, 300);
+}
+
+function toggleFail(id) {
+  issueTargetId = id;
+  showIssueSheet2(id);
+}
+
+/* --- number --- */
+function renderNumberBot(container, it) {
+  var btHtml = it.bt ? '<button class="bot-bt" onclick="btFill(\''+it.id+'\')" title="蓝牙采集">&#128309;</button>' : '';
+  container.innerHTML =
+    '<div class="bot-input-row">' +
+      '<input type="number" step="any" class="bot-input" id="numInput" placeholder="请输入数值" value="'+(it.val||'')+'">' +
+      (it.unit ? '<span class="bot-unit">'+it.unit+'</span>' : '') +
+      btHtml +
+      '<button class="bot-submit" onclick="confirmNumber(\''+it.id+'\')">确认</button>' +
+    '</div>';
+  setTimeout(function(){ var inp = document.getElementById('numInput'); if(inp) inp.focus(); }, 100);
+}
+
+function btFill(id) {
+  var it = findItemById(id);
+  if(!it) return;
+  var mockVals = {
+    'e1': '65.2', 'e2': '66.1', 'e3': '64.8',
+    'e6': '158', 'e7': '162', 'e8': '175',
+    'e10': '42', 'e11': '65'
+  };
+  var val = mockVals[id] || (Math.floor(Math.random()*200)+50).toString();
+  var inp = document.getElementById('numInput');
+  if(inp) inp.value = val;
+  showToast('蓝牙采集：' + val + (it.unit || ''));
+}
+
+function confirmNumber(id) {
+  var inp = document.getElementById('numInput');
+  if(!inp || inp.value.trim() === '') { showToast('请输入数值'); return; }
+  var it = findItemById(id);
+  if(!it) return;
+  var val = parseFloat(inp.value);
+  it.val = inp.value.trim();
+
+  var isNg = false;
+  if(it.std) {
+    if(it.std.indexOf('\u2264200') >= 0 && val > 200) isNg = true;
+    if(it.std.indexOf('\u226560') >= 0 && val < 60) isNg = true;
+  }
+
+  if(isNg) {
+    issueTargetId = id;
+    showIssueSheet2(id);
+  } else {
+    showToast('已保存');
+    tryAutoCalc();
+    var next = findNextItemId(id);
+    if(next) selectedTestId = next;
+    renderDetail();
+    updateP2Progress();
+  }
+}
+
+/* --- text --- */
+function renderTextBot(container, it) {
+  container.innerHTML =
+    '<div class="bot-input-row">' +
+      '<input type="text" class="bot-input" id="textInput" placeholder="请输入'+it.name+'" value="'+(it.val||'')+'">' +
+      '<button class="bot-submit" onclick="confirmText(\''+it.id+'\')">确认</button>' +
+    '</div>';
+  setTimeout(function(){ var inp = document.getElementById('textInput'); if(inp) inp.focus(); }, 100);
+}
+
+function confirmText(id) {
+  var inp = document.getElementById('textInput');
+  if(!inp || inp.value.trim() === '') { showToast('请输入内容'); return; }
+  var it = findItemById(id);
+  if(!it) return;
+  it.val = inp.value.trim();
+  showToast('已保存');
+  var next = findNextItemId(id);
+  if(next) selectedTestId = next;
+  renderDetail();
+  updateP2Progress();
+}
+
+/* --- date --- */
+function renderDateBot(container, it) {
+  container.innerHTML =
+    '<div class="bot-input-row">' +
+      '<input type="date" class="bot-input" id="dateInput" value="'+(it.val||'')+'">' +
+      '<button class="bot-submit" onclick="confirmDate(\''+it.id+'\')">确认</button>' +
+    '</div>';
+}
+
+function confirmDate(id) {
+  var inp = document.getElementById('dateInput');
+  if(!inp || !inp.value) { showToast('请选择日期'); return; }
+  var it = findItemById(id);
+  if(!it) return;
+  it.val = inp.value;
+  showToast('已保存');
+  var next = findNextItemId(id);
+  if(next) selectedTestId = next;
+  renderDetail();
+  updateP2Progress();
+}
+
+/* --- photo --- */
+function renderPhotoBot(container, it) {
+  container.innerHTML =
+    '<div class="bot-input-row">' +
+      '<span style="flex:1;font-size:13px;color:var(--g500)">拍摄'+it.name+'照片</span>' +
+      '<button class="bot-submit" onclick="enterCameraMode(getCurrentGroupIdx())" style="font-size:16px">&#128247; 拍照</button>' +
+    '</div>' +
+    '<div style="font-size:11px;color:var(--g400);margin-top:4px">已拍 '+it.photoCount+'/'+(it.maxPhoto||5)+'</div>';
+}
+
+function getCurrentGroupIdx() {
+  if(!selectedTestId) return 0;
+  var groups = breakerTests[currentTab];
+  for(var g=0; g<groups.length; g++) {
+    for(var i=0; i<groups[g].items.length; i++) {
+      if(groups[g].items[i].id === selectedTestId) return g;
+    }
+  }
+  return 0;
+}
+
+/* --- calc --- */
+function renderCalcBot(container, it) {
+  if(it.val !== '') {
+    var judgeCls = it._pass ? 'ok' : 'ng';
+    var judgeText = it._pass ? '合格 \u2713' : '不合格 \u2717';
+    container.innerHTML =
+      '<div class="calc-display">' +
+        '<div class="calc-result">计算结果：'+it.val+(it.unit ? ' '+it.unit : '')+'</div>' +
+        '<div class="calc-judge '+judgeCls+'">'+judgeText+'</div>' +
+      '</div>';
+    if(!it._pass && !it.issueFlag) {
+      it.issueFlag = true;
+    }
+  } else {
+    container.innerHTML =
+      '<div class="calc-display">' +
+        '<div class="calc-pending">等待前置数据...</div>' +
+      '</div>';
+  }
+}
+
+/* ===== 更新各级进度 ===== */
+function updateDetailCounts() {
+  document.getElementById('nonElecCount').textContent = countDone('non-elec')+'/'+countTotal('non-elec');
+  document.getElementById('elecCount').textContent = countDone('elec')+'/'+countTotal('elec');
+  document.getElementById('wufangCount').textContent = countDone('wufang')+'/'+countTotal('wufang');
+  updateNavProgress();
+
+  var td = totalBreakerDone();
+  var tt = totalBreakerItems();
+  document.getElementById('breakerProg').textContent = td+'/'+tt;
+
+  // update breaker tag
+  var tag = document.getElementById('breakerTag');
+  if(breakerSubmitted) {
+    tag.textContent = '已完成';
+    tag.className = 'dev-row-tag ok';
+  } else if(td > 0 && td < tt) {
+    tag.textContent = '检测中';
+    tag.className = 'dev-row-tag doing';
+  } else if(td === 0) {
+    tag.textContent = '待检测';
+    tag.className = 'dev-row-tag wait';
+  }
+
+  // breaker row color
+  var dr = document.getElementById('devBreaker1');
+  if(breakerSubmitted) {
+    dr.className = 'dev-row done';
+  } else if(td > 0) {
+    dr.className = 'dev-row partial';
+  } else {
+    dr.className = 'dev-row';
+  }
+}
+
+function updateP2Progress() {
+  var done = breakerSubmitted ? 1 : 0;
+  // add batch DC done count
+  var batchDone = 0;
+  for(var i=0; i<batchDC.length; i++) if(batchDC[i].done) batchDone++;
+  // For page2, we count devices: breaker done + batch cables done (simplified)
+  document.getElementById('p2Done').textContent = done;
+  document.getElementById('p2Left').textContent = (8 - done);
+  document.getElementById('p1RoomProg').textContent = totalBreakerDone();
+
+  var p2btn = document.getElementById('p2Btn');
+  if(done >= 8) {
+    p2btn.className = 'bot-btn ready';
+  } else {
+    p2btn.className = 'bot-btn wait';
+  }
+
+  // page1 tag
+  var tag1 = document.getElementById('p1RoomTag');
+  if(totalBreakerDone() > 0 || breakerSubmitted) {
+    tag1.textContent = '检测中';
+    tag1.className = 'room-tag ready';
+  }
+}
+
+/* ===== 组级确认 ===== */
+function confirmGroup(tab, groupIdx) {
+  var grp = breakerTests[tab][groupIdx];
+
+  showConfirmDialog(
+    '确认锁定',
+    grp.group + ' 已全部完成（' + grp.items.length + '项），确认锁定？锁定后不可修改。',
+    '确认锁定',
+    function() {
+      grp.confirmed = true;
+      showToast(grp.group + ' 已确认');
+      if(selectedTestId) {
+        var selGrp = findGroupByItemId(selectedTestId);
+        if(selGrp === grp) {
+          selectedTestId = '';
+        }
+      }
+      renderDetail();
+      jumpToNextUnconfirmedGroup();
+    }
+  );
+}
+
+function jumpToNextUnconfirmedGroup() {
+  var tabs = ['non-elec','elec','wufang'];
+  var tabOrder = [currentTab];
+  for(var t=0; t<tabs.length; t++) {
+    if(tabs[t] !== currentTab) tabOrder.push(tabs[t]);
+  }
+
+  for(var t=0; t<tabOrder.length; t++) {
+    var groups = breakerTests[tabOrder[t]];
+    for(var g=0; g<groups.length; g++) {
+      if(!groups[g].confirmed) {
+        for(var i=0; i<groups[g].items.length; i++) {
+          if(!isItemDone(groups[g].items[i])) {
+            if(tabOrder[t] !== currentTab) {
+              switchTab(tabOrder[t]);
+            }
+            selectedTestId = groups[g].items[i].id;
+            renderDetail();
+            scrollToGroup(g);
+            return;
+          }
+        }
+        if(tabOrder[t] !== currentTab) {
+          switchTab(tabOrder[t]);
+        }
+        selectedTestId = groups[g].items[0].id;
+        renderDetail();
+        scrollToGroup(g);
+        return;
+      }
+    }
+  }
+}
+
+/* ===== 通用确认弹窗 ===== */
+function showConfirmDialog(title, msg, okText, callback) {
+  document.getElementById('cdTitle').textContent = title;
+  document.getElementById('cdDesc').textContent = msg;
+  document.getElementById('cdOkBtn').textContent = okText;
+  confirmDialogCallback = callback;
+  document.getElementById('confirmDialog').classList.add('show');
+}
+
+/* ===== 提交确认（全部组确认后） ===== */
+function showSubmitConfirm() {
+  showConfirmDialog(
+    '提交确认',
+    '断路器 #1 全部 8 组检测数据已确认，提交后不可修改。确认提交？',
+    '确认提交',
+    function() {
+      breakerSubmitted = true;
+      showToast('断路器 #1 已提交');
+      updateP2Progress();
+      updateDetailCounts();
+      goPage(2);
+    }
+  );
+}
+
+function showSubmitRoom() {
+  confirmAction = 'submitRoom';
+  showConfirmDialog(
+    '提交确认',
+    '确认提交此站房的全部检测数据？',
+    '确认提交',
+    function() {
+      showToast('站房数据已提交');
+    }
+  );
+}
+
+function hideConfirm() {
+  document.getElementById('confirmDialog').classList.remove('show');
+  confirmAction = null;
+  confirmDialogCallback = null;
+}
+
+function doConfirmAction() {
+  document.getElementById('confirmDialog').classList.remove('show');
+  if(confirmDialogCallback) {
+    confirmDialogCallback();
+    confirmDialogCallback = null;
+  } else if(confirmAction === 'submitRoom') {
+    showToast('站房数据已提交');
+  }
+  confirmAction = null;
+}
+
+/* ===== 标准值Sheet ===== */
+function showStdSheet() {
+  if(!selectedTestId) return;
+  var it = findItemById(selectedTestId);
+  if(!it || !it.std) return;
+  document.getElementById('stdContent').innerHTML = '<p><strong>'+it.name+'</strong></p><p>标准值：'+(it.std||'无特殊要求')+'</p>';
+  document.getElementById('stdSheet').classList.add('show');
+}
+function hideStdSheet() {
+  document.getElementById('stdSheet').classList.remove('show');
+}
+
+/* ===== 拍照模式 ===== */
+var camPhotoItems = [];
+var camCurrentIdx = 0;
+var camGroupIdx = 0;
+
+function enterCameraMode(groupIdx) {
+  var groups = breakerTests[currentTab];
+  var group = groups[groupIdx];
+  camGroupIdx = groupIdx;
+
+  camPhotoItems = [];
+  for(var i=0; i<group.items.length; i++) {
+    if(group.items[i].type === 'photo') {
+      camPhotoItems.push(group.items[i]);
+    }
+  }
+  if(camPhotoItems.length === 0) return;
+
+  camCurrentIdx = 0;
+  for(var i=0; i<camPhotoItems.length; i++) {
+    if(camPhotoItems[i].photoCount < (camPhotoItems[i].maxPhoto||1)) {
+      camCurrentIdx = i;
+      break;
+    }
+  }
+
+  document.getElementById('p4Title').textContent = group.group;
+  renderCameraMode();
+  goPage(4);
+}
+
+function exitCameraMode() {
+  renderDetail();
+  goPage(3);
+}
+
+function renderCameraMode() {
+  var vfl = document.getElementById('camVfl');
+  var vflText = document.getElementById('camVflText');
+  var total = camPhotoItems.length;
+  var doneCount = 0;
+  for(var i=0; i<total; i++) if(camPhotoItems[i].photoCount >= (camPhotoItems[i].maxPhoto||1)) doneCount++;
+
+  vflText.textContent = doneCount >= total ? '全部拍摄完成' : '\ud83d\udcf7 '+camPhotoItems[camCurrentIdx].name+'  '+(camCurrentIdx+1)+'/'+total;
+  vfl.classList.add('vis');
+
+  // item list
+  var listEl = document.getElementById('camItemList');
+  var html = '';
+  for(var i=0; i<camPhotoItems.length; i++) {
+    var pi = camPhotoItems[i];
+    var isSel = (i === camCurrentIdx);
+    var isDone = (pi.photoCount >= (pi.maxPhoto||1));
+    html += '<div class="ci'+(isSel?' sel':'')+'" onclick="camSelectItem('+i+')">';
+    html += '<div class="cid'+(isSel && !isDone?' dc':'')+(isDone?' dd':'')+'"></div>';
+    html += '<span class="ci-name">'+pi.name+'</span>';
+    html += '<span class="cic">'+pi.photoCount+'/'+(pi.maxPhoto||1)+'</span>';
+    html += '</div>';
+    if(isSel && pi.photoCount > 0) {
+      html += '<div class="ci-photos">';
+      for(var p=0; p<pi.photoCount; p++) {
+        html += '<div class="ci-ph filled">&#128248;<div class="ph-del" onclick="event.stopPropagation();camDeletePhoto('+i+','+p+')">&#10005;</div></div>';
+      }
+      if(pi.photoCount < (pi.maxPhoto||1)) {
+        html += '<div class="ci-ph" style="border:1.5px dashed var(--g300);color:var(--g300)">+</div>';
+      }
+      html += '</div>';
+    }
+  }
+  listEl.innerHTML = html;
+
+  // dots
+  var dotsEl = document.getElementById('camDots');
+  var dotsHtml = '';
+  for(var i=0; i<total; i++) {
+    dotsHtml += '<div class="pd '+(camPhotoItems[i].photoCount >= (camPhotoItems[i].maxPhoto||1) ? 'full':'empty')+'"></div>';
+  }
+  dotsEl.innerHTML = dotsHtml;
+
+  // shutter
+  var sh = document.getElementById('camShutter');
+  var allDone = (doneCount >= total);
+  if(allDone || camPhotoItems[camCurrentIdx].photoCount >= (camPhotoItems[camCurrentIdx].maxPhoto||1)) {
+    sh.classList.add('dis');
+  } else {
+    sh.classList.remove('dis');
+  }
+}
+
+function camSelectItem(idx) {
+  camCurrentIdx = idx;
+  renderCameraMode();
+}
+
+function camTakePhoto() {
+  var pi = camPhotoItems[camCurrentIdx];
+  if(pi.photoCount >= (pi.maxPhoto||1)) return;
+
+  // flash
+  var flash = document.getElementById('camFlash');
+  flash.classList.add('fire');
+  setTimeout(function(){ flash.classList.remove('fire'); }, 200);
+
+  pi.photoCount++;
+  showToast('拍照成功');
+
+  setTimeout(function(){
+    // check if all done
+    var allDone = true;
+    for(var i=0; i<camPhotoItems.length; i++) {
+      if(camPhotoItems[i].photoCount < (camPhotoItems[i].maxPhoto||1)) { allDone = false; break; }
+    }
+
+    if(allDone) {
+      setTimeout(function(){
+        showToast('全部拍照完成');
+        setTimeout(function(){
+          tryAutoCalc();
+          updateDetailCounts();
+          updateP2Progress();
+          exitCameraMode();
+        }, 800);
+      }, 300);
+    } else {
+      // advance to next unfilled
+      for(var i=0; i<camPhotoItems.length; i++) {
+        var ni = (camCurrentIdx + 1 + i) % camPhotoItems.length;
+        if(camPhotoItems[ni].photoCount < (camPhotoItems[ni].maxPhoto||1)) {
+          camCurrentIdx = ni;
+          break;
+        }
+      }
+      renderCameraMode();
+    }
+  }, 300);
+}
+
+function camDeletePhoto(itemIdx, photoIdx) {
+  camPhotoItems[itemIdx].photoCount = Math.max(0, camPhotoItems[itemIdx].photoCount - 1);
+  renderCameraMode();
+}
+
+/* ===== Page5：批量回路电阻（断路器×2） ===== */
+function goBatchDC() {
+  syncBreakerToBatch();  /* 进入前：从按设备视图同步已有数据 */
+  renderBatchDC();
+  goPage(5);
+}
+
+function renderBatchDC() {
+  var container = document.getElementById('batchDCList');
+  var html = '';
+  var phases = ['A','B','C'];
+  for(var c=0; c<batchDC.length; c++) {
+    var dev = batchDC[c];
+    var filledCount = 0;
+    for(var k=0; k<phases.length; k++) if(dev.vals[phases[k]] !== '') filledCount++;
+
+    var statusClass = dev.done ? (dev.pass ? ' ok' : ' ng') : '';
+    html += '<div class="batch-card'+statusClass+'" id="bc'+c+'">';
+    html += '<div class="batch-card-hd">';
+    html += '<span class="batch-card-name">'+dev.name+'</span>';
+    html += '<span class="batch-card-prog'+(dev.done?' done':'')+'">'+filledCount+'/3</span>';
+    html += '</div>';
+    html += '<div class="batch-card-body">';
+
+    for(var k=0; k<phases.length; k++) {
+      var phaseLabel = phases[k]+'相回路电阻';
+      html += '<div class="batch-field">';
+      html += '<span class="batch-field-label">'+phaseLabel+'</span>';
+      html += '<input class="batch-field-input" id="bci'+c+'_'+phases[k]+'" placeholder="___" value="'+dev.vals[phases[k]]+'"'+(dev.done?' disabled':'')+' type="number" step="any">';
+      html += '<span class="batch-field-unit">\u03bc\u03a9</span>';
+      if(!dev.done) html += '<button class="batch-field-bt" onclick="btFillBatch('+c+',\''+phases[k]+'\')">&#128309;</button>';
+      html += '</div>';
+    }
+
+    if(dev.done) {
+      html += '<div class="batch-card-result show '+(dev.pass?'ok':'ng')+'">'+dev.result+'</div>';
+    }
+
+    if(!dev.done) {
+      html += '<div class="batch-card-actions">';
+      html += '<button class="batch-card-confirm" onclick="confirmBatchDC('+c+')">确认</button>';
+      html += '</div>';
+    }
+    html += '</div></div>';
+  }
+  container.innerHTML = html;
+  updateBatchDCProgress();
+}
+
+function btFillBatch(idx, phase) {
+  var simVal = (Math.random()*80 + 120).toFixed(1);
+  var inp = document.getElementById('bci'+idx+'_'+phase);
+  if(inp) {
+    inp.value = simVal;
+    showToast('\u84dd\u7259\u6570\u636e\u5df2\u63a5\u6536\uff1a'+simVal+' \u03bc\u03a9');
+  }
+}
+
+function confirmBatchDC(idx) {
+  var dev = batchDC[idx];
+  var phases = ['A','B','C'];
+  var vals = [];
+  for(var k=0; k<phases.length; k++) {
+    var inp = document.getElementById('bci'+idx+'_'+phases[k]);
+    var v = inp ? inp.value : '';
+    if(v === '' || isNaN(v)) {
+      showToast('\u8bf7\u586b\u5199\u6240\u6709\u76f8\u56de\u8def\u7535\u963b');
+      return;
+    }
+    vals.push(parseFloat(v));
+    dev.vals[phases[k]] = v;
+  }
+
+  var allPass = true;
+  var maxVal = 0;
+  for(var i=0; i<vals.length; i++) {
+    if(vals[i] > 200) allPass = false;
+    if(vals[i] > maxVal) maxVal = vals[i];
+  }
+
+  dev.done = true;
+  dev.pass = allPass;
+  var details = 'A:'+vals[0]+' B:'+vals[1]+' C:'+vals[2]+' \u03bc\u03a9';
+  dev.result = allPass
+    ? '\u5168\u90e8\u2264200\u03bc\u03a9 \u2192 \u5408\u683c \u2713 ('+details+')'
+    : '\u6700\u5927\u503c '+maxVal+'\u03bc\u03a9 \u8d85\u6807 \u2192 \u4e0d\u5408\u683c \u2717';
+
+  showToast(dev.name+' \u56de\u8def\u7535\u963b\u5df2\u4fdd\u5b58');
+  syncBatchToBreaker();  /* 确认时实时同步回按设备视图的数据 */
+  renderBatchDC();
+}
+
+function exitBatchDC() {
+  syncBatchToBreaker();  /* 返回前：将批量视图录入的数据同步回按设备视图 */
+  updateDetailCounts();
+  updateP2Progress();
+  goPage(2);
+}
+
+function updateBatchDCProgress() {
+  var total = batchDC.length;
+  var done = 0;
+  for(var i=0; i<total; i++) if(batchDC[i].done) done++;
+  document.getElementById('p5Done').textContent = done;
+  document.getElementById('p5Left').textContent = (total-done);
+  document.getElementById('p5Bar').style.width = (done/total*100)+'%';
+}
+
+/* ===== D13 不合格处理 ===== */
+var issueSelectedProblems = [];
+
+var issueTypes = [
+  {label:'外观破损/变形', level:'normal', levelText:'一般'},
+  {label:'接线松动/错误', level:'severe', levelText:'严重'},
+  {label:'功能异常/失灵', level:'severe', levelText:'严重'},
+  {label:'参数超标', level:'normal', levelText:'一般'},
+  {label:'配件缺失', level:'normal', levelText:'一般'},
+  {label:'其他问题', level:'normal', levelText:'一般'}
+];
+
+function showIssueSheet2(id) {
+  var it = findItemById(id);
+  if(!it) return;
+  issueTargetId = id;
+  issuePhotoCount = 0;
+  issueSelectedProblems = [];
+
+  document.getElementById('issueHeader').innerHTML =
+    '<b>'+it.name+'</b>' +
+    (it.val ? ' — 检测值：<b style="color:var(--ng)">'+it.val+(it.unit||'')+'</b>' : '') +
+    (it.std ? '<br>标准值：'+it.std : '');
+
+  var html = '';
+  for(var i=0; i<issueTypes.length; i++) {
+    html += '<div class="issue-check" onclick="toggleIssueCheck(this)" data-idx="'+i+'">';
+    html += '<span class="issue-cb"></span>';
+    html += '<span class="issue-label">'+issueTypes[i].label+'</span>';
+    html += '<span class="issue-level '+issueTypes[i].level+'">'+issueTypes[i].levelText+'</span>';
+    html += '</div>';
+  }
+  document.getElementById('issueCheckList').innerHTML = html;
+
+  document.getElementById('issuePhotoArea').innerHTML = '';
+  document.getElementById('issueRemark').value = '';
+  updateIssueConfirmBtn();
+
+  if(it.issueFlag === true) {
+    document.getElementById('issueRevokeBtn').style.display = 'block';
+  } else {
+    document.getElementById('issueRevokeBtn').style.display = 'none';
+  }
+
+  document.getElementById('issueSheet').classList.add('show');
+}
+
+function toggleIssueCheck(el) {
+  el.classList.toggle('on');
+  updateIssueConfirmBtn();
+}
+
+function updateIssueConfirmBtn() {
+  var checked = document.querySelectorAll('#issueCheckList .issue-check.on').length;
+  var btn = document.getElementById('issueConfirmBtn');
+  if(checked > 0) {
+    btn.style.background = 'var(--ng)';
+    btn.style.color = '#fff';
+    btn.style.pointerEvents = 'auto';
+  } else {
+    btn.style.background = 'var(--g200)';
+    btn.style.color = 'var(--g400)';
+    btn.style.pointerEvents = 'none';
+  }
+}
+
+function issueAddPhoto() {
+  if(issuePhotoCount >= 5) { showToast('最多拍5张'); return; }
+  issuePhotoCount++;
+  var area = document.getElementById('issuePhotoArea');
+  var ph = document.createElement('div');
+  ph.className = 'ci-ph filled';
+  ph.innerHTML = '#'+issuePhotoCount;
+  ph.style.width = '44px';
+  ph.style.height = '44px';
+  ph.style.fontSize = '11px';
+  area.appendChild(ph);
+  showToast('补拍照片 #'+issuePhotoCount);
+}
+
+function confirmIssue() {
+  var it = findItemById(issueTargetId);
+  if(!it) return;
+
+  if(it.type === 'toggle') {
+    it.val = '不合格';
+  }
+  it.issueFlag = true;
+
+  document.getElementById('issueSheet').classList.remove('show');
+  showToast('已保存（不合格）');
+
+  tryAutoCalc();
+  var next = findNextItemId(issueTargetId);
+  if(next) selectedTestId = next;
+  renderDetail();
+  updateP2Progress();
+}
+
+function revokeIssue() {
+  var it = findItemById(issueTargetId);
+  if(!it) return;
+
+  if(it.type === 'toggle') {
+    it.val = '合格';
+  }
+  it.issueFlag = false;
+
+  document.getElementById('issueSheet').classList.remove('show');
+  showToast('已撤销不合格，改判为合格');
+
+  tryAutoCalc();
+  var next = findNextItemId(issueTargetId);
+  if(next) selectedTestId = next;
+  renderDetail();
+  updateP2Progress();
+}
+
+/* (legacy, kept for compatibility) */
+function findNextUnfinished() {
+  var flat = getFlatItems(currentTab);
+  for(var i = selectedTestIdx + 1; i < flat.length; i++) {
+    if(!isItemDone(flat[i].item) && flat[i].item.type !== 'calc') return i;
+  }
+  for(var i = 0; i < selectedTestIdx; i++) {
+    if(!isItemDone(flat[i].item) && flat[i].item.type !== 'calc') return i;
+  }
+  return -1;
+}
+
+/* ===== 环境数据 ===== */
+var envData = { temp1:'', temp2:'', temp3:'', humidity:'', weather:'' };
+var envCompleted = false;
+
+function goEnvPage() {
+  // 回显已有数据
+  if(envData.temp1) document.getElementById('envTemp1').value = envData.temp1;
+  if(envData.temp2) document.getElementById('envTemp2').value = envData.temp2;
+  if(envData.temp3) document.getElementById('envTemp3').value = envData.temp3;
+  if(envData.humidity) document.getElementById('envHumidity').value = envData.humidity;
+  // 天气按钮回显
+  var btns = document.querySelectorAll('.env-weather-btn');
+  for(var i=0;i<btns.length;i++) {
+    btns[i].style.borderColor = 'var(--g200)';
+    btns[i].style.color = 'var(--g600)';
+    btns[i].style.background = '#fff';
+  }
+  if(envData.weather) {
+    for(var i=0;i<btns.length;i++) {
+      if(btns[i].textContent.indexOf(envData.weather) >= 0) {
+        btns[i].style.borderColor = 'var(--pri)';
+        btns[i].style.color = 'var(--pri)';
+        btns[i].style.background = 'var(--pri-l)';
+      }
+    }
+  }
+  checkEnvForm();
+  goPage(6);
+}
+
+function selectWeather(btn, val) {
+  envData.weather = val;
+  var btns = document.querySelectorAll('.env-weather-btn');
+  for(var i=0;i<btns.length;i++) {
+    btns[i].style.borderColor = 'var(--g200)';
+    btns[i].style.color = 'var(--g600)';
+    btns[i].style.background = '#fff';
+  }
+  btn.style.borderColor = 'var(--pri)';
+  btn.style.color = 'var(--pri)';
+  btn.style.background = 'var(--pri-l)';
+  checkEnvForm();
+}
+
+// 湿度输入时实时检查>80%
+document.addEventListener('DOMContentLoaded', function() {
+  var humInput = document.getElementById('envHumidity');
+  if(humInput) {
+    humInput.addEventListener('input', function() {
+      var v = parseFloat(this.value);
+      var warn = document.getElementById('envHumidityWarn');
+      if(!isNaN(v) && v >= 80) {
+        warn.style.display = 'block';
+      } else {
+        warn.style.display = 'none';
+      }
+      checkEnvForm();
+    });
+  }
+  // 温度输入也触发表单检查
+  ['envTemp1','envTemp2','envTemp3'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if(el) el.addEventListener('input', function() { checkEnvForm(); });
+  });
+});
+
+function checkEnvForm() {
+  var t1 = document.getElementById('envTemp1').value;
+  var hum = document.getElementById('envHumidity').value;
+  // 必填：站房温度 + 湿度 + 天气
+  var requiredFilled = t1 !== '' && hum !== '' && envData.weather !== '';
+  var btn = document.getElementById('envConfirmBtn');
+  if(requiredFilled) {
+    btn.className = 'bot-btn ready';
+  } else {
+    btn.className = 'bot-btn wait';
+  }
+}
+
+function confirmEnvData() {
+  var t1 = document.getElementById('envTemp1').value;
+  var t2 = document.getElementById('envTemp2').value;
+  var t3 = document.getElementById('envTemp3').value;
+  var hum = document.getElementById('envHumidity').value;
+  // 必填校验：站房温度 + 湿度 + 天气
+  if(!t1 || !hum || !envData.weather) {
+    showToast('请填写站房温度、湿度和天气');
+    return;
+  }
+  envData.temp1 = t1;
+  envData.temp2 = t2 || '';  // 选填
+  envData.temp3 = t3 || '';  // 选填
+  envData.humidity = hum;
+  envCompleted = true;
+
+  showToast('环境数据已保存');
+  updateEnvBanner();
+  goPage(2);
+}
+
+function saveEnvAndBack() {
+  // 返回时也保存已填的数据（不要求全填完）
+  var t1 = document.getElementById('envTemp1').value;
+  var t2 = document.getElementById('envTemp2').value;
+  var t3 = document.getElementById('envTemp3').value;
+  var hum = document.getElementById('envHumidity').value;
+  if(t1) envData.temp1 = t1;
+  if(t2) envData.temp2 = t2;
+  if(t3) envData.temp3 = t3;
+  if(hum) envData.humidity = hum;
+  updateEnvBanner();
+  goPage(2);
+}
+
+function updateEnvBanner() {
+  var banner = document.getElementById('envBanner');
+  if(!banner) return;
+  if(envCompleted) {
+    banner.style.background = 'rgba(52,199,89,0.08)';
+    banner.style.borderLeft = '3px solid var(--ok)';
+    banner.style.cursor = 'pointer';
+    banner.innerHTML = '<span style="font-size:14px;color:var(--ok)">✓</span>'
+      + '<div style="flex:1;font-size:12px;color:#1B7A34">'
+      + '环境数据已采集 · 站房' + envData.temp1 + '℃ · 湿度' + envData.humidity + '%'
+      + (parseFloat(envData.humidity)>=80 ? ' <span style="color:var(--ng)">(≥80%，部分试验项已跳过)</span>' : '')
+      + '</div>'
+      + '<span style="color:var(--g300);font-size:14px">›</span>';
+    banner.onclick = function(){ goEnvPage(); };  // 点击可重新编辑
+  }
+}
+
+/* ===== 初始化 ===== */
+renderBatchDC();
+</script>
+</body>
+</html>

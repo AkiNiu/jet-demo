@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>检测分工 — 检e通V3.0 Demo</title>
+<link rel="stylesheet" href="demo_shared_base.css">
+<style>
+/* 左右布局 */
+.demo-layout{display:flex;gap:40px;max-width:1100px;margin:0 auto;padding:32px 24px;align-items:flex-start}
+.demo-left{flex-shrink:0;position:sticky;top:24px}
+.demo-right{flex:1;min-width:0}
+.demo-right h2{font-size:18px;font-weight:700;color:#374151;margin-bottom:16px}
+.demo-right h3{font-size:14px;font-weight:600;color:#4B5563;margin:20px 0 8px}
+.demo-right p,.demo-right li{font-size:13px;color:#6B7280;line-height:1.8}
+.demo-right ul{padding-left:20px}
+.demo-right table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0 16px}
+.demo-right th{background:#F3F4F6;padding:8px 10px;text-align:left;font-weight:600;color:#4B5563;border-bottom:1px solid #E5E7EB}
+.demo-right td{padding:8px 10px;border-bottom:1px solid #F3F4F6;color:#6B7280}
+.demo-right td:first-child{color:#374151;font-weight:500}
+.demo-right .highlight{background:#FEF3C7;padding:2px 6px;border-radius:3px;font-size:11px;font-weight:600;color:#92400E}
+
+/* ===== 手机壳内部 ===== */
+.scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--g50);padding-bottom:12px}
+
+/* 站房Tab */
+.room-tabs{display:flex;gap:0;background:#fff;border-bottom:1px solid var(--g200);padding:0 12px}
+.room-tab{flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:500;color:var(--g500);cursor:pointer;border-bottom:2px solid transparent;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.room-tab.active{color:var(--pri);border-bottom-color:var(--pri);font-weight:600}
+
+/* 增补提示横幅 */
+.supp-banner{display:none;margin:0;padding:10px 14px;background:#FFF7ED;border-bottom:1px solid #FDBA74;font-size:12px;color:#9A3412;font-weight:500;position:sticky;top:0;z-index:10}
+.supp-banner.show{display:flex;align-items:center;gap:6px}
+.supp-banner .icon{font-size:14px}
+
+/* 设备类型分组标题 */
+.type-header{display:flex;align-items:center;padding:14px 14px 6px;gap:8px}
+.type-label{font-size:12px;font-weight:600;color:var(--g500);flex:1}
+.type-count{font-size:11px;color:var(--g400)}
+.type-batch{font-size:12px;font-weight:600;color:var(--pri);cursor:pointer;padding:4px 10px;border-radius:var(--r-pill);background:var(--pri-l);-webkit-tap-highlight-color:transparent;min-height:28px;display:flex;align-items:center}
+.type-batch:active{background:var(--pri);color:#fff}
+.type-batch.done{color:var(--ok);background:var(--ok-l)}
+
+/* 设备行 */
+.dev-card{margin:0 12px 6px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;overflow:hidden}
+.dev-card:active{background:var(--g50)}
+.dev-card.done{border-left:3px solid var(--ok)}
+.dev-card.undone{border-left:3px solid var(--g300)}
+.dev-card.readonly{cursor:default}
+.dev-card.readonly:active{background:#fff}
+.dev-top{display:flex;align-items:center;padding:10px 14px 3px;gap:8px}
+.dev-name{font-size:13px;font-weight:600;color:var(--g800);flex:1}
+.dev-status{font-size:10px;padding:2px 7px;border-radius:var(--r-pill)}
+.dev-status.ok{background:var(--ok-l);color:#16a34a}
+.dev-status.wait{background:var(--g100);color:var(--g400)}
+.dev-people{display:flex;gap:10px;padding:2px 14px 10px}
+.dev-role{display:flex;align-items:center;gap:3px;font-size:11px;color:var(--g500)}
+.dev-role .label{color:var(--g400)}
+.dev-role .name{color:var(--g700);font-weight:500}
+.dev-role .name.empty{color:var(--warn);font-style:italic}
+
+/* 增补标签 */
+.supp-tag{font-size:10px;padding:1px 6px;border-radius:var(--r-pill);background:#FFF7ED;color:#EA580C;font-weight:600;border:1px solid #FDBA74}
+
+/* 底部 */
+.bot{padding:8px 12px 12px;background:#fff;border-top:1px solid var(--g200);flex-shrink:0}
+.bot-info{font-size:11px;color:var(--g400);text-align:center;margin-bottom:8px}
+.bot-info b{color:var(--g700)}
+.bot-btn{width:100%;padding:14px;border:none;border-radius:var(--r);font-size:16px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.bot-btn.ready{background:var(--pri);color:#fff}
+.bot-btn.ready:active{background:var(--pri-d)}
+.bot-btn.wait{background:var(--g100);color:var(--g400)}
+.bot-btn.edit{background:var(--g200);color:var(--g600)}
+.bot-btn.edit:active{background:var(--g300)}
+
+/* Bottom Sheet 通用 */
+.sh-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:800;align-items:flex-end;justify-content:center}
+.sh-bg.show{display:flex}
+.sh-panel{width:100%;max-width:360px;background:#fff;border-radius:16px 16px 0 0;padding:16px 16px 24px;animation:su .2s ease-out;max-height:80vh;overflow-y:auto}
+@keyframes su{from{transform:translateY(100%)}}
+.sh-title{font-size:15px;font-weight:600;text-align:center;margin-bottom:4px;color:var(--g800)}
+.sh-sub{font-size:12px;color:var(--g400);text-align:center;margin-bottom:16px}
+.sh-section{font-size:12px;font-weight:600;color:var(--g500);padding:8px 0 4px;border-top:1px solid var(--g100);margin-top:8px}
+.sh-section:first-of-type{border-top:none;margin-top:0}
+.sh-person{display:flex;align-items:center;padding:12px 8px;gap:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:var(--rs);min-height:48px}
+.sh-person:active{background:var(--g50)}
+.sh-person.disabled{opacity:.35;pointer-events:none}
+.sh-radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--g300);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.sh-radio.on{border-color:var(--pri);background:var(--pri)}
+.sh-radio.on::after{content:'';width:8px;height:8px;border-radius:50%;background:#fff}
+.sh-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.sh-pname{font-size:14px;color:var(--g700);flex:1}
+.sh-confirm-btn{width:100%;padding:14px;border:none;border-radius:var(--r);font-size:15px;font-weight:600;background:var(--pri);color:#fff;cursor:pointer;margin-top:16px;transition:all .15s}
+.sh-confirm-btn:active{background:var(--pri-d)}
+.sh-confirm-btn.disabled{background:var(--g200);color:var(--g400);pointer-events:none}
+.sh-cancel{margin-top:8px;padding:14px;text-align:center;font-size:14px;color:var(--g500);cursor:pointer}
+
+/* 确认提交弹窗 */
+.confirm-summary{background:var(--g50);border-radius:var(--rs);padding:14px;margin:12px 0}
+.cs-row{font-size:12px;color:var(--g600);line-height:2;display:flex;gap:4px}
+.cs-row b{color:var(--g800);font-weight:600;flex-shrink:0}
+.confirm-btns{display:flex;gap:10px;margin-top:4px}
+.confirm-btns .btn-back{flex:1;padding:14px;border:1.5px solid var(--g300);border-radius:var(--r);font-size:15px;font-weight:600;color:var(--g700);background:#fff;cursor:pointer}
+.confirm-btns .btn-back:active{background:var(--g50)}
+.confirm-btns .btn-go{flex:1;padding:14px;border:none;border-radius:var(--r);font-size:15px;font-weight:600;color:#fff;background:var(--pri);cursor:pointer}
+.confirm-btns .btn-go:active{background:var(--pri-d)}
+
+/* 手机壳外演示控件 */
+.demo-controls{margin-bottom:12px;padding:10px 14px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;font-size:12px;color:#166534}
+.demo-controls .ctrl-title{font-weight:600;margin-bottom:6px}
+.demo-controls button{padding:6px 12px;border:1px solid #86EFAC;border-radius:6px;background:#fff;color:#166534;font-size:12px;font-weight:500;cursor:pointer;margin-right:6px;margin-top:4px}
+.demo-controls button:hover{background:#F0FDF4}
+
+/* 导航栏右侧增补按钮 */
+.nbar-action{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:400;color:#fff;cursor:pointer;border-radius:50%;-webkit-tap-highlight-color:transparent}
+.nbar-action:active{background:rgba(255,255,255,.2)}
+.nbar-action.hidden{display:none}
+
+/* ===== 增补设备全屏页 ===== */
+.supp-page{display:none;flex-direction:column;position:absolute;top:0;left:0;right:0;bottom:0;background:#fff;z-index:60}
+.supp-page.active{display:flex}
+.sp-subtitle{padding:12px 16px 6px;font-size:13px;color:var(--g500)}
+.sp-scroll{flex:1;overflow-y:auto;min-height:0;-webkit-overflow-scrolling:touch}
+/* 设备组列表 */
+.dg-list-item{display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid var(--g100);cursor:pointer;min-height:52px;-webkit-tap-highlight-color:transparent}
+.dg-list-item:active{background:var(--g50)}
+.dg-list-icon{width:36px;height:36px;border-radius:10px;background:var(--pri-l);color:var(--pri-d);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.dg-list-name{font-size:15px;font-weight:500;color:var(--g800);flex:1}
+.dg-list-sub{font-size:12px;color:var(--g400)}
+.dg-list-arrow{font-size:14px;color:var(--g300)}
+/* 表单字段 */
+.sp-field{padding:12px 16px;border-bottom:1px solid var(--g100)}
+.sp-field-label{font-size:12px;color:var(--g500);margin-bottom:8px;display:flex;align-items:center;gap:4px}
+.sp-field-label .req{color:var(--ng);font-weight:700}
+.sp-num-row{display:flex;align-items:center;gap:6px}
+.sp-num-prefix{padding:10px 12px;background:var(--g100);border-radius:var(--rs);font-size:16px;font-weight:600;color:var(--g600);white-space:nowrap}
+.sp-num-input{flex:1;padding:10px 12px;border:1.5px solid var(--g200);border-radius:var(--rs);font-size:16px;font-weight:600;color:var(--g800);box-sizing:border-box}
+.sp-num-input:focus{border-color:var(--pri);outline:none}
+.sp-chips{display:flex;flex-wrap:wrap;gap:8px}
+.sp-chip{padding:8px 16px;border-radius:20px;border:1.5px solid var(--g200);font-size:13px;color:var(--g600);cursor:pointer;background:#fff;min-height:36px;display:flex;align-items:center;-webkit-tap-highlight-color:transparent}
+.sp-chip:active{opacity:.7}
+.sp-chip.sel{border-color:var(--pri);color:var(--pri);background:var(--pri-l);font-weight:600}
+/* 试验项 */
+.sp-section{padding:10px 16px 6px;font-size:12px;font-weight:700;color:var(--g400);letter-spacing:1px;background:var(--g50);border-top:1px solid var(--g200)}
+.sp-trial-actions{display:flex;gap:12px;padding:6px 16px;background:var(--g50);border-bottom:1px solid var(--g200)}
+.sp-trial-actions button{font-size:13px;color:var(--pri);background:none;border:none;cursor:pointer;padding:8px 0;font-weight:600}
+.sp-trial-actions button:active{opacity:.6}
+.sp-trial-row{display:flex;align-items:center;gap:12px;padding:14px 16px;min-height:48px;border-bottom:1px solid var(--g100);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sp-trial-row:active{background:var(--g50)}
+.sp-trial-cb{width:22px;height:22px;border-radius:6px;border:2px solid var(--g300);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s}
+.sp-trial-row.on .sp-trial-cb{background:var(--pri);border-color:var(--pri)}
+.sp-trial-row.on .sp-trial-cb::after{content:'✓';color:#fff;font-size:14px;font-weight:700}
+.sp-trial-name{font-size:14px;color:var(--g700);flex:1}
+.sp-trial-row.on .sp-trial-name{color:var(--g800);font-weight:500}
+.sp-bot{padding:10px 16px;border-top:1px solid var(--g200);background:#fff}
+
+/* Toast */
+.toast{display:none;position:fixed;top:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;padding:10px 20px;border-radius:var(--r-pill);font-size:13px;z-index:999;max-width:300px;text-align:center}
+.toast.show{display:block;animation:ti .25s ease-out}
+@keyframes ti{from{opacity:0;transform:translateX(-50%) translateY(8px)}}
+</style>
+</head>
+<body>
+
+<div class="demo-layout">
+  <!-- ===== 左侧：手机壳 ===== -->
+  <div class="demo-left">
+    <!-- 演示控件（手机壳外） -->
+    <div class="demo-controls">
+      <div class="ctrl-title">演示辅助控件</div>
+      <button onclick="openAddDevice()">工作负责人增补设备（同导航栏＋）</button>
+      <button onclick="simTestPersonSupplement()">模拟：试验人员自主增补</button>
+    </div>
+
+    <div class="phone">
+      <div class="sbar">9:41</div>
+      <div class="nbar" style="position:relative"><div class="back">←</div><div class="title">检测分工</div><div class="nbar-action" id="navAddBtn" onclick="openAddDevice()">＋</div></div>
+
+      <!-- 项目摘要（与核查分工卡片样式一致） -->
+      <div style="margin:8px 12px 4px;padding:10px 14px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm)">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:14px;font-weight:600;color:var(--g800)">建湖复兴花园一期</span>
+          <span style="font-size:12px;color:var(--g500)">2026-03-27</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+          <span style="font-size:12px;color:var(--g500)">江苏省盐城市建湖县</span>
+          <span style="font-size:11px;color:var(--g400)">项目规模 2-0-4-1</span>
+        </div>
+      </div>
+
+      <!-- 站房Tab -->
+      <div class="room-tabs" id="roomTabs"></div>
+
+      <!-- 增补提示横幅 -->
+      <div class="supp-banner" id="suppBanner"><span class="icon">&#9888;</span><span id="suppBannerText"></span></div>
+
+      <!-- 设备列表 -->
+      <div class="scroll" id="devList"></div>
+
+      <!-- 底部 -->
+      <div class="bot">
+        <div class="bot-info" id="botInfo"></div>
+        <button class="bot-btn wait" id="botBtn">提交分工</button>
+      </div>
+
+      <!-- ===== 增补设备 - 第1屏：选择设备组 ===== -->
+      <div class="supp-page" id="suppGroupPage">
+        <div class="sbar">9:41</div>
+        <div class="nbar" style="position:relative"><div class="back" onclick="suppClose()">←</div><div class="title" id="suppGroupTitle">增补检测设备</div></div>
+        <div class="sp-subtitle" id="suppGroupSub">选择要增补的设备类型</div>
+        <div class="sp-scroll" id="suppGroupList"></div>
+      </div>
+
+      <!-- ===== 增补设备 - 第2屏：配置设备详情 ===== -->
+      <div class="supp-page" id="suppConfigPage">
+        <div class="sbar">9:41</div>
+        <div class="nbar" style="position:relative"><div class="back" onclick="suppBackToGroups()">←</div><div class="title" id="suppConfigTitle">配置设备</div></div>
+        <div class="sp-scroll" id="suppConfigBody"></div>
+        <div class="sp-bot">
+          <button class="bot-btn ready" id="suppSaveBtn" onclick="suppSaveDevice()">保存并分工</button>
+        </div>
+      </div>
+
+      <div class="toast" id="toastEl"></div>
+    </div>
+  </div>
+
+  <!-- ===== 右侧：设计说明 ===== -->
+  <div class="demo-right">
+    <h2>检测分工 — "以设备为粒度，精准到人的任务分发"</h2>
+
+    <h3>1. 设计决策说明</h3>
+    <ul class="design-decisions">
+      <li><strong>模式变革：从"包干到组"到"精准到人"</strong> —— 2.4系统按检测组分配导致线下还需二次沟通分配；3.0系统按设备颗粒度，直接选定"操作人+监护人"，彻底消除线下两层皮，满足省检要求双人署名的核心合规场景。</li>
+      <li><strong>主打极速批量的交互模型</strong> —— 面对省检大站房（30+台设备），放弃低效的逐个分配。核心交互转为：按设备类型聚类 → 一键选中未分配设备 → 预填记忆上一次选择。原本可能需要120次点击的操作，被压缩到16次左右。</li>
+      <li><strong>显式修改，无需撤回</strong> —— 提交后底部显示"修改分工"按钮，点击即进入编辑模式。人员分配与安措数据完全解耦——即使安措已经开始拍照，工作负责人依然可以调整"谁做哪台设备"。直到该站房有设备进入SR-50实测阶段，修改入口才会锁死。废弃传统的"撤回→修改→重新提交"流程，避免状态机复杂度。</li>
+      <li><strong>增补设备双通道</strong> —— 工作负责人在分工页面增补：设备进入待分配队列，橙色"增补"标签醒目提示。试验人员在检测执行中自主增补：操作人=自己，选监护人后立即可检测，零审批。两条路的增补结果在分工页面统一展示，工作负责人始终全局可见可调。</li>
+      <li><strong>入口导航统一收束</strong> —— 检测分工页面不再作为外层的独立入口存在，而是统一归集至 <b>BIGA项目工作台（工单详情页-流程进度Tab）</b>，保障数字工单的结构一体化。</li>
+    </ul>
+
+    <h3>2. 业务规则摘要</h3>
+    <table class="biz-rules-table">
+      <tr><th style="width:25%">规则维度</th><th>规则说明（一线作业验证准则）</th></tr>
+      <tr><td><strong>解锁与阻断</strong></td><td>上游"抽检对象确认"中只要有任意单个站房提交，该站房即立刻解锁本分工环节，无需等待全项目。</td></tr>
+      <tr><td><strong>互斥与闭环</strong></td><td>操作人必须与监护人<b>严格互斥</b>（禁止选同一人）。该站房下所有设备全部分配完毕后方可整体提交。</td></tr>
+      <tr><td><strong>修改分工</strong></td><td>提交后点"修改分工"进入编辑模式，保存后直接UPDATE人员分配，<b>不回退station_room_status</b>，与安措状态完全解耦。站房任意设备进入SR-50实测后修改入口锁死。</td></tr>
+      <tr><td><strong>增补设备</strong></td><td><b>工作负责人通道</b>：增补设备进入待分配队列，橙色"增补"标签+顶部横幅提醒。<b>试验人员通道</b>：检测执行中自主增补，操作人=自己，选监护人，零审批立即可测。两通道结果在分工页面统一可见。</td></tr>
+      <tr><td><strong>全局透明度</strong></td><td>现场所有试验人员均可通过BIGA工作台入口，以<b>只读视角</b>获得站房内全员分工全貌。</td></tr>
+    </table>
+
+    <h3>3. 版本边界</h3>
+    <table class="version-boundary-table">
+      <tr><th style="width:25%">功能点</th><th>V3.0 实现</th><th>V3.1+ 规划</th></tr>
+      <tr><td><strong>修改分工</strong></td><td>提交后"修改分工"按钮进入编辑模式，直接UPDATE覆写，SR-50后锁死。</td><td>—</td></tr>
+      <tr><td><strong>增补设备</strong></td><td>工作负责人在分工页增补+分配；试验人员在检测执行中自主增补（操作人=自己）。</td><td>—</td></tr>
+      <tr><td><strong>人员通知与触达</strong></td><td>全员可看全局公开分配表，现场口头传唤。</td><td>分发后向新分配人员主动推送App内/极光通知。</td></tr>
+    </table>
+
+    <details style="margin-top: 24px; border: 1px solid #E5E7EB; border-radius: 8px; padding: 12px 16px; background: #ebfdfa;">
+      <summary style="font-size: 14px; font-weight: 600; color: #047857; cursor: pointer; outline: none;">开发参考 (Technical Notes)</summary>
+      <div style="margin-top: 12px; font-size: 13px; color: #4B5563; line-height: 1.6;">
+        <ul style="padding-left: 20px; list-style-type: disc;">
+          <li><strong>低代码组件映射：</strong>
+            <br>`TopTabs`容器用于渲染站房导航；`GroupList`用于设备类型聚类；`BottomSheet`及`Radio`用于人员单双选。均可复用标准低代码库。
+          </li>
+          <li><strong>修改分工数据层：</strong>
+            <br>修改时直接调用 `UPDATE prj_test_divide SET operator_id=X, supervisor_id=Y WHERE device_id IN (...)`，不触发 station_room_status 回退。
+            <br><b>后端刚性卡口：</b>拦截器中若 `EXISTS(TEST_RECORD WHERE test_status >= SR-50)` 则阻断修改请求。
+          </li>
+          <li><strong>增补设备数据流：</strong>
+            <br>工作负责人增补：上游抽检对象确认写入 test_object 表 → 检测分工页查询时自动展示新设备（supplementary=true）。
+            <br>试验人员增补：检测执行端写入 test_object + prj_test_divide（operator=self, supervisor=选择值），分工页面查询时同样展示。
+          </li>
+          <li><strong>配对记忆：</strong>LocalState 缓存上一次 operator+supervisor 组合，批量指定时自动预填。</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+</div>
+
+<!-- 单个指定 Bottom Sheet -->
+<div class="sh-bg" id="assignSh">
+  <div class="sh-panel">
+    <div class="sh-title" id="assignTitle">GP1 出线柜 — 指定人员</div>
+    <div class="sh-sub" id="assignSub">为该设备选择操作人和监护人</div>
+
+    <div class="sh-section">操作人（负责录入检测数据）</div>
+    <div id="operatorList"></div>
+
+    <div class="sh-section">监护人（报告上的另一署名人）</div>
+    <div id="cosignerList"></div>
+
+    <button class="sh-confirm-btn disabled" id="assignBtn" onclick="confirmAssign()">确认指定</button>
+    <div class="sh-cancel" id="clearBtn" onclick="clearAssign()" style="display:none;color:#FF3B30">取消分配</div>
+    <div class="sh-cancel" onclick="closeSh()">取消</div>
+  </div>
+</div>
+
+<!-- 批量二次确认 Bottom Sheet -->
+<div class="sh-bg" id="batchConfirmSh">
+  <div class="sh-panel">
+    <div class="sh-title">确认批量指定</div>
+    <div class="sh-sub" id="batchConfirmSub"></div>
+    <div class="confirm-btns">
+      <button class="btn-back" onclick="closeSh()">取消</button>
+      <button class="btn-go" onclick="doBatchConfirm()">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- 确认提交 Bottom Sheet -->
+<div class="sh-bg" id="confirmSh">
+  <div class="sh-panel">
+    <div class="sh-title">确认提交分工</div>
+    <div class="sh-sub">提交后该站房可进入安措/检测流程</div>
+    <div class="confirm-summary" id="confirmBody"></div>
+    <div class="confirm-btns">
+      <button class="btn-back" onclick="closeSh()">返回修改</button>
+      <button class="btn-go" onclick="doConfirm()">确认提交</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== 数据 =====
+const MEMBERS = [
+  { id: 1, name: '王强', color: '#4F46E5' },
+  { id: 2, name: '李明', color: '#0891B2' },
+  { id: 3, name: '赵刚', color: '#059669' },
+  { id: 4, name: '陈华', color: '#D97706' }
+];
+
+function genCables(prefix, type, count) {
+  const arr = [];
+  for (let i = 1; i <= count; i++) {
+    arr.push({ id: prefix + i, name: prefix + i, type: type, operator: null, cosigner: null, supp: false });
+  }
+  return arr;
+}
+
+const ROOMS = [
+  {
+    id: 'room1', name: '1#开关站', submitted: false, editing: false,
+    devices: [
+      { id: 'r1_zz1', name: 'GP1 出线柜', type: '中置柜', operator: null, cosigner: null, supp: false },
+      { id: 'r1_zz2', name: 'GP2 进线柜', type: '中置柜', operator: null, cosigner: null, supp: false },
+      { id: 'r1_zz3', name: 'GP3 配变柜', type: '中置柜', operator: null, cosigner: null, supp: false },
+      { id: 'r1_dlq', name: '1#GP21 断路器', type: '断路器', operator: null, cosigner: null, supp: false },
+      { id: 'r1_pt', name: '1#GP22 PT', type: '电压互感器', operator: null, cosigner: null, supp: false },
+      ...genCables('1#GP', '高压电缆', 10)
+    ]
+  },
+  {
+    id: 'room2', name: '4#箱变', submitted: false, editing: false,
+    devices: [
+      { id: 'r2_hw', name: '4#GP01 环网柜', type: '环网柜', operator: null, cosigner: null, supp: false },
+      ...genCables('4#GP', '高压电缆', 10),
+      { id: 'r2_pb', name: '4#XBPB1 配变', type: '配变', operator: null, cosigner: null, supp: false },
+      { id: 'r2_dy', name: '4#DP01 低压柜', type: '低压柜', operator: null, cosigner: null, supp: false },
+      ...genCables('4#DL', '低压电缆', 10),
+      ...genCables('4#FZX', '分支箱', 3),
+      ...genCables('4#BX', '表箱', 3)
+    ]
+  }
+];
+
+let currentRoom = 0;
+let editingDevIds = [];
+let batchMode = false;
+let batchType = '';
+let tempOperator = null;
+let tempCosigner = null;
+let lastPair = { operator: null, cosigner: null };
+let suppCounter = 0;
+// ===== 增补设备：设备组定义 =====
+const DEVICE_GROUPS = [
+  { key:'zzg', name:'中置柜', prefix:'GP', subTypes:['进线柜','出线柜','分段柜','PT柜','配变柜','计量柜'],
+    trials:['外观检查','绝缘电阻','回路电阻','交流耐压','分合闸时间','机械特性','变比测量','介质损耗'] },
+  { key:'hwg', name:'环网柜', prefix:'GP', subTypes:['进线柜','出线柜'],
+    trials:['外观检查','绝缘电阻','回路电阻','交流耐压','分合闸时间'] },
+  { key:'dlq', name:'断路器', prefix:'GP', subTypes:null,
+    trials:['外观检查','绝缘电阻','回路电阻','交流耐压','分合闸时间','机械特性'] },
+  { key:'pt',  name:'电压互感器', prefix:'GP', subTypes:['户内PT','户外PT'],
+    trials:['外观检查','绝缘电阻','变比测量','介质损耗','交流耐压'] },
+  { key:'gydl',name:'高压电缆', prefix:'GP-', subTypes:null,
+    trials:['外观检查','绝缘电阻','交流耐压','护层绝缘'] },
+  { key:'pb',  name:'配变', prefix:'XBPB', subTypes:['干式变压器','油浸式变压器'],
+    trials:['外观检查','绝缘电阻','直流电阻','变比测量','介质损耗','交流耐压'] },
+  { key:'dyg', name:'低压柜', prefix:'DP', subTypes:['受电柜','馈线柜'],
+    trials:['外观检查','绝缘电阻','接地电阻'] },
+  { key:'dydl',name:'低压电缆', prefix:'DL-', subTypes:null,
+    trials:['外观检查','绝缘电阻'] },
+  { key:'fzx', name:'分支箱', prefix:'FZX', subTypes:null,
+    trials:['外观检查','绝缘电阻','接地电阻'] },
+  { key:'bx',  name:'表箱', prefix:'BX', subTypes:null,
+    trials:['外观检查','绝缘电阻','接地电阻'] }
+];
+let suppSelectedGroup = null;
+let suppSelectedSubType = null;
+let suppTrialStates = [];
+
+// ===== 判断当前站房是否可编辑 =====
+function isEditable() {
+  const room = ROOMS[currentRoom];
+  if (!room.submitted) return true;     // 未提交：正常编辑
+  if (room.editing) return true;        // 已提交但进入了编辑模式
+  return false;                         // 已提交且只读
+}
+
+// ===== 渲染 =====
+function renderTabs() {
+  const el = document.getElementById('roomTabs');
+  el.innerHTML = ROOMS.map((r, i) => {
+    const total = r.devices.length;
+    const done = r.devices.filter(d => d.operator && d.cosigner).length;
+    let badge = '';
+    const suppUndone = r.devices.filter(d => d.supp && !(d.operator && d.cosigner)).length;
+    if (r.submitted && !r.editing) {
+      badge = suppUndone > 0 ? ' ⚠' + suppUndone : ' ✓';
+    } else {
+      badge = ' (' + done + '/' + total + ')';
+    }
+    return '<div class="room-tab' + (i === currentRoom ? ' active' : '') + '" onclick="switchRoom(' + i + ')">' +
+      r.name + badge + '</div>';
+  }).join('');
+}
+
+function renderBanner() {
+  const room = ROOMS[currentRoom];
+  const suppUndone = room.devices.filter(d => d.supp && !(d.operator && d.cosigner));
+  const banner = document.getElementById('suppBanner');
+  const text = document.getElementById('suppBannerText');
+  if (suppUndone.length > 0) {
+    text.textContent = '有 ' + suppUndone.length + ' 台增补设备未分工';
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+function renderDevices() {
+  const room = ROOMS[currentRoom];
+  const canEdit = isEditable();
+
+  // 按设备类型分组（增补设备排在同类型顶部）
+  const groups = [];
+  const groupMap = {};
+  room.devices.forEach(d => {
+    if (!groupMap[d.type]) {
+      groupMap[d.type] = [];
+      groups.push({ type: d.type, devices: groupMap[d.type] });
+    }
+    groupMap[d.type].push(d);
+  });
+  // 增补设备排到同组顶部
+  groups.forEach(g => {
+    g.devices.sort((a, b) => (b.supp ? 1 : 0) - (a.supp ? 1 : 0));
+  });
+
+  let html = '';
+  groups.forEach(g => {
+    const total = g.devices.length;
+    const done = g.devices.filter(d => d.operator && d.cosigner).length;
+    const allDone = done === total;
+    const undone = total - done;
+
+    html += '<div class="type-header">' +
+      '<span class="type-label">' + g.type + '</span>' +
+      '<span class="type-count">' + done + '/' + total + '</span>';
+
+    if (canEdit && total >= 2) {
+      if (allDone) {
+        html += '<span class="type-batch" onclick="openBatchReassign(\'' + escType(g.type) + '\')">重新批量指定</span>';
+      } else {
+        html += '<span class="type-batch" onclick="openBatch(\'' + escType(g.type) + '\')">批量指定' + (undone < total ? '(' + undone + ')' : '') + '</span>';
+      }
+    }
+    html += '</div>';
+
+    g.devices.forEach(d => {
+      const isDone = d.operator && d.cosigner;
+      const opName = d.operator ? getMember(d.operator).name : '未指定';
+      const coName = d.cosigner ? getMember(d.cosigner).name : '未指定';
+      const clickAttr = canEdit ? ' onclick="openAssign(\'' + d.id + '\')"' : '';
+      const readonlyClass = canEdit ? '' : ' readonly';
+      const suppHtml = d.supp ? ' <span class="supp-tag">增补</span>' : '';
+      html += '<div class="dev-card ' + (isDone ? 'done' : 'undone') + readonlyClass + '"' + clickAttr + '>' +
+        '<div class="dev-top">' +
+          '<div class="dev-name">' + d.name + suppHtml + '</div>' +
+          '<div class="dev-status ' + (isDone ? 'ok' : 'wait') + '">' + (isDone ? '已分配' : '未分配') + '</div>' +
+        '</div>' +
+        '<div class="dev-people">' +
+          '<div class="dev-role"><span class="label">操作人:</span> <span class="name ' + (d.operator ? '' : 'empty') + '">' + opName + '</span></div>' +
+          '<div class="dev-role"><span class="label">监护人:</span> <span class="name ' + (d.cosigner ? '' : 'empty') + '">' + coName + '</span></div>' +
+        '</div>' +
+      '</div>';
+    });
+  });
+  document.getElementById('devList').innerHTML = html;
+  renderBanner();
+  updateBot();
+  updateSuppEntry();
+}
+
+function updateBot() {
+  const room = ROOMS[currentRoom];
+  const btn = document.getElementById('botBtn');
+  const info = document.getElementById('botInfo');
+  const total = room.devices.length;
+  const done = room.devices.filter(d => d.operator && d.cosigner).length;
+
+  // 状态1：已提交 + 只读模式
+  if (room.submitted && !room.editing) {
+    const suppUndone = room.devices.filter(d => d.supp && !(d.operator && d.cosigner)).length;
+    if (suppUndone > 0) {
+      info.innerHTML = '有 <b>' + suppUndone + '</b> 台增补设备待分工';
+      btn.textContent = '补充分工';
+      btn.className = 'bot-btn ready';
+      btn.style.background = '#EA580C';
+      btn.onclick = function() { enterEditMode(); };
+    } else {
+      info.innerHTML = '该站房分工已提交';
+      btn.textContent = '修改分工';
+      btn.className = 'bot-btn edit';
+      btn.style.background = '';
+      btn.onclick = function() { enterEditMode(); };
+    }
+    return;
+  }
+
+  // 状态2：已提交 + 编辑模式
+  if (room.submitted && room.editing) {
+    info.innerHTML = '编辑模式 · 已分配 <b>' + done + '/' + total + '</b>';
+    btn.style.background = '';
+    if (done === total) {
+      btn.textContent = '保存修改';
+      btn.className = 'bot-btn ready';
+      btn.onclick = function() { saveEdit(); };
+    } else {
+      btn.textContent = '保存修改（还有' + (total - done) + '项未分配）';
+      btn.className = 'bot-btn wait';
+      btn.onclick = null;
+    }
+    return;
+  }
+
+  // 状态3：未提交（首次编辑）
+  btn.style.background = '';
+  info.innerHTML = '已分配 <b>' + done + '/' + total + '</b> · 未分配 ' + (total - done);
+  if (done === total) {
+    btn.textContent = '提交分工';
+    btn.className = 'bot-btn ready';
+    btn.onclick = function() { trySubmit(); };
+  } else {
+    btn.textContent = '提交分工（还有' + (total - done) + '项未分配）';
+    btn.className = 'bot-btn wait';
+    btn.onclick = null;
+  }
+}
+
+function updateSuppEntry() {
+  const room = ROOMS[currentRoom];
+  const btn = document.getElementById('navAddBtn');
+  // 已提交且不在编辑模式时隐藏（只读状态下不能增补）
+  if (room.submitted && !room.editing) {
+    btn.classList.add('hidden');
+  } else {
+    btn.classList.remove('hidden');
+  }
+}
+
+function getMember(id) { return MEMBERS.find(m => m.id === id); }
+function escType(t) { return t.replace(/'/g, "\\'"); }
+
+// ===== 修改分工：进入/保存编辑模式 =====
+function enterEditMode() {
+  ROOMS[currentRoom].editing = true;
+  renderTabs();
+  renderDevices();
+  toast('已进入编辑模式，可修改人员分配');
+}
+
+function saveEdit() {
+  const room = ROOMS[currentRoom];
+  const total = room.devices.length;
+  const done = room.devices.filter(d => d.operator && d.cosigner).length;
+  if (done < total) return;
+  room.editing = false;
+  renderTabs();
+  renderDevices();
+  toast(room.name + ' 分工已保存');
+}
+
+// ===== 交互：单个指定 =====
+function switchRoom(i) {
+  currentRoom = i;
+  renderTabs();
+  renderDevices();
+}
+
+function openAssign(devId) {
+  if (!isEditable()) return;
+  const room = ROOMS[currentRoom];
+  const dev = room.devices.find(d => d.id === devId);
+  batchMode = false;
+  editingDevIds = [devId];
+  tempOperator = dev.operator;
+  tempCosigner = dev.cosigner;
+
+  const suppLabel = dev.supp ? '（增补）' : '';
+  document.getElementById('assignTitle').textContent = dev.name + suppLabel + ' — 指定人员';
+  document.getElementById('assignSub').textContent = '为该设备选择操作人和监护人';
+  document.getElementById('clearBtn').style.display = (dev.operator && dev.cosigner) ? 'block' : 'none';
+  renderPersonLists();
+  document.getElementById('assignSh').classList.add('show');
+}
+
+// ===== 交互：批量指定 =====
+function openBatch(type) {
+  if (!isEditable()) return;
+  const room = ROOMS[currentRoom];
+  const targets = room.devices.filter(d => d.type === type && !(d.operator && d.cosigner));
+  if (targets.length === 0) { toast('该类型已全部分配'); return; }
+
+  batchMode = true;
+  batchType = type;
+  editingDevIds = targets.map(d => d.id);
+  tempOperator = lastPair.operator;
+  tempCosigner = lastPair.cosigner;
+  if (tempOperator && tempOperator === tempCosigner) tempCosigner = null;
+
+  document.getElementById('assignTitle').textContent = type + ' — 批量指定';
+  let subText = '为 ' + targets.length + ' 台未分配的' + type + '统一指定人员';
+  if (tempOperator && tempCosigner) {
+    subText += '（已预填上次配对：' + getMember(tempOperator).name + ' + ' + getMember(tempCosigner).name + '）';
+  }
+  document.getElementById('assignSub').textContent = subText;
+  document.getElementById('clearBtn').style.display = 'none';
+  renderPersonLists();
+  document.getElementById('assignSh').classList.add('show');
+}
+
+function openBatchReassign(type) {
+  if (!isEditable()) return;
+  const room = ROOMS[currentRoom];
+  const targets = room.devices.filter(d => d.type === type);
+  if (targets.length === 0) return;
+
+  batchMode = true;
+  batchType = type;
+  editingDevIds = targets.map(d => d.id);
+  tempOperator = lastPair.operator;
+  tempCosigner = lastPair.cosigner;
+  if (tempOperator && tempOperator === tempCosigner) tempCosigner = null;
+
+  document.getElementById('assignTitle').textContent = type + ' — 重新批量指定';
+  let subText = '覆盖 ' + targets.length + ' 台' + type + '的已有分配';
+  if (tempOperator && tempCosigner) {
+    subText += '（已预填上次配对：' + getMember(tempOperator).name + ' + ' + getMember(tempCosigner).name + '）';
+  }
+  document.getElementById('assignSub').textContent = subText;
+  document.getElementById('clearBtn').style.display = 'none';
+  renderPersonLists();
+  document.getElementById('assignSh').classList.add('show');
+}
+
+// ===== 人员选择 =====
+function renderPersonLists() {
+  let opHtml = '';
+  MEMBERS.forEach(m => {
+    const selected = tempOperator === m.id;
+    opHtml += '<div class="sh-person" onclick="pickOperator(' + m.id + ')">' +
+      '<div class="sh-radio ' + (selected ? 'on' : '') + '"></div>' +
+      '<div class="sh-avatar" style="background:' + m.color + '">' + m.name[0] + '</div>' +
+      '<div class="sh-pname">' + m.name + '</div>' +
+    '</div>';
+  });
+  document.getElementById('operatorList').innerHTML = opHtml;
+
+  let coHtml = '';
+  MEMBERS.forEach(m => {
+    const selected = tempCosigner === m.id;
+    const disabled = tempOperator === m.id;
+    coHtml += '<div class="sh-person ' + (disabled ? 'disabled' : '') + '" onclick="pickCosigner(' + m.id + ')">' +
+      '<div class="sh-radio ' + (selected ? 'on' : '') + '"></div>' +
+      '<div class="sh-avatar" style="background:' + m.color + '">' + m.name[0] + '</div>' +
+      '<div class="sh-pname">' + m.name + (disabled ? '（已选为操作人）' : '') + '</div>' +
+    '</div>';
+  });
+  document.getElementById('cosignerList').innerHTML = coHtml;
+
+  const btn = document.getElementById('assignBtn');
+  const ready = tempOperator && tempCosigner;
+  btn.className = 'sh-confirm-btn' + (ready ? '' : ' disabled');
+  btn.textContent = batchMode ? '确认批量指定（' + editingDevIds.length + '台）' : '确认指定';
+}
+
+function pickOperator(id) {
+  tempOperator = id;
+  if (tempCosigner === id) tempCosigner = null;
+  renderPersonLists();
+}
+
+function pickCosigner(id) {
+  if (tempOperator === id) return;
+  tempCosigner = id;
+  renderPersonLists();
+}
+
+function confirmAssign() {
+  if (!tempOperator || !tempCosigner) return;
+  if (batchMode && editingDevIds.length > 1) {
+    document.getElementById('batchConfirmSub').textContent =
+      '将 ' + editingDevIds.length + ' 台' + batchType + ' 全部指定给 ' +
+      getMember(tempOperator).name + '（操作）+ ' + getMember(tempCosigner).name + '（监护）';
+    document.getElementById('batchConfirmSh').classList.add('show');
+    return;
+  }
+  doAssign();
+}
+
+function doBatchConfirm() {
+  document.getElementById('batchConfirmSh').classList.remove('show');
+  doAssign();
+}
+
+function doAssign() {
+  lastPair.operator = tempOperator;
+  lastPair.cosigner = tempCosigner;
+  const room = ROOMS[currentRoom];
+  const count = editingDevIds.length;
+  editingDevIds.forEach(devId => {
+    const dev = room.devices.find(d => d.id === devId);
+    dev.operator = tempOperator;
+    dev.cosigner = tempCosigner;
+  });
+  closeSh();
+  renderTabs();
+  renderDevices();
+  if (batchMode) {
+    toast(batchType + ' × ' + count + '台 → ' + getMember(tempOperator).name + ' + ' + getMember(tempCosigner).name);
+  } else {
+    const dev = room.devices.find(d => d.id === editingDevIds[0]);
+    toast(dev.name + ' → ' + getMember(tempOperator).name + ' + ' + getMember(tempCosigner).name);
+  }
+}
+
+function clearAssign() {
+  const room = ROOMS[currentRoom];
+  const dev = room.devices.find(d => d.id === editingDevIds[0]);
+  dev.operator = null;
+  dev.cosigner = null;
+  closeSh();
+  renderTabs();
+  renderDevices();
+  toast(dev.name + ' 已取消分配');
+}
+
+// ===== 提交 =====
+function trySubmit() {
+  const room = ROOMS[currentRoom];
+  if (room.submitted) return;
+  const total = room.devices.length;
+  const done = room.devices.filter(d => d.operator && d.cosigner).length;
+  if (done < total) {
+    toast('还有 ' + (total - done) + ' 项设备未分配人员');
+    return;
+  }
+  const summary = {};
+  room.devices.forEach(d => {
+    const opName = getMember(d.operator).name;
+    const coName = getMember(d.cosigner).name;
+    const pairKey = opName + '+' + coName;
+    if (!summary[pairKey]) summary[pairKey] = { op: opName, co: coName, count: 0, types: {} };
+    summary[pairKey].count++;
+    if (!summary[pairKey].types[d.type]) summary[pairKey].types[d.type] = 0;
+    summary[pairKey].types[d.type]++;
+  });
+  let html = '<div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:10px">' + room.name + ' · ' + total + '台设备</div>';
+  for (const key in summary) {
+    const s = summary[key];
+    const detail = Object.keys(s.types).map(t => t + '×' + s.types[t]).join('、');
+    html += '<div class="cs-row"><b>' + s.op + '（操作）+ ' + s.co + '（监护）：</b>' + detail + '</div>';
+  }
+  document.getElementById('confirmBody').innerHTML = html;
+  document.getElementById('confirmSh').classList.add('show');
+}
+
+function doConfirm() {
+  ROOMS[currentRoom].submitted = true;
+  ROOMS[currentRoom].editing = false;
+  closeSh();
+  renderTabs();
+  renderDevices();
+  toast(ROOMS[currentRoom].name + ' 分工已提交');
+}
+
+// ===== 增补设备：第1屏 — 选择设备组 =====
+function openAddDevice() {
+  if (!isEditable()) return;
+  const room = ROOMS[currentRoom];
+  document.getElementById('suppGroupTitle').textContent = '增补检测设备';
+  document.getElementById('suppGroupSub').textContent = '为 ' + room.name + ' 选择要增补的设备类型';
+
+  let html = '';
+  DEVICE_GROUPS.forEach(g => {
+    const sub = g.subTypes ? g.subTypes.length + '种子类型' : '直接配置';
+    html += '<div class="dg-list-item" onclick="suppSelectGroup(\'' + g.key + '\')">' +
+      '<div class="dg-list-icon">' + g.name.charAt(0) + '</div>' +
+      '<div style="flex:1"><div class="dg-list-name">' + g.name + '</div><div class="dg-list-sub">' + sub + ' · ' + g.trials.length + '项试验</div></div>' +
+      '<div class="dg-list-arrow">›</div>' +
+    '</div>';
+  });
+  document.getElementById('suppGroupList').innerHTML = html;
+  document.getElementById('suppGroupPage').classList.add('active');
+}
+
+function suppClose() {
+  document.getElementById('suppGroupPage').classList.remove('active');
+  document.getElementById('suppConfigPage').classList.remove('active');
+}
+
+// ===== 增补设备：第2屏 — 配置设备详情 =====
+function suppSelectGroup(key) {
+  suppSelectedGroup = DEVICE_GROUPS.find(g => g.key === key);
+  suppSelectedSubType = null;
+  suppTrialStates = suppSelectedGroup.trials.map(() => true); // 默认全选
+
+  document.getElementById('suppConfigTitle').textContent = suppSelectedGroup.name;
+  document.getElementById('suppGroupPage').classList.remove('active');
+
+  // 构建表单
+  const room = ROOMS[currentRoom];
+  const roomPrefix = room.name.match(/\d+/)[0] + '#'; // "1#" or "4#"
+  const fullPrefix = roomPrefix + suppSelectedGroup.prefix;
+
+  let html = '';
+
+  // 字段1：设备编号
+  html += '<div class="sp-field">' +
+    '<div class="sp-field-label"><span class="req">*</span>对象编号</div>' +
+    '<div class="sp-num-row">' +
+      '<div class="sp-num-prefix">' + fullPrefix + '</div>' +
+      '<input class="sp-num-input" id="suppNumInput" type="text" inputmode="text" placeholder="编号">' +
+    '</div>' +
+  '</div>';
+
+  // 字段2：子类型（如有）
+  if (suppSelectedGroup.subTypes) {
+    html += '<div class="sp-field">' +
+      '<div class="sp-field-label"><span class="req">*</span>子项类型</div>' +
+      '<div class="sp-chips" id="suppSubTypeChips">';
+    suppSelectedGroup.subTypes.forEach((st, i) => {
+      html += '<div class="sp-chip" onclick="suppPickSubType(' + i + ')">' + st + '</div>';
+    });
+    html += '</div></div>';
+  }
+
+  // 分隔：试验项
+  html += '<div class="sp-section">试验项（' + suppSelectedGroup.trials.length + '项）</div>';
+  html += '<div class="sp-trial-actions"><button onclick="suppTrialAll(true)">全选</button><button onclick="suppTrialAll(false)">全不选</button></div>';
+  html += '<div id="suppTrialList">';
+  suppSelectedGroup.trials.forEach((t, i) => {
+    html += '<div class="sp-trial-row on" onclick="suppToggleTrial(' + i + ')" id="suppTrial' + i + '">' +
+      '<div class="sp-trial-cb"></div>' +
+      '<div class="sp-trial-name">' + t + '</div>' +
+    '</div>';
+  });
+  html += '</div>';
+
+  document.getElementById('suppConfigBody').innerHTML = html;
+  document.getElementById('suppConfigPage').classList.add('active');
+  setTimeout(() => document.getElementById('suppNumInput').focus(), 200);
+}
+
+function suppBackToGroups() {
+  document.getElementById('suppConfigPage').classList.remove('active');
+  document.getElementById('suppGroupPage').classList.add('active');
+}
+
+function suppPickSubType(idx) {
+  suppSelectedSubType = suppSelectedGroup.subTypes[idx];
+  const chips = document.querySelectorAll('#suppSubTypeChips .sp-chip');
+  chips.forEach((c, i) => c.classList.toggle('sel', i === idx));
+}
+
+function suppToggleTrial(idx) {
+  suppTrialStates[idx] = !suppTrialStates[idx];
+  const row = document.getElementById('suppTrial' + idx);
+  row.classList.toggle('on', suppTrialStates[idx]);
+}
+
+function suppTrialAll(val) {
+  suppTrialStates = suppTrialStates.map(() => val);
+  suppSelectedGroup.trials.forEach((_, i) => {
+    document.getElementById('suppTrial' + i).classList.toggle('on', val);
+  });
+}
+
+function suppSaveDevice() {
+  const numVal = document.getElementById('suppNumInput').value.trim();
+  if (!numVal) { toast('请输入设备编号'); return; }
+  if (suppSelectedGroup.subTypes && !suppSelectedSubType) { toast('请选择子项类型'); return; }
+  if (!suppTrialStates.some(v => v)) { toast('请至少选择一项试验项'); return; }
+
+  const room = ROOMS[currentRoom];
+  const roomPrefix = room.name.match(/\d+/)[0] + '#';
+  const fullName = roomPrefix + suppSelectedGroup.prefix + numVal +
+    (suppSelectedSubType ? ' ' + suppSelectedSubType : '');
+
+  suppCounter++;
+  const newDev = {
+    id: 'supp_' + suppCounter,
+    name: fullName,
+    type: suppSelectedGroup.name,
+    operator: null,
+    cosigner: null,
+    supp: true
+  };
+  room.devices.push(newDev);
+
+  if (room.submitted && !room.editing) {
+    room.editing = true;
+  }
+
+  // 关闭增补页面
+  document.getElementById('suppConfigPage').classList.remove('active');
+  document.getElementById('suppGroupPage').classList.remove('active');
+
+  renderTabs();
+  renderDevices();
+  toast('已增补：' + newDev.name);
+
+  // 自动弹出指定人员Sheet
+  setTimeout(() => openAssign(newDev.id), 400);
+}
+
+// ===== 增补设备：试验人员通道（演示） =====
+function simTestPersonSupplement() {
+  const room = ROOMS[currentRoom];
+  suppCounter++;
+  // 试验人员增补：操作人=自己（模拟为赵刚），监护人=自选（模拟为陈华）
+  const newDev = {
+    id: 'supp_tp_' + suppCounter,
+    name: room.name.slice(0,2) + '#试验员增补' + suppCounter,
+    type: '高压电缆',
+    operator: 3,    // 赵刚（模拟试验人员自己）
+    cosigner: 4,    // 陈华（模拟选择的监护人）
+    supp: true
+  };
+  room.devices.push(newDev);
+  renderTabs();
+  renderDevices();
+  toast('试验人员（赵刚）自主增补：' + newDev.name + '，已自动分配');
+}
+
+// ===== 通用 =====
+function closeSh() {
+  document.querySelectorAll('.sh-bg').forEach(el => el.classList.remove('show'));
+}
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toastEl');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+document.querySelectorAll('.sh-bg').forEach(bg => {
+  bg.addEventListener('click', e => { if (e.target === bg) closeSh(); });
+});
+
+// ===== 初始化 =====
+renderTabs();
+renderDevices();
+</script>
+</body>
+</html>

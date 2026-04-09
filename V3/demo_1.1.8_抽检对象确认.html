@@ -1,0 +1,1776 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>抽检对象确认 — 检e通V3.0 Demo</title>
+<link rel="stylesheet" href="demo_shared_base.css">
+<style>
+  /* === Layout === */
+  .demo-layout { display:flex; gap:40px; max-width:1100px; margin:0 auto; padding:32px 24px; align-items:flex-start; }
+  .demo-left { flex-shrink:0; position:sticky; top:24px; }
+  .demo-right { flex:1; min-width:0; }
+  .demo-right h2 { font-size:18px; font-weight:700; color:#374151; margin-bottom:16px; }
+  .demo-right h3 { font-size:14px; font-weight:600; color:#4B5563; margin:20px 0 8px; }
+  .demo-right p,.demo-right li,.demo-right td,.demo-right th { font-size:13px; color:#6B7280; line-height:1.8; }
+  .demo-right th { font-weight:600; color:#4B5563; text-align:left; }
+  .demo-right table { width:100%; border-collapse:collapse; margin:8px 0; }
+  .demo-right td,.demo-right th { padding:6px 10px; border-bottom:1px solid #E5E7EB; vertical-align:top; }
+  .demo-right ul { padding-left:20px; }
+  .demo-right code { background:#F3F4F6; padding:1px 5px; border-radius:4px; font-size:12px; }
+
+  /* === Step indicator (two steps) === */
+  .step-bar { display:flex; align-items:center; padding:10px 16px; background:var(--g50); border-bottom:1px solid var(--g200); }
+  .step-pill { display:flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; transition:.2s; }
+  .step-pill.active { background:var(--pri); color:#fff; }
+  .step-pill.done { background:#D1FAE5; color:#065F46; }
+  .step-pill.pending { background:var(--g100); color:var(--g400); }
+  .step-pill .num { width:20px; height:20px; border-radius:50%; background:rgba(255,255,255,.3); display:flex; align-items:center; justify-content:center; font-size:11px; }
+  .step-pill.pending .num { background:var(--g200); }
+  .step-conn { width:24px; height:2px; background:var(--g200); margin:0 4px; }
+  .step-conn.done { background:#10B981; }
+
+  /* === Step 1: inspection type selector === */
+  .s1-type-sel { display:flex; gap:0; margin:12px 16px 0; border-radius:var(--r); overflow:hidden; border:1.5px solid var(--g200); }
+  .s1-type-btn {
+    flex:1; padding:12px 0; text-align:center; font-size:14px; font-weight:600;
+    cursor:pointer; background:var(--g50); color:var(--g400); transition:.15s; min-height:48px;
+    display:flex; align-items:center; justify-content:center; border:none;
+  }
+  .s1-type-btn:first-child { border-right:1.5px solid var(--g200); }
+  .s1-type-btn.sel { background:var(--pri); color:#fff; }
+  .s1-type-btn:active { opacity:.8; }
+  .s1-hint { padding:12px 16px 6px; font-size:13px; color:var(--g500); }
+  .s1-hint.disabled { color:var(--g300); }
+  .s1-list { padding:4px 16px; }
+  .s1-list.disabled { pointer-events:none; opacity:.4; }
+  .s1-row {
+    display:flex; align-items:center; gap:14px; padding:14px 12px;
+    border-radius:var(--r); margin-bottom:6px; cursor:pointer;
+    border:2px solid transparent; transition:.15s; min-height:56px;
+  }
+  .s1-row:active { background:var(--g50); }
+  .s1-row.checked { border-color:var(--pri); background:var(--pri-l); }
+  .s1-cb {
+    width:24px; height:24px; border-radius:6px; border:2px solid var(--g300);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:.15s;
+  }
+  .s1-row.checked .s1-cb { background:var(--pri); border-color:var(--pri); }
+  .s1-row.checked .s1-cb::after { content:'✓'; color:#fff; font-size:15px; font-weight:700; }
+  .s1-name { font-size:15px; font-weight:600; color:var(--g800); flex:1; }
+  .s1-type { font-size:12px; color:var(--g500); background:var(--g100); padding:3px 10px; border-radius:10px; }
+  .s1-count { padding:8px 16px; font-size:12px; color:var(--pri-d); font-weight:600; text-align:center; }
+
+  /* === Step 2: station tabs + detail === */
+  .s2-tabs { display:flex; gap:6px; padding:8px 12px; overflow-x:auto; border-bottom:1px solid var(--g200); }
+  .s2-tab {
+    padding:8px 14px; border-radius:20px; font-size:13px; cursor:pointer;
+    white-space:nowrap; background:var(--g100); color:var(--g500); min-height:38px;
+    display:flex; align-items:center; gap:5px; transition:.15s;
+  }
+  .s2-tab.active { background:var(--pri-l); color:var(--pri-d); font-weight:600; border:1.5px solid var(--pri); }
+  .s2-tab.submitted { background:#D1FAE5; color:#065F46; opacity:.7; }
+  .s2-tab .tick { font-size:13px; }
+
+  /* === Flat chip selector (replaces dropdown) === */
+  .field-row { padding:10px 16px; border-bottom:1px solid var(--g100); }
+  .field-label { font-size:12px; color:var(--g500); margin-bottom:6px; display:flex; align-items:center; gap:4px; }
+  .field-label .req { color:var(--ng); font-weight:700; }
+  .chip-group { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip-opt {
+    padding:8px 16px; border-radius:20px; font-size:14px; cursor:pointer;
+    border:1.5px solid var(--g200); color:var(--g600); background:#fff;
+    min-height:40px; display:flex; align-items:center; transition:.15s;
+  }
+  .chip-opt:active { opacity:.7; }
+  .chip-opt.sel { border-color:var(--pri); color:var(--pri); background:var(--pri-l); font-weight:600; }
+  .chip-opt.err { border-color:var(--ng); }
+  .field-input {
+    width:100%; padding:10px 12px; border:1.5px solid var(--g200); border-radius:var(--rs);
+    font-size:14px; color:var(--g800); box-sizing:border-box;
+  }
+  .field-input:focus { border-color:var(--pri); outline:none; }
+  .field-err { font-size:11px; color:var(--ng); margin-top:4px; display:none; }
+
+  /* === Divider === */
+  .section-divider {
+    padding:10px 16px 6px; font-size:12px; font-weight:700; color:var(--g400);
+    text-transform:uppercase; letter-spacing:1px; background:var(--g50);
+    border-top:1px solid var(--g200); margin-top:4px;
+  }
+
+  /* === Device groups (collapsible) === */
+  .dg { margin:0; }
+  .dg-hd {
+    display:flex; align-items:center; padding:12px 16px; min-height:52px;
+    border-bottom:1px solid var(--g100); cursor:pointer;
+  }
+  .dg-hd:active { background:var(--g50); }
+  .dg-arrow { width:20px; color:var(--g400); font-size:12px; transition:.2s; flex-shrink:0; }
+  .dg-arrow.collapsed { transform:rotate(-90deg); }
+  .dg-label { flex:1; font-size:14px; font-weight:600; color:var(--g800); }
+  .dg-count { font-size:12px; color:var(--g400); margin-right:8px; }
+  .dg-add {
+    width:48px; height:48px; border-radius:50%; background:var(--pri); color:#fff;
+    border:none; font-size:22px; cursor:pointer; display:flex; align-items:center;
+    justify-content:center; margin:-8px 0; box-shadow:var(--shadow-sm);
+  }
+  .dg-add:active { background:var(--pri-d); transform:scale(.92); }
+  .dg-bd { border-left:3px solid var(--pri-l); margin-left:26px; }
+  .dg-bd.collapsed { display:none; }
+  /* 左滑删除容器 */
+  .dg-swipe { position:relative; overflow:hidden; }
+  .dg-item {
+    display:flex; align-items:center; padding:12px 16px; min-height:48px;
+    border-bottom:1px solid var(--g50); cursor:pointer;
+    position:relative; background:#fff; transition:transform .2s;
+  }
+  .dg-item:active { background:var(--g50); }
+  .dg-item-name { flex:1; font-size:14px; color:var(--g700); }
+  .dg-item-tag { font-size:11px; padding:3px 8px; border-radius:10px; background:#D1FAE5; color:#065F46; }
+  .dg-empty { padding:16px; text-align:center; font-size:13px; color:var(--g400); }
+  .dg-del-btn {
+    position:absolute; right:0; top:0; bottom:0; width:72px;
+    background:var(--ng); color:#fff; border:none; font-size:13px; font-weight:600;
+    cursor:pointer; display:none; align-items:center; justify-content:center;
+  }
+  .dg-swipe.swiped .dg-item { transform:translateX(-72px); }
+  .dg-swipe.swiped .dg-del-btn { display:flex; }
+
+  /* 面包屑 */
+  .dev-breadcrumb { padding:0 16px 8px; font-size:12px; color:var(--g400); }
+
+  /* === Confirm dialog === */
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  .cd-mask { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.45); z-index:300; justify-content:center; align-items:center; }
+  .cd-mask.show { display:flex; animation:fadeIn .2s; }
+  .cd-box { width:280px; background:#fff; border-radius:16px; padding:24px 20px 16px; text-align:center; }
+  .cd-box h3 { font-size:16px; font-weight:700; color:var(--g800); margin-bottom:8px; }
+  .cd-box p { font-size:14px; color:var(--g500); margin-bottom:20px; line-height:1.6; }
+  .cd-btns { display:flex; gap:8px; }
+  .cd-btns .btn { flex:1; }
+
+  /* === 安措执行人选择 === */
+  .person-radio { display:flex; align-items:center; gap:10px; padding:10px 8px; cursor:pointer; border-radius:8px; min-height:44px; -webkit-tap-highlight-color:transparent; }
+  .person-radio:active { background:var(--g50); }
+  .person-radio .pr-dot { width:18px; height:18px; border-radius:50%; border:2px solid var(--g300); display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .15s; }
+  .person-radio .pr-dot.on { border-color:var(--pri); background:var(--pri); }
+  .person-radio .pr-dot.on::after { content:''; width:7px; height:7px; border-radius:50%; background:#fff; }
+  .person-radio .pr-name { font-size:14px; color:var(--g700); }
+  .person-radio .pr-tag { font-size:10px; color:var(--g400); background:var(--g100); padding:1px 6px; border-radius:4px; }
+
+  /* === Device config full-screen page (替代 Bottom Sheet) === */
+
+  /* === Trial items: checkbox list === */
+  .trial-row {
+    display:flex; align-items:center; gap:12px; padding:14px 16px;
+    min-height:48px; border-bottom:1px solid var(--g100); cursor:pointer;
+  }
+  .trial-row:active { background:var(--g50); }
+  .trial-cb {
+    width:22px; height:22px; border-radius:6px; border:2px solid var(--g300);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:.15s;
+  }
+  .trial-row.on .trial-cb { background:var(--pri); border-color:var(--pri); }
+  .trial-row.on .trial-cb::after { content:'✓'; color:#fff; font-size:14px; font-weight:700; }
+  .trial-name { font-size:14px; color:var(--g700); flex:1; }
+  .trial-row.on .trial-name { color:var(--g800); font-weight:500; }
+  .trial-actions { display:flex; gap:12px; padding:6px 16px; background:var(--g50); border-bottom:1px solid var(--g200); }
+  .trial-actions button { font-size:13px; color:var(--pri); background:none; border:none; cursor:pointer; padding:8px 0; font-weight:600; }
+  .trial-actions button:active { opacity:.6; }
+
+  /* === Cable batch creation matrix === */
+  .cable-page { display:none; flex:1; min-height:0; flex-direction:column; overflow:hidden; }
+  .cable-page.active { display:flex; }
+  .cable-scroll { flex:1; overflow-y:auto; min-height:0; }
+  .cable-add-row { display:flex; align-items:center; gap:8px; padding:12px 16px; border-bottom:1px solid var(--g200); background:var(--g50); }
+  .cable-add-row .label { font-size:13px; color:var(--g500); flex-shrink:0; }
+  .cable-num-input { width:64px; padding:10px 8px; border:1.5px solid var(--g200); border-radius:var(--rs); font-size:16px; font-weight:600; color:var(--g800); text-align:center; box-sizing:border-box; }
+  .cable-num-input:focus { border-color:var(--pri); outline:none; }
+  .cable-matrix-row { display:flex; align-items:center; padding:6px 16px; min-height:56px; border-bottom:1px solid var(--g100); }
+  .cable-mr-label { width:56px; font-size:14px; font-weight:600; color:var(--g800); flex-shrink:0; }
+  .cable-mr-cells { display:flex; flex:1; gap:6px; }
+  .cable-mr-cb {
+    width:44px; height:44px; border-radius:10px; border:2px solid var(--g200);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:.15s; font-size:14px; font-weight:600; color:var(--g400); background:#fff;
+  }
+  .cable-mr-cb:active { transform:scale(.92); }
+  .cable-mr-cb.on { background:var(--pri); border-color:var(--pri); color:#fff; }
+  .cable-mr-actions { width:64px; flex-shrink:0; display:flex; gap:2px; justify-content:flex-end; }
+  .cable-mr-btn { padding:6px 8px; border-radius:6px; border:none; font-size:12px; cursor:pointer; background:none; color:var(--g400); min-height:44px; display:flex; align-items:center; }
+  .cable-mr-btn:active { background:var(--g100); }
+  .cable-mr-btn.sel-all { color:var(--pri); }
+  .cable-mr-btn.del { color:var(--ng); font-size:16px; }
+  .cable-stats { padding:10px 16px; background:var(--pri-l); font-size:13px; color:var(--pri-d); font-weight:600; }
+  .cable-empty { padding:40px 16px; text-align:center; font-size:14px; color:var(--g400); }
+
+  /* Location fill list */
+  .loc-item { padding:12px 16px; border-bottom:1px solid var(--g100); }
+  .loc-item-label { font-size:14px; font-weight:600; color:var(--g800); margin-bottom:6px; }
+  .loc-item-input {
+    width:100%; padding:10px 12px; border:1.5px solid var(--g200); border-radius:var(--rs);
+    font-size:14px; color:var(--g800); box-sizing:border-box;
+  }
+  .loc-item-input:focus { border-color:var(--pri); outline:none; }
+  .loc-hint { padding:12px 16px; font-size:13px; color:var(--g400); background:var(--g50); border-bottom:1px solid var(--g200); }
+
+  /* Inline number input for device numbering */
+  .num-inline {
+    display:flex; align-items:center; gap:6px; padding:4px 0;
+  }
+  .num-inline .field-input { flex:1; font-size:16px; height:48px; }
+
+  .scroll-area { flex:1; overflow-y:auto; min-height:0; }
+  .step-content { display:none; flex:1; min-height:0; flex-direction:column; overflow:hidden; }
+  .step-content.active { display:flex; }
+
+  .dev-page { display:none; flex:1; min-height:0; flex-direction:column; overflow:hidden; }
+  .dev-page.active { display:flex; }
+  .dev-scroll { flex:1; overflow-y:auto; min-height:0; }
+
+  .phone { display:flex; flex-direction:column; overflow:hidden; }
+</style>
+</head>
+<body>
+
+<div class="demo-layout">
+  <div class="demo-left">
+    <div class="phone">
+      <div class="sbar">9:41</div>
+      <div class="nbar"><div class="back" onclick="goBack()">←</div><div class="title">抽检对象确认</div></div>
+
+      <!-- Step Bar -->
+      <div class="step-bar">
+        <div class="step-pill active" id="sp1" onclick="goStep(1)"><span class="num">1</span>检测范围</div>
+        <div class="step-conn" id="sc1"></div>
+        <div class="step-pill pending" id="sp2" onclick="goStep(2)"><span class="num">2</span>站房详情</div>
+      </div>
+
+      <!-- Step 1 -->
+      <div class="step-content active" id="step1">
+        <div class="scroll-area">
+          <div class="s1-type-sel">
+            <div class="s1-type-btn" id="typeAll" onclick="setInspType('all')">全检</div>
+            <div class="s1-type-btn" id="typeSample" onclick="setInspType('sample')">抽检</div>
+          </div>
+          <div class="s1-hint disabled" id="s1Hint">请先选择检测类型</div>
+          <div class="s1-list disabled" id="s1List"></div>
+        </div>
+        <div style="padding:10px 16px; border-top:1px solid var(--g200);">
+          <div class="s1-count" id="s1Count">已选 0 个站房</div>
+          <button class="btn btn-primary btn-block btn-lg" onclick="finishStep1()">下一步：进入站房详情</button>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step-content" id="step2">
+        <div class="s2-tabs" id="s2Tabs"></div>
+        <div class="scroll-area" id="s2Body"></div>
+        <div style="padding:10px 16px; border-top:1px solid var(--g200);">
+          <button class="btn btn-primary btn-block btn-lg" id="submitBtn" onclick="submitStation()">提交此站房</button>
+        </div>
+      </div>
+
+      <!-- Cable Batch Creation Page (电缆批量创建，矩阵点选) -->
+      <div class="cable-page" id="cablePage">
+        <div class="dev-breadcrumb" id="cableBreadcrumb" style="display:none;"></div>
+        <div class="cable-scroll">
+          <div class="field-row">
+            <div class="field-label">字母前缀</div>
+            <div class="chip-group" id="cablePrefixChips"></div>
+          </div>
+          <!-- 电缆型号+规格：均移至创建后逐根选择 -->
+
+          <!-- 添加柜号 -->
+          <div class="cable-add-row">
+            <span class="label" id="cableCabLabel">柜号</span>
+            <input class="cable-num-input" id="cableCabinetInput" type="text" inputmode="numeric" placeholder="如 11">
+            <button class="btn btn-primary" style="padding:10px 20px;min-height:44px;" onclick="cableAddCabinet()">添加</button>
+          </div>
+          <div id="cableMatrixArea"><div class="cable-empty">输入柜号并点击"添加"，开始选择电缆</div></div>
+          <div class="cable-stats" id="cableStats" style="display:none;">已选 0 根电缆</div>
+          <div class="section-divider">试验项</div>
+          <div class="trial-actions"><button onclick="cableTrialAll(true)">全选</button><button onclick="cableTrialAll(false)">全不选</button></div>
+          <div id="cableTrialList"></div>
+        </div>
+        <div style="padding:10px 16px; border-top:1px solid var(--g200);">
+          <button class="btn btn-primary btn-block btn-lg" onclick="cableSave()">保存</button>
+        </div>
+      </div>
+
+      <!-- Cable Batch Confirm Dialog -->
+      <div class="cd-mask" id="cableCdMask">
+        <div class="cd-box" style="width:320px;max-height:75vh;text-align:left;overflow:hidden;display:flex;flex-direction:column;">
+          <h3 style="text-align:center;margin-bottom:8px;flex-shrink:0;">确认创建？</h3>
+          <div id="cableCdBody" style="flex:1;overflow-y:auto;margin-bottom:12px;"></div>
+          <div class="cd-btns" style="flex-shrink:0;">
+            <button class="btn btn-outline" onclick="document.getElementById('cableCdMask').classList.remove('show')">返回修改</button>
+            <button class="btn btn-primary" onclick="cableDoConfirm()">确认创建</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Location Description Fill Page (分支箱/表箱位置描述快速填写) -->
+      <div class="dev-page" id="locPage">
+        <div class="dev-breadcrumb" id="locBreadcrumb" style="display:none;"></div>
+        <div class="dev-scroll" id="locBody"></div>
+        <div style="padding:10px 16px; border-top:1px solid var(--g200);">
+          <button class="btn btn-primary btn-block btn-lg" onclick="locSave()">完成</button>
+        </div>
+      </div>
+
+      <!-- Device Config Page (全屏页面，替代 Bottom Sheet) -->
+      <div class="dev-page" id="devPage">
+        <div class="dev-breadcrumb" id="devBreadcrumb" style="display:none;"></div>
+        <div class="dev-scroll" id="devBody"></div>
+        <div style="padding:10px 16px; border-top:1px solid var(--g200);">
+          <button class="btn btn-primary btn-block btn-lg" onclick="saveDevice()">保存</button>
+        </div>
+      </div>
+
+      <div class="toast" id="toast"></div>
+    </div>
+  </div>
+
+  <div class="demo-right">
+    <h2>抽检对象确认</h2>
+    <p>工作负责人确定检测范围、完善站房属性、配置各站房下的检测设备和试验项。这是全流程中操作量最大的环节。</p>
+
+    <h3>设计决策</h3>
+    <ul>
+      <li><b>两步向导，不是三步</b>——Step 1选范围（全检/抽检+站房标记），Step 2逐站房配置（属性+设备+试验项）。只收结构信息，不收铭牌信息（铭牌在检测执行时现场采集）</li>
+      <li><b>从2.4系统78+次点击大幅精简</b>——砍掉5个无消费方字段（序号/进线数/配变数/规则参照/首测标记），站房编号继承不重填，所有少选项改为平铺chip一次点击</li>
+      <li><b>设备自动生成空壳</b>——选柜体类型后按行业默认规则自动生成设备列表（只有类型，编号和试验项待配置）。"+"按钮追加，左滑删除。默认规则可通过数据中台配置</li>
+      <li><b>设备配置走全屏页面</b>——解决Bottom Sheet键盘冲突，上半区设备属性+下半区试验项Checkbox List，一页保存。试验项默认全选，每行48dp防误触</li>
+      <li><b>电缆/分支箱/表箱用矩阵批量创建</b>——高压电缆一维网格(1-20)直选，低压电缆二维矩阵(柜号×间隔号)，分支箱/表箱同低压+固定后缀"下侧"。创建后逐根选型号规格或填位置描述</li>
+      <li><b>逐站房提交解锁</b>——不等全部站房配完，提交一个就解锁一个站房的安措和检测分工。提交时同时选安措执行人（单选1人）</li>
+      <li><b>撤回+增补双轨修正</b>——大问题用撤回（安措未开始可撤），小问题用增补（始终可加设备）。增补设备标橙色区分</li>
+    </ul>
+
+    <h3>请试试以下操作</h3>
+    <table>
+      <tr><th style="width:35%">做什么</th><th>怎么做</th></tr>
+      <tr><td>选检测类型</td><td>顶部"全检/抽检"切换→全检自动全选，抽检手动勾选→下一步</td></tr>
+      <tr><td>配置站房属性</td><td>Step 2 Tab切换站房→选柜体类型（chip点选）→系统自动生成空壳设备</td></tr>
+      <tr><td>配置单个设备</td><td>点击空壳设备→全屏页面→填编号+选子类型→勾选试验项→保存</td></tr>
+      <tr><td>批量创建电缆</td><td>设备列表"+"→矩阵页→选前缀+点选编号→确认→逐根选型号规格</td></tr>
+      <tr><td>批量创建分支箱</td><td>同电缆矩阵→确认后跳转位置描述快速填写</td></tr>
+      <tr><td>删除设备</td><td>设备行左滑→红色删除按钮→二次确认弹窗</td></tr>
+      <tr><td>提交站房</td><td>底部"提交此站房"→选安措执行人→确认→Tab变灰锁定</td></tr>
+      <tr><td>撤回已提交</td><td>已提交站房Tab→"撤回此站房"（安措未开始才可用）</td></tr>
+      <tr><td>增补设备</td><td>已提交站房→底部"增补设备"→同正常创建流程→橙色标记</td></tr>
+    </table>
+
+    <h3>业务规则</h3>
+    <table>
+      <tr><th style="width:30%">规则</th><th>说明</th></tr>
+      <tr><td>全检/抽检</td><td>无默认值必须选。全检→全选只读；抽检→手动勾选至少1个。切换时清空/全选</td></tr>
+      <tr><td>站房属性继承</td><td>编号从建设情况确认继承（只读）。柜体类型/PT形式/规模/位置在此补填</td></tr>
+      <tr><td>设备自动生成</td><td>选柜体类型后触发。开关站默认：中置柜(进/出/段各1)+断路器+PT+高压电缆。空壳显示"待配置"蓝标</td></tr>
+      <tr><td>柜体类型切换</td><td>已有已配置设备时二次确认（切换将清空设备）</td></tr>
+      <tr><td>空壳校验</td><td>提交时空壳设备必须删除或配置完成，否则阻断提交</td></tr>
+      <tr><td>分段柜独有字段</td><td>母联类型（分段隔离柜/双分段柜）+连接方式（电缆/铜排）+联锁方式（机械锁/程序锁），影响试验项</td></tr>
+      <tr><td>安措执行人</td><td>提交站房时单选1人（候选=仅试验人员，工作负责人不可选自己）。安措和检测分工并行解锁</td></tr>
+      <tr><td>撤回条件</td><td>站房状态=submitted或divided→可撤回；safety_doing及之后→不可撤回（引导增补）</td></tr>
+      <tr><td>增补</td><td>已提交站房始终可增补。标橙色"增补"标签，自动出现在检测分工待分工列表</td></tr>
+      <tr><td>设备删除</td><td>左滑+二次确认。已提交站房的设备不可删除（只读）</td></tr>
+    </table>
+
+    <h3>电缆/分支箱/表箱编号规则</h3>
+    <table>
+      <tr><th>设备类型</th><th>编号格式</th><th>批量方式</th></tr>
+      <tr><td>高压电缆</td><td>前缀+数字（如GP-3）</td><td>前缀chip + 一维网格(1-20)</td></tr>
+      <tr><td>低压电缆</td><td>前缀+柜号-间隔号（如DP11-2）</td><td>前缀chip + 柜号输入 + 间隔号5格矩阵</td></tr>
+      <tr><td>分支箱</td><td>前缀+柜号-间隔号+下侧</td><td>同低压电缆 + 固定后缀 + 位置描述</td></tr>
+      <tr><td>表箱</td><td>同分支箱</td><td>同分支箱</td></tr>
+    </table>
+
+    <h3>设备状态标签</h3>
+    <table>
+      <tr><th>标签</th><th>颜色</th><th>含义</th></tr>
+      <tr><td>待配置</td><td>蓝色</td><td>空壳设备，未填编号和试验项</td></tr>
+      <tr><td>8/11项</td><td>绿色</td><td>已配置且试验项全选</td></tr>
+      <tr><td>8/11项</td><td>黄色</td><td>已配置但试验项有取消</td></tr>
+      <tr><td>增补</td><td>橙色</td><td>提交后增补的设备</td></tr>
+    </table>
+
+    <h3>站房状态模型</h3>
+    <p style="font-size:12px;color:#6B7280;line-height:1.8">
+      submitted（刚提交）→ divided（检测分工完成）→ safety_doing（安措进行中）→ testing（检测中）→ test_done（检测完成）<br>
+      撤回窗口：submitted/divided 可撤回 | safety_doing 及之后不可撤回
+    </p>
+
+    <h3>版本边界</h3>
+    <table>
+      <tr><th style="width:35%">能力</th><th>V3.0</th><th>V3.1</th></tr>
+      <tr><td>站房属性</td><td>7字段精简</td><td>按需扩展</td></tr>
+      <tr><td>设备生成规则</td><td>行业默认（数据中台可配）</td><td>按地区/项目类型差异化</td></tr>
+      <tr><td>撤回</td><td>直接撤回无审批</td><td>新增审批节点</td></tr>
+      <tr><td>编号校验</td><td>不做（编号规则复杂，待完整梳理）</td><td>同类型内唯一校验</td></tr>
+      <tr><td>铭牌信息</td><td>不在此阶段收集</td><td>同（检测执行时收集）</td></tr>
+    </table>
+
+    <h3>与上下游的关系</h3>
+    <table>
+      <tr><th>方向</th><th>数据</th><th>用途</th></tr>
+      <tr><td>上游（建设情况确认）</td><td>站房列表+编号+类型</td><td>继承，不重填</td></tr>
+      <tr><td>下游（检测分工）</td><td>已提交站房的设备列表</td><td>按设备分配操作人+监护人</td></tr>
+      <tr><td>下游（安措执行）</td><td>安措执行人+站房</td><td>指定人逐站房做安措</td></tr>
+      <tr><td>下游（检测执行）</td><td>设备+试验项</td><td>检测任务生成</td></tr>
+      <tr><td>下游（报告生成）</td><td>站房属性→抽取记录单；设备→报告封面</td><td>数据源</td></tr>
+    </table>
+
+    <details>
+    <summary>📋 开发参考（点击展开）</summary>
+
+    <h3>低代码组件映射</h3>
+    <table>
+      <tr><th>UI元素</th><th>组件</th><th>状态</th></tr>
+      <tr><td>Step 1 全检/抽检 Segmented</td><td>MetaSegmented</td><td>✅</td></tr>
+      <tr><td>Step 1 站房勾选列表</td><td>MetaCheckboxMultiple</td><td>✅</td></tr>
+      <tr><td>Step 2 站房Tab切换</td><td>MetaTabs</td><td>✅</td></tr>
+      <tr><td>站房属性chip字段</td><td>MetaCheckbox(radio)</td><td>✅</td></tr>
+      <tr><td>设备分组折叠</td><td>MetaCollapse</td><td>⚠️ 需扩展header slot</td></tr>
+      <tr><td>设备配置全屏页</td><td>标准表单页</td><td>✅</td></tr>
+      <tr><td>试验项Checkbox List</td><td>MetaCheckboxMultiple</td><td>✅</td></tr>
+      <tr><td>三段式编号</td><td>需自定义</td><td>❌ 业务组件</td></tr>
+      <tr><td>电缆矩阵批量创建</td><td>需自定义</td><td>❌ 业务组件</td></tr>
+      <tr><td>左滑删除</td><td>需自定义</td><td>❌ 手势组件</td></tr>
+    </table>
+
+    <h3>站房级状态字段</h3>
+    <p><code>station_room_status</code>: submitted → divided → safety_doing → safety_done → testing → test_done<br>
+    线性无分支状态链，简单状态机，不需要Flowable建模。项目级状态由站房聚合计算。</p>
+
+    <h3>设备类型映射（27种子类型）</h3>
+    <table>
+      <tr><th>大类(setCode)</th><th>子类型</th></tr>
+      <tr><td>100 中置柜</td><td>进线/出线/变压器/分段/PT（5种）</td></tr>
+      <tr><td>101 充气柜</td><td>进线/出线/变压器/分段/PT（5种）</td></tr>
+      <tr><td>102 环网柜</td><td>进线/出线/变压器/分段/PT（5种）</td></tr>
+      <tr><td>103 断路器</td><td>单一类型</td></tr>
+      <tr><td>104 电压互感器</td><td>单一类型</td></tr>
+      <tr><td>105 高压电缆</td><td>单一类型</td></tr>
+      <tr><td>106 配变</td><td>干式/油浸式（2种）</td></tr>
+      <tr><td>107 低压柜</td><td>受电/馈线/联络/电容（4种）</td></tr>
+      <tr><td>108 低压电缆</td><td>单一类型</td></tr>
+      <tr><td>109 分支箱</td><td>单一类型</td></tr>
+      <tr><td>110 表箱</td><td>单一类型</td></tr>
+    </table>
+
+    <h3>默认设备生成规则（数据中台可配）</h3>
+    <table>
+      <tr><th>站房类型</th><th>默认生成</th></tr>
+      <tr><td>开关站（中置式）</td><td>中置柜(进+出+段各1) + 断路器1 + PT1 + 高压电缆1</td></tr>
+      <tr><td>开关站（充气式）</td><td>充气柜(进+出+段各1) + 断路器1 + PT1 + 高压电缆1</td></tr>
+      <tr><td>配电室</td><td>配变1 + 低压柜(受电+馈线各1) + 低压电缆1 + 分支箱1 + 表箱1</td></tr>
+      <tr><td>箱变</td><td>环网柜(进+出+段各1) + 高压电缆1 + 配变1 + 低压柜(受电+馈线各1) + 低压电缆1 + 分支箱1 + 表箱1</td></tr>
+    </table>
+
+    <h3>电缆型号（9种，高低压通用）</h3>
+    <p style="font-size:11px;color:#6B7280">ZC-YJV22 / ZR-YJV22 / ZC-YJV23 / ZR-YJV23 / NH / WDZC-YJY23 / WDZN-YJY23 / ZNH-YJY23 / FS-ZR-YJV22</p>
+
+    <h3>提交数据（每站房）</h3>
+    <p>站房属性（7字段）+ 设备列表（每设备含编号+子类型+试验项配置+独有字段）+ 安措执行人ID + 提交时间 + 操作人</p>
+
+    <h3>待确认项</h3>
+    <ul>
+      <li>#2 编号前缀格式（GP/KP/AH）是地域差异还是用户选择？V3.0需明确</li>
+      <li>#3 非连续编号场景多常见？影响矩阵设计</li>
+      <li>#6 检测分工页如何显示"部分站房已提交、部分还在配置"的混合状态</li>
+      <li>#8 各设备类型编号规则完整梳理（影响编号校验，V3.0暂不做校验）</li>
+    </ul>
+
+    </details>
+  </div>
+</div>
+
+<!-- Confirm Dialog (通用) -->
+<div class="cd-mask" id="cdMask">
+  <div class="cd-box">
+    <h3 id="cdTitle">确认</h3>
+    <p id="cdMsg"></p>
+    <div class="cd-btns">
+      <button class="btn btn-outline" onclick="closeDialog()">取消</button>
+      <button class="btn btn-primary" id="cdOkBtn" onclick="">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- 站房提交弹窗（含安措分工） -->
+<div class="cd-mask" id="submitMask">
+  <div class="cd-box" style="width:300px;text-align:left;">
+    <h3 style="text-align:center;" id="submitTitle">提交站房</h3>
+    <p style="font-size:13px;color:var(--g600);margin-bottom:12px;" id="submitDevCount"></p>
+    <div style="font-size:13px;font-weight:600;color:var(--g700);margin-bottom:8px;">安措执行人（选1人）</div>
+    <div id="submitPersonList" style="margin-bottom:16px;"></div>
+    <p style="font-size:11px;color:var(--g400);margin-bottom:16px;">提交后该站房的安措和检测分工可同时开展</p>
+    <div class="cd-btns">
+      <button class="btn btn-outline" onclick="closeSubmitDialog()">取消</button>
+      <button class="btn btn-primary" id="submitOkBtn" onclick="doSubmit()">确认提交</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== Data =====
+const stations = [
+  { id:1, name:'1#开关站', type:'100', tl:'开关站', checked:false },
+  { id:2, name:'2#开关站', type:'100', tl:'开关站', checked:false },
+  { id:3, name:'1#配电室', type:'101', tl:'配电室', checked:false },
+  { id:4, name:'2#配电室', type:'101', tl:'配电室', checked:false },
+  { id:5, name:'3#配电室', type:'101', tl:'配电室', checked:false },
+  { id:6, name:'4#箱变',   type:'103', tl:'箱变',   checked:false },
+];
+const roomData = {};   // {stationId: {number,hvType,ptType,hvScale,ringScale,pos,ugLayers}}
+const devData = {};    // {stationId: {setCode: [{name,sub,configured,trials,isSupp}]}}
+const submitted = {};  // {stationId: true}
+const stationStatus = {}; // {stationId: 'submitted'|'divided'|'safety_doing'|'testing'...} 模拟站房级状态
+let curStep = 1, curTab = 0;
+let editCtx = null;    // {stationId, setCode, label, curSub, segType, editIndex, isSupplement}
+let inspType = null;   // null | 'all' | 'sample'
+
+// 根据站房类型+柜体类型动态获取设备模板（参照V2.4 conf_station_room_type_and_test_obj_type_mapping）
+function getDevTpls(s, r) {
+  const hvType = r?.hvType;
+  if (s.type === '100') { // 开关站
+    const hvG = hvType==='101' ? {sc:'101',l:'充气柜'} : {sc:'100',l:'中置柜'};
+    return [hvG, {sc:'103',l:'断路器'}, {sc:'104',l:'电压互感器'}, {sc:'105',l:'高压电缆'}];
+  }
+  if (s.type === '102') { // 合建站 = 开关站设备 + 环网柜 + 配电室设备
+    const hvG = hvType==='101' ? {sc:'101',l:'充气柜'} : {sc:'100',l:'中置柜'};
+    return [hvG, {sc:'102',l:'环网柜'}, {sc:'103',l:'断路器'}, {sc:'104',l:'电压互感器'}, {sc:'105',l:'高压电缆'},
+            {sc:'106',l:'配变'}, {sc:'107',l:'低压柜'}, {sc:'108',l:'低压电缆'}, {sc:'109',l:'分支箱'}, {sc:'110',l:'表箱'}];
+  }
+  if (s.type === '103') { // 箱变
+    const hvG = hvType==='100' ? {sc:'100',l:'中置柜'} : {sc:'102',l:'环网柜'};
+    return [hvG, {sc:'105',l:'高压电缆'}, {sc:'106',l:'配变'}, {sc:'107',l:'低压柜'}, {sc:'108',l:'低压电缆'}, {sc:'109',l:'分支箱'}, {sc:'110',l:'表箱'}];
+  }
+  if (s.type === '101') { // 配电室
+    return [{sc:'106',l:'配变'}, {sc:'107',l:'低压柜'}, {sc:'108',l:'低压电缆'}, {sc:'109',l:'分支箱'}, {sc:'110',l:'表箱'}];
+  }
+  return [];
+}
+
+// 默认生成规则：空壳设备（只有类型，编号/试验项待用户配置）
+// 参照行业惯例：开关站=中置柜(进线+出线+分段)+断路器+PT+高压电缆
+const defaultSubs = {
+  '100': ['进线柜体','出线柜体','分段柜体'],  // 中置柜默认3种（不含PT柜体/配变柜体）
+  '101': ['进线柜体','出线柜体','分段柜体'],  // 充气柜同上
+  '102': ['进线柜体','出线柜体','分段柜体'],  // 环网柜同上
+  '107': ['受电柜体','馈线柜体'],              // 低压柜默认2种
+};
+
+function autoGenDevices(stationId) {
+  const s = stations.find(x=>x.id===stationId);
+  const r = roomData[stationId] || {};
+  const tpls = getDevTpls(s, r);
+  devData[stationId] = {};
+  for (const t of tpls) {
+    devData[stationId][t.sc] = [];
+    const subs = defaultSubs[t.sc];
+    if (subs) {
+      // 有子类型的设备组：按默认子类型各生成1个空壳
+      subs.forEach(sub => {
+        devData[stationId][t.sc].push({ name:'', sub, configured:false });
+      });
+    } else {
+      // 无子类型的设备：生成1个空壳
+      devData[stationId][t.sc].push({ name:'', configured:false });
+    }
+  }
+}
+
+const trials = {
+  '100':['外观检查','装配检查','柜体测厚','铜排测量','继保试验','辅控绝缘','耐压前绝缘','耐压试验','耐压后绝缘','控制检查','出线五防'],
+  '101':['外观检查','装配检查','辅控绝缘','耐压试验'],
+  '102':['装配检查','柜体测厚','主回路电阻','辅控绝缘','耐压试验','进线五防'],
+  '103':['外观检查','装配检查','开关特性','回路电阻','辅控回路','耐压试验'],
+  '104':['外观检查','直阻测量','变比测量','精度试验','耐压前绝缘','耐压试验','耐压后绝缘'],
+  '105':['外观检查','挂牌检查','性能检查','米标检查','验电核相','直阻测量','长度测量','局放试验'],
+  '106':['外观检查','装配检查','直阻测量','变比测量','容量测试','耐压前绝缘','耐压试验','耐压后绝缘'],
+  '107':['外观检查','装配检查','柜体厚度','铜排检查','绝缘试验','机械操作','通流试验'],
+  '108':['外观检查','性能检查','验电核相','直阻测量','绝缘测量'],
+  '109':['外观检查','装配检查','箱体厚度','铜排测量','绝缘测量'],
+  '110':['外观检查','装配检查','箱体厚度'],
+};
+
+// ===== Utils =====
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type==='error'?' toast-error':type==='ok'?' toast-success':'');
+  setTimeout(() => t.className='toast', 2200);
+}
+function getChecked() { return stations.filter(s=>s.checked); }
+
+// ===== Step Nav =====
+function goStep(n) {
+  if (n===2 && !getChecked().length) { showToast('请先勾选抽中站房','error'); return; }
+  curStep = n;
+  document.querySelectorAll('.step-content').forEach(e=>e.classList.remove('active'));
+  document.getElementById('step'+n).classList.add('active');
+  const sp1=document.getElementById('sp1'), sp2=document.getElementById('sp2'), sc=document.getElementById('sc1');
+  if (n===1) { sp1.className='step-pill active'; sp2.className='step-pill pending'; sc.className='step-conn'; }
+  else { sp1.className='step-pill done'; sp2.className='step-pill active'; sc.className='step-conn done'; initStep2(); }
+}
+function goBack() { if(curStep>1) goStep(1); }
+
+// ===== Dialog Utility =====
+let dialogCallback = null;
+function showDialog(title, msg, okText, onOk) {
+  document.getElementById('cdTitle').textContent = title;
+  document.getElementById('cdMsg').textContent = msg;
+  const okBtn = document.getElementById('cdOkBtn');
+  okBtn.textContent = okText || '确认';
+  dialogCallback = onOk;
+  okBtn.setAttribute('onclick', 'execDialog()');
+  document.getElementById('cdMask').classList.add('show');
+}
+function execDialog() { closeDialog(); if (dialogCallback) dialogCallback(); }
+function closeDialog() { document.getElementById('cdMask').classList.remove('show'); dialogCallback = null; }
+
+// ===== Inspection Type =====
+function setInspType(type) {
+  inspType = type;
+  document.getElementById('typeAll').className = 's1-type-btn' + (type==='all'?' sel':'');
+  document.getElementById('typeSample').className = 's1-type-btn' + (type==='sample'?' sel':'');
+  const hint = document.getElementById('s1Hint');
+  const list = document.getElementById('s1List');
+  if (type==='all') {
+    stations.forEach(s => s.checked = true);
+    hint.textContent = '全检模式：全部站房参与检测';
+    hint.className = 's1-hint';
+    list.className = 's1-list';
+    renderS1();
+  } else {
+    stations.forEach(s => s.checked = false);
+    hint.textContent = '根据供电公司抽检规则，勾选需要检测的站房';
+    hint.className = 's1-hint';
+    list.className = 's1-list';
+    renderS1();
+  }
+}
+
+// ===== Step 1 =====
+function renderS1() {
+  const list = document.getElementById('s1List');
+  const isAll = inspType==='all';
+  list.innerHTML = stations.map((s,i) => `
+    <div class="s1-row ${s.checked?'checked':''}" onclick="${isAll?'':('toggleS('+i+')')}" style="${isAll?'cursor:default;opacity:.7;':''}">
+      <div class="s1-cb"></div>
+      <span class="s1-name">${s.name}</span>
+      <span class="s1-type">${s.tl}</span>
+    </div>`).join('');
+  const cnt = stations.filter(s=>s.checked).length;
+  document.getElementById('s1Count').textContent = `已选 ${cnt} 个站房` + (isAll?' (全检)':'');
+}
+function toggleS(i) {
+  if (inspType==='all') return;
+  stations[i].checked = !stations[i].checked;
+  renderS1();
+}
+function finishStep1() {
+  if (!inspType) { showToast('请先选择检测类型','error'); return; }
+  if (!getChecked().length) { showToast('请至少选择一个站房','error'); return; }
+  goStep(2);
+}
+
+// ===== Step 2 =====
+function initStep2() {
+  const checked = getChecked();
+  checked.forEach(s => {
+    if (!roomData[s.id]) roomData[s.id] = { number:s.name };
+    // 首次进入时自动生成默认检测对象（沿用V2.4规则）
+    if (!devData[s.id] || Object.keys(devData[s.id]).length === 0) {
+      autoGenDevices(s.id);
+    }
+  });
+  if (curTab >= checked.length) curTab = 0;
+  renderS2();
+}
+function renderS2() {
+  const checked = getChecked();
+  // Tabs
+  document.getElementById('s2Tabs').innerHTML = checked.map((s,i) => {
+    const isSub = submitted[s.id];
+    const cls = isSub ? 'submitted' : i===curTab ? 'active' : '';
+    return `<div class="s2-tab ${cls}" onclick="switchTab(${i})">${isSub?'<span class="tick">🔒</span>':''}${s.name}</div>`;
+  }).join('');
+  renderDetail(checked[curTab]);
+  document.getElementById('submitBtn').textContent = submitted[checked[curTab]?.id] ? '已提交 ✓' : '提交此站房';
+  document.getElementById('submitBtn').disabled = !!submitted[checked[curTab]?.id];
+}
+function switchTab(i) { curTab=i; renderS2(); }
+
+function renderDetail(s) {
+  if (!s) return;
+  const r = roomData[s.id] || {};
+  const body = document.getElementById('s2Body');
+  const dis = submitted[s.id] ? 'pointer-events:none;opacity:.6;' : '';
+  let h = `<div style="${dis}">`;
+
+  // ---- Station info section (V3.0设计：精简字段，继承建设情况确认数据) ----
+  h += `<div class="section-divider">站房属性</div>`;
+
+  // 站房编号 — 继承自建设情况确认，只读展示
+  h += `<div class="field-row"><div class="field-label">站房编号 <span style="font-size:11px;color:var(--g400);font-weight:400;">继承自建设情况确认</span></div>
+    <input class="field-input" value="${r.number||s.name}" style="background:var(--g50);color:var(--g500);" readonly></div>`;
+
+  // 柜体类型 — 100(开关站)/102(合建站)/103(箱变)，不含101(配电室)
+  if (s.type==='100'||s.type==='102'||s.type==='103') {
+    h += chipField(s.id, '柜体类型', 'hvType', [['100','金属铠装中置移开式'],['101','气体绝缘金属封闭式']], r.hvType, true);
+  }
+
+  // PT形式 — 仅当柜体类型='100'(金属铠装中置移开式)时显示
+  if ((s.type==='100'||s.type==='102'||s.type==='103') && r.hvType==='100') {
+    h += chipField(s.id, 'PT形式', 'ptType', [['100','移动式'],['101','固定式']], r.ptType, true);
+  }
+
+  // 高压柜规模 — 100(开关站)/102(合建站)
+  if (s.type==='100'||s.type==='102') {
+    h += chipField(s.id, '高压柜规模', 'hvScale', [['100','≤2进6出'],['101','>2进6出']], r.hvScale, true);
+  }
+  // 环网柜规模 — 103(箱变)
+  if (s.type==='103') {
+    h += chipField(s.id, '环网柜规模', 'ringScale', [['100','≤2进4出'],['101','>2进4出']], r.ringScale, true);
+  }
+
+  // 建设位置 — 全部站房类型
+  h += chipField(s.id, '建设位置', 'pos', [['100','地面'],['101','B1(负一层)'],['102','B2(负二层)']], r.pos, true);
+
+  // 地下层数 — 仅当建设位置=B1或B2时显示
+  if (r.pos==='101'||r.pos==='102') {
+    h += chipField(s.id, '地下层数', 'ugLayers', [['1','1层'],['2','2层']], r.ugLayers, true);
+  }
+
+  // ---- Device section (根据站房类型+柜体类型动态生成) ----
+  h += `<div class="section-divider">抽检设备</div>`;
+  const tpls = getDevTpls(s, r);
+  const ruleMap = {'100':'第2部分','101':'第4.1部分','102':'第3部分','103':'第6部分'};
+  h += `<div style="padding:4px 16px;font-size:12px;color:var(--g400);">规则参照：${ruleMap[s.type]||'—'}${!r.hvType&&(s.type==='100'||s.type==='102'||s.type==='103')?' · <span style="color:var(--ng)">请先选择柜体类型</span>':''}</div>`;
+
+  for (const t of tpls) {
+    const objs = devData[s.id]?.[t.sc] || [];
+    h += `<div class="dg">
+      <div class="dg-hd" onclick="toggleDG(this)">
+        <span class="dg-arrow">▼</span>
+        <span class="dg-label">${t.l}</span>
+        <span class="dg-count">${objs.length}个</span>
+        <button class="dg-add" onclick="event.stopPropagation();openBS(${s.id},'${t.sc}','${t.l}')">+</button>
+      </div>
+      <div class="dg-bd">`;
+    if (objs.length===0) {
+      h += `<div class="dg-empty">暂无设备，点击 + 添加</div>`;
+    } else {
+      objs.forEach((o, oi) => {
+        const subTag = o.sub ? `<span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--g100);color:var(--g500);margin-right:6px;">${o.sub}</span>` : '';
+        let statusTag;
+        if (o.isSupp) {
+          // 增补设备：独立橙色（与部分配置的黄色区分）
+          const trialInfo = o.trials ? `${o.trials.filter(x=>x.on).length}/${o.trials.length}项` : '';
+          statusTag = `<span style="font-size:11px;padding:3px 10px;border-radius:10px;background:#FFEDD5;color:#C2410C;">增补${trialInfo?' · '+trialInfo:''}</span>`;
+        } else if (!o.configured) {
+          // 空壳：待配置
+          statusTag = `<span style="font-size:11px;padding:3px 10px;border-radius:10px;background:#DBEAFE;color:#1E40AF;">待配置</span>`;
+        } else if (o.trials) {
+          const trialOn = o.trials.filter(x=>x.on).length;
+          const trialTotal = o.trials.length;
+          statusTag = `<span style="font-size:11px;padding:3px 10px;border-radius:10px;background:${trialOn===trialTotal?'#D1FAE5':'#FEF3C7'};color:${trialOn===trialTotal?'#065F46':'#92400E'};">${trialOn}/${trialTotal}项</span>`;
+        } else {
+          statusTag = `<span style="font-size:11px;padding:3px 10px;border-radius:10px;background:#D1FAE5;color:#065F46;">已配置</span>`;
+        }
+        const locTag = o.location ? `<span style="font-size:11px;color:var(--g400);display:block;margin-top:2px;">${o.location}</span>` : '';
+        const clickAction = dis ? '' : `editDevice(${s.id},'${t.sc}',${oi},'${t.l}')`;
+        if (dis) {
+          h += `<div class="dg-item"><span class="dg-item-name">${subTag}${o.name||'(未编号)'}${locTag}</span>${statusTag}</div>`;
+        } else {
+          h += `<div class="dg-swipe" ontouchstart="swipeStart(event,this)" ontouchmove="swipeMove(event,this)" ontouchend="swipeEnd(event,this)" onmousedown="mSwipeStart(event,this)" onmousemove="mSwipeMove(event,this)" onmouseup="mSwipeEnd(event,this)" onmouseleave="mSwipeEnd(event,this)">
+            <div class="dg-item" onclick="${clickAction}"><span class="dg-item-name">${subTag}${o.name||'(未编号)'}${locTag}</span>${statusTag}</div>
+            <button class="dg-del-btn" onclick="deleteDevice(${s.id},'${t.sc}',${oi},'${o.sub||''}','${o.name||''}')">删除</button>
+          </div>`;
+        }
+      });
+    }
+    h += `</div></div>`;
+  }
+  // === 已提交站房：撤回+增补按钮 ===
+  if (submitted[s.id]) {
+    const status = stationStatus[s.id] || 'submitted';
+    const canRecall = (status === 'submitted' || status === 'divided');
+    h += `<div style="padding:16px;">`;
+    if (canRecall) {
+      h += `<div style="text-align:center;margin-bottom:10px;">
+        <button class="btn btn-text" style="color:var(--ng);font-size:14px;" onclick="recallStation(${s.id})">撤回此站房</button>
+      </div>`;
+    } else {
+      h += `<div style="text-align:center;margin-bottom:10px;font-size:12px;color:var(--g400);">该站房安措已开始，无法撤回</div>`;
+    }
+    h += `<button class="btn btn-outline btn-block btn-lg" onclick="supplementDevice(${s.id})">增补设备</button>`;
+    h += `</div>`;
+  }
+
+  h += `</div>`;
+  body.innerHTML = h;
+}
+
+function chipField(sid, label, key, opts, val, req) {
+  let h = `<div class="field-row"><div class="field-label">${req?'<span class="req">*</span> ':''}${label}</div><div class="chip-group">`;
+  for (const [v,t] of opts) {
+    h += `<div class="chip-opt ${val===v?'sel':''}" onclick="setR(${sid},'${key}','${v}');renderS2()">${t}</div>`;
+  }
+  h += `</div></div>`;
+  return h;
+}
+function setR(sid, key, val) {
+  if (!roomData[sid]) roomData[sid]={};
+  roomData[sid][key] = val;
+  // 联动清除：柜体类型切换时清空PT形式 + 重新生成设备列表
+  if (key==='hvType') {
+    if (val!=='100') delete roomData[sid].ptType;
+    // 如果已有已配置设备，弹确认框
+    const existingDevs = devData[sid] || {};
+    const configuredCount = Object.values(existingDevs).flat().filter(d=>d.configured).length;
+    if (configuredCount > 0) {
+      const savedVal = val;
+      showDialog('切换柜体类型', `将清空已配置的 ${configuredCount} 个设备，确认切换？`, '确认切换', () => {
+        autoGenDevices(sid);
+        renderS2();
+      });
+      return; // 等用户确认后再重建
+    }
+    autoGenDevices(sid); // 柜体类型决定设备列表
+  }
+  // 联动清除：建设位置切换为地面时清空地下层数
+  if (key==='pos' && val==='100') { delete roomData[sid].ugLayers; }
+}
+function toggleDG(el) {
+  const arrow = el.querySelector('.dg-arrow');
+  const bd = el.nextElementSibling;
+  arrow.classList.toggle('collapsed');
+  bd.classList.toggle('collapsed');
+}
+
+// ===== Device Config Page =====
+// 各子类型试验项（V2.4配置表 conf_test_set_info 按 test_obj_type_id 配置）
+const subTrials = {
+  '进线柜体': ['外观检查','装配检查','柜体测厚','铜排测量','继保试验','辅控绝缘','耐压前绝缘','耐压试验','耐压后绝缘','控制检查','进线五防'],
+  '出线柜体': ['外观检查','装配检查','柜体测厚','铜排测量','继保试验','辅控绝缘','耐压前绝缘','耐压试验','耐压后绝缘','控制检查','出线五防'],
+  '配变柜体': ['外观检查','装配检查','柜体测厚','铜排测量','继保试验','辅控绝缘','耐压前绝缘','耐压试验','耐压后绝缘','控制检查'],
+  '分段柜体_分段隔离柜': ['外观检查','装配检查','柜体测厚','铜排测量','继保试验','辅控绝缘','耐压前绝缘','耐压试验','耐压后绝缘','控制检查','分段隔离五防'],
+  '分段柜体_双分段柜': ['外观检查','装配检查','柜体测厚','铜排测量','继保试验','辅控绝缘','耐压前绝缘','耐压试验','耐压后绝缘','控制检查','双分段五防'],
+  'PT柜体': ['外观检查','装配检查','柜体测厚','辅控绝缘','耐压前绝缘','耐压试验','耐压后绝缘'],
+};
+
+// ===== Device Config Page (全屏页面，替代 Bottom Sheet) =====
+let devPageTrials = []; // 当前设备页面的试验项状态 [{name, on}]
+
+function openDevPage(stationId, setCode, label, devIndex) {
+  if (submitted[stationId]) return;
+  const dev = devIndex !== null ? devData[stationId]?.[setCode]?.[devIndex] : null;
+  editCtx = {
+    stationId, setCode, label,
+    curSub: dev?.sub || (['100','101','102'].includes(setCode) ? '进线柜体' : setCode==='107' ? '受电柜体' : null),
+    segType: null,
+    editIndex: devIndex
+  };
+  const s = stations.find(x=>x.id===stationId);
+  const titleText = dev?.sub ? `${label} · ${dev.sub}` : label;
+  document.querySelector('#devPage').classList.add('active');
+  document.getElementById('step2').classList.remove('active');
+  document.querySelector('.nbar .title').textContent = titleText;
+  document.querySelector('.nbar .back').setAttribute('onclick', 'closeDevPage()');
+  document.querySelector('.step-bar').style.display = 'none';
+  // 面包屑（仅补充站房名，标题已有设备类型信息）
+  document.getElementById('devBreadcrumb').textContent = `${s.name}`;
+  document.getElementById('devBreadcrumb').style.display = 'block';
+  renderDevPage();
+}
+
+function closeDevPage() {
+  document.getElementById('devPage').classList.remove('active');
+  document.getElementById('step2').classList.add('active');
+  document.querySelector('.nbar .title').textContent = '抽检对象确认';
+  document.querySelector('.nbar .back').setAttribute('onclick', 'goBack()');
+  document.querySelector('.step-bar').style.display = 'flex';
+  document.getElementById('devBreadcrumb').style.display = 'none';
+  renderS2();
+}
+
+function renderDevPage() {
+  const { stationId, setCode, curSub, segType, editIndex } = editCtx;
+  const s = stations.find(x=>x.id===stationId);
+  const num = roomData[stationId]?.number || s.name;
+  const isEdit = editIndex !== undefined && editIndex !== null;
+  let h = '';
+
+  // === 设备属性区 ===
+  h += `<div class="section-divider">设备属性</div>`;
+
+  // B2修复：编辑已有设备时回填编号
+  const existingDev = isEdit ? devData[stationId]?.[setCode]?.[editIndex] : null;
+  const existingName = existingDev?.name || '';
+
+  if (setCode==='106') {
+    h += `<div class="field-row"><div class="field-label"><span class="req">*</span> 对象编号</div>
+      <input class="field-input" id="devObjName" value="${existingName}" placeholder="如 ${num.replace(/#/,'#XB')}PB1"></div>`;
+    h += `<div class="field-row"><div class="field-label">变压器类型</div><div class="chip-group">
+      <div class="chip-opt sel" onclick="devChipSel(this)" data-g="txType">干式变压器</div>
+      <div class="chip-opt" onclick="devChipSel(this)" data-g="txType">油浸式变压器</div>
+    </div></div>`;
+  } else {
+    const pfxMap = {'100':'GP,GP-,KP','101':'GP,GP-,KP','102':'GP,GP-,AH','103':'GP,GP-,KP','104':'GP,GP-,KP','105':'GP,GP-,KP','107':'DP,DP-,AH','108':'DP,DP-,AH','109':'DP,DP-,AH','110':'DP,DP-,AH'};
+    const pfxs = (pfxMap[setCode]||'GP,GP-').split(',');
+    // 从已有编号中解析前缀和数字（如 "1#GP18" -> pfx1="1#", pfx2="GP", numVal="18"）
+    let fillPfx2 = pfxs[0], fillNum = '';
+    if (existingName) {
+      // 支持含后缀的编号解析，如 "1#DP11-2下侧" → pfx2=DP11-, num=2
+      const cleanName = existingName.replace(/下侧$|下段$/, ''); // 去掉固定后缀
+      const m = cleanName.match(/^(\d+#)(.+?)(\d+)$/);
+      if (m) { fillPfx2 = m[2]; fillNum = m[3]; }
+    }
+    h += `<div class="field-row"><div class="field-label">站房前缀</div><div class="chip-group">
+      <div class="chip-opt sel" id="devPfx1">${num.match(/\d+/)?.[0]||'1'}#</div>
+    </div></div>`;
+    h += `<div class="field-row"><div class="field-label">编号前缀</div><div class="chip-group">`;
+    pfxs.forEach(p => { h += `<div class="chip-opt ${p===fillPfx2?'sel':''}" onclick="devChipSel(this)" data-g="pfx2">${p}</div>`; });
+    h += `</div></div>`;
+    h += `<div class="field-row"><div class="field-label"><span class="req">*</span> 数字编号</div>
+      <div class="num-inline"><input class="field-input" id="devNumInput" value="${fillNum}" placeholder="输入编号，如 18" inputmode="text"></div></div>`;
+  }
+
+  // 子项类型
+  if (['100','101','102'].includes(setCode)) {
+    const subs = ['进线柜体','出线柜体','分段柜体','PT柜体','配变柜体'];
+    h += `<div class="field-row"><div class="field-label"><span class="req">*</span> 子项类型</div><div class="chip-group">`;
+    subs.forEach(t => {
+      h += `<div class="chip-opt ${curSub===t?'sel':''}" onclick="devSubChange('${t}')">${t}</div>`;
+    });
+    h += `</div></div>`;
+
+    if (curSub === '分段柜体') {
+      h += `<div class="field-row"><div class="field-label"><span class="req">*</span> 母联类型</div><div class="chip-group">
+        <div class="chip-opt ${segType==='100'?'sel':''}" onclick="devSegChange('100')">分段隔离柜</div>
+        <div class="chip-opt ${segType==='101'?'sel':''}" onclick="devSegChange('101')">双分段柜</div>
+      </div></div>`;
+      h += `<div class="field-row"><div class="field-label"><span class="req">*</span> 连接方式</div><div class="chip-group">
+        <div class="chip-opt sel" onclick="devChipSel(this)" data-g="conn">电缆</div>
+        <div class="chip-opt" onclick="devChipSel(this)" data-g="conn">铜排</div>
+      </div></div>`;
+      h += `<div class="field-row"><div class="field-label"><span class="req">*</span> 联锁方式</div><div class="chip-group">
+        <div class="chip-opt sel" onclick="devChipSel(this)" data-g="lock">机械锁</div>
+        <div class="chip-opt" onclick="devChipSel(this)" data-g="lock">程序锁</div>
+      </div></div>`;
+    }
+    if (curSub === 'PT柜体') {
+      const stPt = roomData[stationId]?.ptType;
+      h += `<div class="field-row"><div class="field-label">PT安装方式 <span style="font-size:11px;color:var(--g400);font-weight:400;">继承自站房属性</span></div><div class="chip-group">
+        <div class="chip-opt ${stPt==='100'?'sel':''}" style="pointer-events:none;opacity:.7;">移动式</div>
+        <div class="chip-opt ${stPt==='101'?'sel':''}" style="pointer-events:none;opacity:.7;">固定式</div>
+      </div></div>`;
+    }
+  }
+  if (setCode==='107') {
+    const lpSubs = ['受电柜体','馈线柜体','联络柜体','电容柜体'];
+    h += `<div class="field-row"><div class="field-label">子项类型</div><div class="chip-group">`;
+    lpSubs.forEach(t => {
+      h += `<div class="chip-opt ${curSub===t?'sel':''}" onclick="devSubChange('${t}')">${t}</div>`;
+    });
+    h += `</div></div>`;
+    h += `<div class="field-row"><div class="field-label">抽屉数量</div><div class="chip-group">`;
+    [3,4,5,6].forEach((n,i) => { h += `<div class="chip-opt ${i===0?'sel':''}" onclick="devChipSel(this)" data-g="drawer">${n}</div>`; });
+    h += `</div></div>`;
+  }
+
+  // === 电缆专属字段：电缆型号 + 电缆规格（回填已有值） ===
+  if (setCode === '105' || setCode === '108') {
+    const existModel = isEdit ? (devData[stationId]?.[setCode]?.[editIndex]?.model || '') : '';
+    const existSpec = isEdit ? (devData[stationId]?.[setCode]?.[editIndex]?.spec || '') : '';
+    const models = ['ZC-YJV22','ZR-YJV22','ZC-YJV23','ZR-YJV23','NH','WDZC-YJY23','WDZN-YJY23','ZNH-YJY23','FS-ZR-YJV22'];
+    h += `<div class="field-row"><div class="field-label"><span class="req">*</span> 电缆型号</div><div class="chip-group">`;
+    models.forEach((m,i) => {
+      const sel = existModel ? m===existModel : i===0;
+      h += `<div class="chip-opt ${sel?'sel':''}" onclick="devChipSel(this)" data-g="cableModel" data-val="${m}">${m}</div>`;
+    });
+    h += `</div></div>`;
+    const specs = setCode === '105'
+      ? ['3×70','3×95','3×120','3×150','3×240','3×400']
+      : ['4×50','4×70','4×95','4×120','4×150','4×240','4×150+1×95','4×240+1×120'];
+    h += `<div class="field-row"><div class="field-label"><span class="req">*</span> 电缆规格</div><div class="chip-group">`;
+    specs.forEach((s,i) => {
+      const sel = existSpec ? s===existSpec : i===0;
+      h += `<div class="chip-opt ${sel?'sel':''}" onclick="devChipSel(this)" data-g="cableSpec" data-val="${s}">${s}</div>`;
+    });
+    h += `</div></div>`;
+  }
+
+  // === 分支箱/计量表箱专属字段 ===
+  if (setCode === '109' || setCode === '110') {
+    // 固定后缀"下侧"提示
+    h += `<div class="field-row"><div class="field-label">编号后缀 <span style="font-size:11px;color:var(--g400);font-weight:400;">低代码模板配置</span></div>
+      <div class="chip-opt sel" style="pointer-events:none;">下侧</div></div>`;
+    // 位置描述
+    const existingLoc = isEdit ? (devData[stationId]?.[setCode]?.[editIndex]?.location || '') : '';
+    h += `<div class="field-row"><div class="field-label">位置描述 <span style="font-size:11px;color:var(--g400);font-weight:400;">可选，如"9#楼一单元8~13层"</span></div>
+      <input class="field-input" id="devLocation" value="${existingLoc}" placeholder="补充位置描述"></div>`;
+  }
+
+  // === 试验项区（同一页面下半区）===
+  const trialItems = getTrialItems(setCode, curSub, segType);
+  // 如果是编辑已配置设备，使用已有试验项状态
+  if (isEdit && devData[stationId][setCode][editIndex]?.trials) {
+    devPageTrials = devData[stationId][setCode][editIndex].trials.map(t=>({...t}));
+  } else {
+    devPageTrials = trialItems.map(t => ({name:t, on:true}));
+  }
+
+  h += `<div class="section-divider">试验项</div>`;
+  h += `<div class="trial-actions"><button onclick="devTrialAll(true)">全选</button><button onclick="devTrialAll(false)">全不选</button></div>`;
+  h += devPageTrials.map((t,i) => `
+    <div class="trial-row ${t.on?'on':''}" onclick="devTrialToggle(${i})">
+      <div class="trial-cb"></div>
+      <span class="trial-name">${t.name}</span>
+    </div>`).join('');
+
+  document.getElementById('devBody').innerHTML = h;
+}
+
+function getTrialItems(setCode, curSub, segType) {
+  if (['100','101','102'].includes(setCode) && curSub) {
+    if (curSub === '分段柜体') {
+      return subTrials[segType==='101' ? '分段柜体_双分段柜' : '分段柜体_分段隔离柜'] || [];
+    }
+    return subTrials[curSub] || trials[setCode] || [];
+  }
+  return trials[setCode] || ['外观检查','装配检查'];
+}
+
+function devSubChange(sub) { editCtx.curSub = sub; editCtx.segType = null; renderDevPage(); }
+function devSegChange(code) { editCtx.segType = code; renderDevPage(); }
+function devChipSel(el) {
+  const g = el.dataset.g;
+  if (g) { el.parentElement.querySelectorAll(`.chip-opt[data-g="${g}"]`).forEach(c=>c.classList.remove('sel')); }
+  else { el.parentElement.querySelectorAll('.chip-opt').forEach(c=>c.classList.remove('sel')); }
+  el.classList.add('sel');
+}
+
+function devTrialToggle(i) {
+  devPageTrials[i].on = !devPageTrials[i].on;
+  const rows = document.querySelectorAll('#devBody .trial-row');
+  rows[i]?.classList.toggle('on');
+}
+function devTrialAll(on) {
+  devPageTrials.forEach(t => t.on = on);
+  document.querySelectorAll('#devBody .trial-row').forEach(r => { on ? r.classList.add('on') : r.classList.remove('on'); });
+}
+
+// 打开设备配置页（新增）
+function openBS(stationId, setCode, label) {
+  // 电缆/分支箱/表箱走矩阵批量创建
+  if (['105','108','109','110'].includes(setCode)) {
+    openCablePage(stationId, setCode, label);
+  } else {
+    openDevPage(stationId, setCode, label, null);
+  }
+}
+// 编辑已有设备（空壳或已配置）
+function editDevice(stationId, setCode, devIndex, groupLabel) { openDevPage(stationId, setCode, groupLabel, devIndex); }
+
+// saveDevice: 统一版本在下方增补模块中定义
+
+// ===== Submit Station =====
+// ===== 安措分工人员数据 =====
+const teamMembers = [
+  {id:'wq', name:'王强'},
+  {id:'lm', name:'李明'},
+  {id:'zg', name:'赵刚'},
+  {id:'ch', name:'陈华'}
+];
+let selectedExecutor = {}; // {stationId: personId}
+let pendingSubmitStation = null;
+
+function submitStation() {
+  const checked = getChecked();
+  const s = checked[curTab];
+  if (!s || submitted[s.id]) return;
+  const objs = devData[s.id] || {};
+  const allDevs = Object.values(objs).flat();
+  const total = allDevs.length;
+  if (total===0) { showToast('请至少创建一个设备','error'); return; }
+  const unconfigured = allDevs.filter(d => !d.configured);
+  if (unconfigured.length > 0) {
+    showToast(`还有 ${unconfigured.length} 个设备未配置，请完成配置或删除后再提交`, 'error');
+    return;
+  }
+  // 打开含安措分工的提交弹窗
+  pendingSubmitStation = s;
+  selectedExecutor[s.id] = selectedExecutor[s.id] || null;
+  document.getElementById('submitTitle').textContent = s.name + ' — 提交确认';
+  document.getElementById('submitDevCount').textContent = '已确认检测对象：' + total + ' 台设备';
+  renderPersonList(s.id);
+  document.getElementById('submitMask').classList.add('show');
+}
+
+function renderPersonList(stationId) {
+  const list = document.getElementById('submitPersonList');
+  const sel = selectedExecutor[stationId];
+  let html = '';
+  // 候选人=仅试验人员（工作负责人不可选自己，执行-确认异体分离）
+  teamMembers.forEach(p => {
+    html += `<div class="person-radio" onclick="pickExecutor('${stationId}','${p.id}')">
+      <div class="pr-dot ${sel===p.id?'on':''}"></div>
+      <div class="pr-name">${p.name}</div>
+    </div>`;
+  });
+  list.innerHTML = html;
+  // 更新确认按钮状态
+  document.getElementById('submitOkBtn').disabled = !sel;
+  document.getElementById('submitOkBtn').style.opacity = sel ? '1' : '.4';
+}
+
+function pickExecutor(stationId, personId) {
+  selectedExecutor[stationId] = personId;
+  renderPersonList(stationId);
+}
+
+function closeSubmitDialog() {
+  document.getElementById('submitMask').classList.remove('show');
+  pendingSubmitStation = null;
+}
+
+function doSubmit() {
+  const s = pendingSubmitStation;
+  if (!s) return;
+  const sel = selectedExecutor[s.id];
+  if (!sel) { showToast('请选择安措执行人','error'); return; }
+  submitted[s.id] = true;
+  stationStatus[s.id] = 'submitted';
+  document.getElementById('submitMask').classList.remove('show');
+  const execName = teamMembers.find(p=>p.id===sel)?.name || sel;
+  showToast(`${s.name} 已提交，安措执行人：${execName}`, 'ok');
+  pendingSubmitStation = null;
+  renderS2();
+}
+
+// ===== 左滑删除（触屏+鼠标兼容） =====
+let swipeStartX = 0, mSwiping = false;
+function swipeStart(e, el) { swipeStartX = e.touches[0].clientX; }
+function swipeMove(e, el) {
+  const dx = e.touches[0].clientX - swipeStartX;
+  if (dx < -40) el.classList.add('swiped');
+  else if (dx > 20) el.classList.remove('swiped');
+}
+function swipeEnd(e, el) {}
+// 鼠标兼容（网页端演示用）
+function mSwipeStart(e, el) { mSwiping = true; swipeStartX = e.clientX; e.preventDefault(); }
+function mSwipeMove(e, el) {
+  if (!mSwiping) return;
+  const dx = e.clientX - swipeStartX;
+  if (dx < -40) el.classList.add('swiped');
+  else if (dx > 20) el.classList.remove('swiped');
+}
+function mSwipeEnd(e, el) { mSwiping = false; }
+
+function deleteDevice(sid, sc, idx, sub, name) {
+  const label = (sub ? sub + ' ' : '') + (name || '(未编号)');
+  showDialog('删除设备', `确认删除 ${label}？删除后不可恢复。`, '确认删除', () => {
+    devData[sid][sc].splice(idx, 1);
+    showToast(`已删除 ${label}`, 'ok');
+    renderS2();
+  });
+}
+
+// ===== 撤回站房 =====
+function recallStation(sid) {
+  const status = stationStatus[sid] || 'submitted';
+  if (status !== 'submitted' && status !== 'divided') {
+    showToast('该站房安措已开始，无法撤回，请使用增补功能', 'error');
+    return;
+  }
+  const s = stations.find(x=>x.id===sid);
+  showDialog('撤回站房', `确认撤回 ${s.name}？撤回后该站房将回到可编辑状态，已生成的检测分工将被清除。`, '确认撤回', () => {
+    submitted[sid] = false;
+    delete stationStatus[sid];
+    showToast(`${s.name} 已撤回，可重新编辑`, 'ok');
+    renderS2();
+  });
+}
+
+// ===== 增补设备 =====
+function supplementDevice(sid) {
+  const s = stations.find(x=>x.id===sid);
+  const r = roomData[sid] || {};
+  const tpls = getDevTpls(s, r);
+  if (tpls.length === 0) { showToast('请先选择柜体类型', 'error'); return; }
+
+  // 增补模式：增加设备组选择页面
+  editCtx = {
+    stationId: sid, setCode: tpls[0].sc, label: tpls[0].l,
+    curSub: ['100','101','102'].includes(tpls[0].sc) ? '进线柜体' : tpls[0].sc==='107' ? '受电柜体' : null,
+    segType: null, editIndex: null, isSupplement: true
+  };
+  document.querySelector('#devPage').classList.add('active');
+  document.getElementById('step2').classList.remove('active');
+  document.querySelector('.nbar .title').textContent = `增补设备 · ${s.name}`;
+  document.querySelector('.nbar .back').setAttribute('onclick', 'closeDevPage()');
+  document.querySelector('.step-bar').style.display = 'none';
+
+  renderDevPageForSupplement(sid, tpls);
+}
+
+// 增补模式下设备组切换：电缆/分支箱/表箱走矩阵
+function suppSwitchToGroup(sid, sc, label) {
+  if (['105','108','109','110'].includes(sc)) {
+    // 直接从devPage切换到cablePage，不经过step2（消除闪烁）
+    document.getElementById('devPage').classList.remove('active');
+    document.getElementById('devBreadcrumb').style.display = 'none';
+    openCablePage(sid, sc, label, true); // 传入isSupplement=true
+    return true;
+  }
+  return false;
+}
+
+function renderDevPageForSupplement(sid, tpls) {
+  let h = '';
+  h += `<div class="section-divider">选择设备组</div>`;
+  h += `<div class="field-row"><div class="field-label"><span class="req">*</span> 设备类型</div><div class="chip-group">`;
+  tpls.forEach((t,i) => {
+    h += `<div class="chip-opt ${i===0?'sel':''}" onclick="suppSwitchGroup('${t.sc}','${t.l}',this)" data-g="suppGroup">${t.l}</div>`;
+  });
+  h += `</div></div>`;
+
+  // 渲染默认第一个设备组的配置表单
+  editCtx.setCode = tpls[0].sc;
+  editCtx.label = tpls[0].l;
+  h += `<div id="suppFormArea"></div>`;
+  document.getElementById('devBody').innerHTML = h;
+
+  // 延迟渲染表单（复用renderDevPage的逻辑）
+  setTimeout(() => renderSuppForm(), 50);
+}
+
+function suppSwitchGroup(sc, label, el) {
+  // 电缆/分支箱/表箱走矩阵批量创建
+  if (suppSwitchToGroup(editCtx.stationId, sc, label)) return;
+  editCtx.setCode = sc;
+  editCtx.label = label;
+  editCtx.curSub = ['100','101','102'].includes(sc) ? '进线柜体' : sc==='107' ? '受电柜体' : null;
+  editCtx.segType = null;
+  el.parentElement.querySelectorAll('.chip-opt').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  renderSuppForm();
+}
+
+function renderSuppForm() {
+  // 复用renderDevPage的核心逻辑，只渲染到suppFormArea
+  const { stationId, setCode, curSub, segType } = editCtx;
+  const s = stations.find(x=>x.id===stationId);
+  const num = roomData[stationId]?.number || s.name;
+  let h = '';
+
+  h += `<div class="section-divider">设备属性</div>`;
+  // 编号输入（与renderDevPage一致）
+  const pfxMap = {'100':'GP,GP-,KP','101':'GP,GP-,KP','102':'GP,GP-,AH','103':'GP,GP-,KP','104':'GP,GP-,KP','105':'GP,GP-,KP','107':'DP,DP-,AH','108':'DP,DP-,AH','109':'DP,DP-,AH','110':'DP,DP-,AH'};
+  if (setCode==='106') {
+    h += `<div class="field-row"><div class="field-label"><span class="req">*</span> 对象编号</div>
+      <input class="field-input" id="devObjName" placeholder="如 ${num.replace(/#/,'#XB')}PB1"></div>`;
+    h += `<div class="field-row"><div class="field-label">变压器类型</div><div class="chip-group">
+      <div class="chip-opt sel" onclick="devChipSel(this)" data-g="txType">干式变压器</div>
+      <div class="chip-opt" onclick="devChipSel(this)" data-g="txType">油浸式变压器</div>
+    </div></div>`;
+  } else {
+    const pfxs = (pfxMap[setCode]||'GP,GP-').split(',');
+    h += `<div class="field-row"><div class="field-label">站房前缀</div><div class="chip-group">
+      <div class="chip-opt sel" id="devPfx1">${num.match(/\d+/)?.[0]||'1'}#</div>
+    </div></div>`;
+    h += `<div class="field-row"><div class="field-label">编号前缀</div><div class="chip-group">`;
+    pfxs.forEach((p,i) => { h += `<div class="chip-opt ${i===0?'sel':''}" onclick="devChipSel(this)" data-g="pfx2">${p}</div>`; });
+    h += `</div></div>`;
+    h += `<div class="field-row"><div class="field-label"><span class="req">*</span> 数字编号</div>
+      <div class="num-inline"><input class="field-input" id="devNumInput" placeholder="输入编号" inputmode="text"></div></div>`;
+  }
+  // 子项类型
+  if (['100','101','102'].includes(setCode)) {
+    const subs = ['进线柜体','出线柜体','分段柜体','PT柜体','配变柜体'];
+    h += `<div class="field-row"><div class="field-label"><span class="req">*</span> 子项类型</div><div class="chip-group">`;
+    subs.forEach(t => { h += `<div class="chip-opt ${curSub===t?'sel':''}" onclick="suppSubChange('${t}')">${t}</div>`; });
+    h += `</div></div>`;
+    // M4修复：分段柜体独有字段
+    if (curSub === '分段柜体') {
+      h += `<div class="field-row"><div class="field-label"><span class="req">*</span> 母联类型</div><div class="chip-group">
+        <div class="chip-opt ${segType==='100'?'sel':''}" onclick="suppSegChange('100')">分段隔离柜</div>
+        <div class="chip-opt ${segType==='101'?'sel':''}" onclick="suppSegChange('101')">双分段柜</div>
+      </div></div>`;
+      h += `<div class="field-row"><div class="field-label"><span class="req">*</span> 连接方式</div><div class="chip-group">
+        <div class="chip-opt sel" onclick="devChipSel(this)" data-g="conn">电缆</div>
+        <div class="chip-opt" onclick="devChipSel(this)" data-g="conn">铜排</div>
+      </div></div>`;
+      h += `<div class="field-row"><div class="field-label"><span class="req">*</span> 联锁方式</div><div class="chip-group">
+        <div class="chip-opt sel" onclick="devChipSel(this)" data-g="lock">机械锁</div>
+        <div class="chip-opt" onclick="devChipSel(this)" data-g="lock">程序锁</div>
+      </div></div>`;
+    }
+    if (curSub === 'PT柜体') {
+      const stPt = roomData[editCtx.stationId]?.ptType;
+      h += `<div class="field-row"><div class="field-label">PT安装方式 <span style="font-size:11px;color:var(--g400);font-weight:400;">继承自站房属性</span></div><div class="chip-group">
+        <div class="chip-opt ${stPt==='100'?'sel':''}" style="pointer-events:none;opacity:.7;">移动式</div>
+        <div class="chip-opt ${stPt==='101'?'sel':''}" style="pointer-events:none;opacity:.7;">固定式</div>
+      </div></div>`;
+    }
+  }
+  if (setCode==='107') {
+    const lpSubs = ['受电柜体','馈线柜体','联络柜体','电容柜体'];
+    h += `<div class="field-row"><div class="field-label">子项类型</div><div class="chip-group">`;
+    lpSubs.forEach(t => { h += `<div class="chip-opt ${curSub===t?'sel':''}" onclick="suppSubChange('${t}')">${t}</div>`; });
+    h += `</div></div>`;
+    h += `<div class="field-row"><div class="field-label">抽屉数量</div><div class="chip-group">`;
+    [3,4,5,6].forEach((n,i) => { h += `<div class="chip-opt ${i===0?'sel':''}" onclick="devChipSel(this)" data-g="drawer">${n}</div>`; });
+    h += `</div></div>`;
+  }
+
+  // 试验项
+  const trialItems = getTrialItems(setCode, curSub, segType);
+  devPageTrials = trialItems.map(t => ({name:t, on:true}));
+  h += `<div class="section-divider">试验项</div>`;
+  h += `<div class="trial-actions"><button onclick="devTrialAll(true)">全选</button><button onclick="devTrialAll(false)">全不选</button></div>`;
+  h += devPageTrials.map((t,i) => `
+    <div class="trial-row ${t.on?'on':''}" onclick="devTrialToggle(${i})">
+      <div class="trial-cb"></div>
+      <span class="trial-name">${t.name}</span>
+    </div>`).join('');
+
+  document.getElementById('suppFormArea').innerHTML = h;
+}
+
+function suppSubChange(sub) {
+  editCtx.curSub = sub;
+  editCtx.segType = null;
+  renderSuppForm();
+}
+function suppSegChange(code) {
+  editCtx.segType = code;
+  renderSuppForm();
+}
+
+// ===== Save Device (统一版本) =====
+function saveDevice() {
+  if (!editCtx) return;
+  const { stationId, setCode, curSub, editIndex, isSupplement } = editCtx;
+  const s = stations.find(x=>x.id===stationId);
+  const num = roomData[stationId]?.number || s.name;
+
+  let objName = '';
+  if (setCode==='106') {
+    objName = document.getElementById('devObjName')?.value;
+    if (!objName) { showToast('请输入对象编号','error'); return; }
+  } else {
+    const numVal = document.getElementById('devNumInput')?.value?.trim();
+    if (!numVal) { showToast('请输入数字编号','error'); return; }
+    const pfx1 = document.getElementById('devPfx1')?.textContent || '1#';
+    const pfx2 = document.querySelector('#devBody .chip-opt.sel[data-g="pfx2"]')?.textContent ||
+                 document.querySelector('#suppFormArea .chip-opt.sel[data-g="pfx2"]')?.textContent || 'GP';
+    objName = pfx1 + pfx2 + numVal;
+    // 分支箱/计量表箱：拼接固定后缀"下侧"
+    const sfx = cableSuffixMap[setCode] || '';
+    if (sfx) objName += sfx;
+  }
+
+  // 位置描述（分支箱/计量表箱）
+  const locationVal = document.getElementById('devLocation')?.value?.trim() || '';
+  // 电缆型号/规格
+  const cableModelSel = document.querySelector('#devBody .chip-opt.sel[data-g="cableModel"]');
+  const cableSpecSel = document.querySelector('#devBody .chip-opt.sel[data-g="cableSpec"]');
+  const modelVal = cableModelSel?.dataset?.val || cableModelSel?.textContent || '';
+  const specVal = cableSpecSel?.dataset?.val || cableSpecSel?.textContent || '';
+
+  if (editIndex !== undefined && editIndex !== null) {
+    const dev = devData[stationId][setCode][editIndex];
+    dev.name = objName;
+    dev.configured = true;
+    dev.trials = devPageTrials.map(t=>({...t}));
+    if (curSub) dev.sub = curSub;
+    if (setCode === '109' || setCode === '110') dev.location = locationVal;
+    if (setCode === '105' || setCode === '108') { dev.model = modelVal; dev.spec = specVal; }
+  } else {
+    if (!devData[stationId][setCode]) devData[stationId][setCode] = [];
+    const dev = { name: objName, configured: true, trials: devPageTrials.map(t=>({...t})) };
+    if (curSub) dev.sub = curSub;
+    if (isSupplement) dev.isSupp = true;
+    if (setCode === '109' || setCode === '110') dev.location = locationVal;
+    if (setCode === '105' || setCode === '108') { dev.model = modelVal; dev.spec = specVal; }
+    devData[stationId][setCode].push(dev);
+  }
+
+  const onCount = devPageTrials.filter(t=>t.on).length;
+  closeDevPage();
+  showToast(`已${isSupplement?'增补':'保存'} ${curSub?curSub+' ':''}${objName}${locationVal?' '+locationVal:''}（试验项 ${onCount}/${devPageTrials.length}）`, 'ok');
+}
+
+// ===== Cable Batch Creation (矩阵点选) =====
+let cableCtx = null;
+const CABLE_MAX_INTERVAL = 5;
+const HV_CABLE_MAX = 20; // 高压电缆编号上限
+const cablePrefixMap = { '108': ['DP','AH'], '105': ['GP','GP-','KP'], '109': ['DP','AH'], '110': ['DP','AH'] };
+const cableSuffixMap = { '109': '下侧', '110': '下侧' };
+// 高压电缆(105)是一维选择（前缀+数字），其余是二维（前缀+柜号+间隔号）
+function isHvCable(sc) { return sc === '105'; }
+
+function openCablePage(stationId, setCode, label, isSupplement) {
+  if (submitted[stationId] && !isSupplement) return;
+  const s = stations.find(x=>x.id===stationId);
+  const prefixes = cablePrefixMap[setCode] || ['GP'];
+  const suffix = cableSuffixMap[setCode] || '';
+  const trialItems = trials[setCode] || ['外观检查','装配检查'];
+  cableCtx = {
+    stationId, setCode, label, prefix: prefixes[0], suffix,
+    cabinets: [],
+    trials: trialItems.map(t => ({name:t, on:true})),
+    isSupplement: !!isSupplement
+  };
+
+  // 渲染前缀chips
+  document.getElementById('cablePrefixChips').innerHTML = prefixes.map((p,i) =>
+    `<div class="chip-opt ${i===0?'sel':''}" onclick="cableSetPrefix('${p}',this)">${p}</div>`
+  ).join('');
+
+  document.getElementById('cablePage').classList.add('active');
+  document.getElementById('step2').classList.remove('active');
+  document.querySelector('.nbar .title').textContent = `${label} · 批量创建`;
+  document.querySelector('.nbar .back').setAttribute('onclick', 'closeCablePage()');
+  document.querySelector('.step-bar').style.display = 'none';
+  document.getElementById('cableBreadcrumb').textContent = s.name;
+  document.getElementById('cableBreadcrumb').style.display = 'block';
+  document.getElementById('cableCabinetInput').value = '';
+  // 根据设备类型调整UI
+  const hv = isHvCable(setCode);
+  // 柜号输入行：高压电缆隐藏
+  document.querySelector('.cable-add-row').style.display = hv ? 'none' : 'flex';
+  // 柜号标签
+  const cabLabelMap = {'108':'柜号','109':'关联编号','110':'关联编号'};
+  document.getElementById('cableCabLabel').textContent = cabLabelMap[setCode] || '柜号';
+  // 电缆型号/规格：仅电缆显示，规格按高压/低压区分
+  const isCable = (setCode === '105' || setCode === '108');
+  // 电缆型号+规格均在创建后逐根选择，批量页不显示
+  // 高压电缆：自动初始化1-20的网格
+  if (hv) {
+    cableCtx.hvNumbers = Array(HV_CABLE_MAX).fill(false); // 1-20, 默认未选
+  }
+
+  renderCableMatrix();
+  renderCableTrials();
+}
+
+function closeCablePage() {
+  document.getElementById('cablePage').classList.remove('active');
+  document.getElementById('step2').classList.add('active');
+  document.querySelector('.nbar .title').textContent = '抽检对象确认';
+  document.querySelector('.nbar .back').setAttribute('onclick', 'goBack()');
+  document.querySelector('.step-bar').style.display = 'flex';
+  document.getElementById('cableBreadcrumb').style.display = 'none';
+  cableCtx = null;
+  renderS2();
+}
+
+function cableSetPrefix(p, el) {
+  cableCtx.prefix = p;
+  el.parentElement.querySelectorAll('.chip-opt').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  renderCableMatrix();
+}
+
+function cableAddCabinet() {
+  const input = document.getElementById('cableCabinetInput');
+  const num = input.value.trim();
+  if (!num) { showToast('请输入柜号','error'); return; }
+  if (cableCtx.cabinets.find(c => c.num === num)) { showToast(`柜号 ${num} 已添加`,'error'); return; }
+  cableCtx.cabinets.push({ num, intervals: Array(CABLE_MAX_INTERVAL).fill(true) });
+  cableCtx.cabinets.sort((a,b) => parseInt(a.num) - parseInt(b.num));
+  input.value = '';
+  input.focus();
+  renderCableMatrix();
+}
+
+function cableToggle(ci, ii) { cableCtx.cabinets[ci].intervals[ii] = !cableCtx.cabinets[ci].intervals[ii]; renderCableMatrix(); }
+function cableSelectAllRow(ci) { const allOn = cableCtx.cabinets[ci].intervals.every(v=>v); cableCtx.cabinets[ci].intervals = Array(CABLE_MAX_INTERVAL).fill(!allOn); renderCableMatrix(); }
+function cableDeleteRow(ci) { cableCtx.cabinets.splice(ci, 1); renderCableMatrix(); }
+
+function renderCableMatrix() {
+  const area = document.getElementById('cableMatrixArea');
+  const stats = document.getElementById('cableStats');
+  const hv = isHvCable(cableCtx?.setCode);
+
+  // === 高压电缆：一维数字网格 1-20 ===
+  if (hv && cableCtx) {
+    let h = `<div style="padding:8px 16px;font-size:12px;color:var(--g500);">编号格式：${cableCtx.prefix}<strong style="color:var(--pri-d);">[数字]</strong>，点选需要检测的电缆</div>`;
+    h += `<div style="padding:8px 16px;">`;
+    h += `<div style="display:flex;gap:12px;margin-bottom:10px;">
+      <button class="cable-mr-btn sel-all" onclick="hvSelectAll(true)" style="font-size:13px;">全选</button>
+      <button class="cable-mr-btn" onclick="hvSelectAll(false)" style="font-size:13px;">全不选</button>
+    </div>`;
+    h += `<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;">`;
+    cableCtx.hvNumbers.forEach((on, i) => {
+      h += `<div class="cable-mr-cb ${on?'on':''}" onclick="hvToggle(${i})" style="width:100%;height:48px;">${i+1}</div>`;
+    });
+    h += `</div></div>`;
+    area.innerHTML = h;
+    const total = cableCtx.hvNumbers.filter(v=>v).length;
+    stats.textContent = `已选 ${total} 根高压电缆`;
+    stats.style.display = total > 0 ? 'block' : 'none';
+    return;
+  }
+
+  // === 低压电缆/分支箱/表箱：二维矩阵 ===
+  if (!cableCtx || cableCtx.cabinets.length === 0) {
+    area.innerHTML = '<div class="cable-empty">输入柜号并点击"添加"，开始选择</div>';
+    stats.style.display = 'none';
+    return;
+  }
+  let h = '';
+  const sfx = cableCtx.suffix;
+  if (sfx) {
+    h += `<div style="padding:6px 16px;font-size:12px;color:var(--g500);background:var(--g50);border-bottom:1px solid var(--g200);">编号格式：${cableCtx.prefix}[柜号]-[间隔号]<strong style="color:var(--pri-d);">${sfx}</strong>　（"${sfx}"为固定后缀，低代码模板可配置）</div>`;
+  }
+  cableCtx.cabinets.forEach((cab, ci) => {
+    h += `<div class="cable-matrix-row">
+      <div class="cable-mr-label">${cableCtx.prefix}${cab.num}</div>
+      <div class="cable-mr-cells">`;
+    cab.intervals.forEach((on, ii) => {
+      h += `<div class="cable-mr-cb ${on?'on':''}" onclick="cableToggle(${ci},${ii})">${ii+1}</div>`;
+    });
+    h += `</div><div class="cable-mr-actions">
+      <button class="cable-mr-btn sel-all" onclick="cableSelectAllRow(${ci})">全选</button>
+      <button class="cable-mr-btn del" onclick="cableDeleteRow(${ci})">✕</button>
+    </div></div>`;
+  });
+  area.innerHTML = h;
+  const total = cableCtx.cabinets.reduce((s,c) => s + c.intervals.filter(v=>v).length, 0);
+  const unitMap = {'108':'根低压电缆','109':'个分支箱','110':'个计量表箱'};
+  const unit = unitMap[cableCtx.setCode] || '个';
+  stats.textContent = `已选 ${total} ${unit}`;
+  stats.style.display = total > 0 ? 'block' : 'none';
+}
+
+// 高压电缆网格交互
+function hvToggle(i) { cableCtx.hvNumbers[i] = !cableCtx.hvNumbers[i]; renderCableMatrix(); }
+function hvSelectAll(on) { cableCtx.hvNumbers = cableCtx.hvNumbers.map(() => on); renderCableMatrix(); }
+
+function renderCableTrials() {
+  if (!cableCtx) return;
+  document.getElementById('cableTrialList').innerHTML = cableCtx.trials.map((t,i) => `
+    <div class="trial-row ${t.on?'on':''}" onclick="cableToggleTrial(${i})">
+      <div class="trial-cb"></div>
+      <span class="trial-name">${t.name}</span>
+    </div>`).join('');
+}
+function cableToggleTrial(i) { cableCtx.trials[i].on = !cableCtx.trials[i].on; renderCableTrials(); }
+function cableTrialAll(on) { cableCtx.trials.forEach(t => t.on = on); renderCableTrials(); }
+
+function cableGetNames() {
+  if (!cableCtx) return [];
+  const names = [];
+  if (isHvCable(cableCtx.setCode)) {
+    // 高压电缆：前缀+数字
+    cableCtx.hvNumbers.forEach((on, i) => {
+      if (on) names.push(`${cableCtx.prefix}${i+1}`);
+    });
+  } else {
+    // 低压电缆/分支箱/表箱：前缀+柜号-间隔号+后缀
+    const sfx = cableCtx.suffix || '';
+    cableCtx.cabinets.forEach(cab => {
+      cab.intervals.forEach((on, ii) => {
+        if (on) names.push(`${cableCtx.prefix}${cab.num}-${ii+1}${sfx}`);
+      });
+    });
+  }
+  return names;
+}
+
+function cableSave() {
+  if (!cableCtx) return;
+  const names = cableGetNames();
+  if (names.length === 0) { showToast('请至少选择一个','error'); return; }
+  const trialOn = cableCtx.trials.filter(t=>t.on).length;
+  if (trialOn === 0) { showToast('请至少选择一个试验项','error'); return; }
+
+  // 弹出确认弹窗，展示完整编号列表
+  const sfx = cableCtx.suffix || '';
+  let bodyHtml = `<div style="font-size:13px;color:var(--g500);margin-bottom:8px;">共 ${names.length} 个，试验项 ${trialOn}/${cableCtx.trials.length}</div>`;
+
+  // 按柜号分组展示
+  const groups = {};
+  names.forEach(n => {
+    const base = n.replace(sfx, '');
+    const m = base.match(/^(.+)-(\d+)$/);
+    const g = m ? m[1] : n;
+    if (!groups[g]) groups[g] = [];
+    groups[g].push(n);
+  });
+  Object.entries(groups).forEach(([g, items]) => {
+    bodyHtml += `<div style="font-size:13px;font-weight:600;color:var(--g700);margin:10px 0 4px;">${g}</div>`;
+    bodyHtml += `<div style="display:flex;flex-wrap:wrap;gap:5px;">`;
+    items.forEach(n => {
+      bodyHtml += `<span style="font-size:12px;padding:4px 10px;border-radius:8px;background:var(--pri-l);color:var(--pri-d);">${n}</span>`;
+    });
+    bodyHtml += `</div>`;
+  });
+
+  if (sfx) {
+    bodyHtml += `<div style="font-size:12px;color:var(--g400);margin-top:12px;padding-top:8px;border-top:1px solid var(--g200);">位置描述（如"9#楼一单元8~13层"）需在创建后逐个补充</div>`;
+  }
+
+  document.getElementById('cableCdBody').innerHTML = bodyHtml;
+  document.getElementById('cableCdMask').classList.add('show');
+}
+
+function cableDoConfirm() {
+  const names = cableGetNames();
+  const { stationId, setCode, suffix, trials: cTrials } = cableCtx;
+  const trialOn = cTrials.filter(t=>t.on).length;
+
+  // 写入 devData
+  if (!devData[stationId][setCode]) devData[stationId][setCode] = [];
+  const isSupp = cableCtx.isSupplement;
+  names.forEach(n => {
+    const dev = { name: n, configured: true, trials: cTrials.map(t=>({...t})), location: '' };
+    if (isSupp) dev.isSupp = true;
+    devData[stationId][setCode].push(dev);
+  });
+
+  document.getElementById('cableCdMask').classList.remove('show');
+
+  const isCable = (setCode === '105' || setCode === '108');
+  if (isCable) {
+    // 电缆：确认后进入规格快速选择页
+    openSpecPage(stationId, setCode, names);
+  } else if (suffix) {
+    // 分支箱/表箱：确认后进入位置描述填写页
+    openLocPage(stationId, setCode, names);
+  } else {
+    closeCablePage();
+    showToast(`已创建 ${names.length} 个（试验项 ${trialOn}/${cTrials.length}）`, 'ok');
+  }
+}
+
+// ===== Cable Spec Selection Page =====
+function openSpecPage(stationId, setCode, names) {
+  const s = stations.find(x=>x.id===stationId);
+  const devs = devData[stationId][setCode];
+  const startIndex = devs.length - names.length;
+  const specs = setCode === '105'
+    ? ['3×70','3×95','3×120','3×150','3×240','3×400']
+    : ['4×50','4×70','4×95','4×120','4×150','4×240','4×150+1×95','4×240+1×120'];
+
+  const models = ['ZC-YJV22','ZR-YJV22','ZC-YJV23','ZR-YJV23','NH','WDZC-YJY23','WDZN-YJY23','ZNH-YJY23','FS-ZR-YJV22'];
+
+  document.getElementById('cablePage').classList.remove('active');
+  document.getElementById('locPage').classList.add('active');
+  document.querySelector('.nbar .title').textContent = '电缆型号与规格';
+  document.querySelector('.nbar .back').setAttribute('onclick', 'closeLocPage()');
+  document.getElementById('locBreadcrumb').textContent = s.name;
+  document.getElementById('locBreadcrumb').style.display = 'block';
+
+  let h = `<div class="loc-hint">每根电缆选择型号和规格</div>`;
+  names.forEach((n, i) => {
+    h += `<div class="loc-item">
+      <div class="loc-item-label">${n}</div>
+      <div class="field-label" style="margin-top:6px;">型号</div>
+      <div class="chip-group" style="margin-bottom:8px;">`;
+    models.forEach((m, mi) => {
+      h += `<div class="chip-opt ${mi===0?'sel':''}" onclick="specChipSel(this)" data-g="model${i}" data-model="${m}" style="font-size:12px;padding:6px 10px;min-height:36px;">${m}</div>`;
+    });
+    h += `</div>
+      <div class="field-label">规格</div>
+      <div class="chip-group">`;
+    specs.forEach((sp, si) => {
+      h += `<div class="chip-opt ${si===0?'sel':''}" onclick="specChipSel(this)" data-g="spec${i}" data-spec="${sp}">${sp}</div>`;
+    });
+    h += `</div></div>`;
+  });
+  document.getElementById('locBody').innerHTML = h;
+
+  // 存储上下文供 locSave 使用
+  locCtx = { stationId, setCode, startIndex, names, isSpec: true };
+}
+
+function specChipSel(el) {
+  const g = el.dataset.g;
+  el.parentElement.querySelectorAll(`.chip-opt[data-g="${g}"]`).forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+// ===== Location Description Fill Page =====
+let locCtx = null; // {stationId, setCode, startIndex, names}
+
+function openLocPage(stationId, setCode, names) {
+  const s = stations.find(x=>x.id===stationId);
+  const devs = devData[stationId][setCode];
+  const startIndex = devs.length - names.length;
+  locCtx = { stationId, setCode, startIndex, names };
+
+  // 隐藏矩阵页，显示位置描述页
+  document.getElementById('cablePage').classList.remove('active');
+  document.getElementById('locPage').classList.add('active');
+  document.querySelector('.nbar .title').textContent = '补充位置描述';
+  document.querySelector('.nbar .back').setAttribute('onclick', 'closeLocPage()');
+  document.getElementById('locBreadcrumb').textContent = s.name;
+  document.getElementById('locBreadcrumb').style.display = 'block';
+
+  // 渲染列表
+  let h = `<div class="loc-hint">可选填写，不需要的可留空，填完点"完成"</div>`;
+  names.forEach((n, i) => {
+    h += `<div class="loc-item">
+      <div class="loc-item-label">${n}</div>
+      <input class="loc-item-input" id="locInput${i}" placeholder="如 9#楼一单元8~13层">
+    </div>`;
+  });
+  document.getElementById('locBody').innerHTML = h;
+}
+
+function locSave() {
+  if (!locCtx) return;
+  const { stationId, setCode, startIndex, names, isSpec } = locCtx;
+
+  if (isSpec) {
+    // 型号+规格选择模式
+    names.forEach((n, i) => {
+      const specSel = document.querySelector(`.chip-opt.sel[data-g="spec${i}"]`);
+      const modelSel = document.querySelector(`.chip-opt.sel[data-g="model${i}"]`);
+      devData[stationId][setCode][startIndex + i].spec = specSel?.dataset?.spec || '';
+      devData[stationId][setCode][startIndex + i].model = modelSel?.dataset?.model || '';
+    });
+    closeLocPage();
+    showToast(`已完成！${names.length} 根电缆型号规格已配置`, 'ok');
+  } else {
+    // 位置描述模式
+    let filled = 0;
+    names.forEach((n, i) => {
+      const val = document.getElementById(`locInput${i}`)?.value?.trim() || '';
+      devData[stationId][setCode][startIndex + i].location = val;
+      if (val) filled++;
+    });
+    closeLocPage();
+    showToast(`已完成！${filled}/${names.length} 个补充了位置描述`, 'ok');
+  }
+}
+
+function closeLocPage() {
+  document.getElementById('locPage').classList.remove('active');
+  document.getElementById('step2').classList.add('active');
+  document.querySelector('.nbar .title').textContent = '抽检对象确认';
+  document.querySelector('.nbar .back').setAttribute('onclick', 'goBack()');
+  document.querySelector('.step-bar').style.display = 'flex';
+  document.getElementById('locBreadcrumb').style.display = 'none';
+  locCtx = null;
+  cableCtx = null;
+  renderS2();
+}
+
+// 柜号输入回车添加
+document.getElementById('cableCabinetInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') cableAddCabinet(); });
+
+// Init
+renderS1();
+</script>
+</body>
+</html>

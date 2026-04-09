@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>现场核查全流程V2 — 检e通V3.0 Demo</title>
+<link rel="stylesheet" href="demo_shared_base.css">
+<style>
+/* Tab */
+.ptabs{position:fixed;top:0;left:0;right:0;z-index:999;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06);display:flex;max-width:1200px;margin:0 auto}
+.ptab{flex:1;text-align:center;padding:10px 4px 8px;font-size:12px;font-weight:600;cursor:pointer;color:var(--g400);border-bottom:2.5px solid transparent;transition:all .2s}
+.ptab.on{color:var(--pri);border-bottom-color:var(--pri)}
+.ptab small{display:block;font-size:10px;font-weight:400;margin-top:2px}
+.pbody{padding-top:48px}
+.pw{display:none}
+.pw.on{display:flex;justify-content:center;align-items:flex-start;gap:36px;padding:24px;max-width:1200px;margin:0 auto}
+.pw .phone{flex-shrink:0;margin:0}
+/* Side */
+.sn{width:360px;flex-shrink:0;position:sticky;top:68px}
+.sn h2{font-size:18px;font-weight:700;margin-bottom:8px;color:var(--g800)}
+.sn h3{font-size:14px;font-weight:600;margin:16px 0 6px;color:var(--g700)}
+.sn p,.sn li{font-size:13px;line-height:1.7;color:var(--g500)}
+.sn ul{padding-left:16px}
+.sn .co{border-radius:var(--rs);padding:10px 12px;margin:10px 0;font-size:12px;line-height:1.6}
+.sn .co-p{background:var(--pri-l);color:#2A6B60}
+.sn .co-w{background:#FFF9E6;color:#6B5900}
+.sn table{width:100%;border-collapse:collapse;margin:8px 0 16px;font-size:12px}
+.sn th{background:var(--g100);padding:8px 10px;text-align:left;font-weight:600;color:var(--g700);border-bottom:1px solid var(--g200)}
+.sn td{padding:8px 10px;border-bottom:1px solid var(--g100);color:var(--g600);line-height:1.5}
+.sn td:first-child{color:var(--g800);font-weight:500;width:28%}
+.sn details{margin-top:20px;border:1px solid #E5E7EB;border-radius:8px;padding:12px 16px;background:#ebfdfa}
+.sn summary{font-size:14px;font-weight:600;color:#047857;cursor:pointer;outline:none}
+.sn details p, .sn details ul, .sn details table {margin-top:12px; color:var(--g700)}
+
+/* 宽版分栏 */
+.sn.sn-wide{width:720px;column-count:2;column-gap:32px;display:block}
+.sn.sn-wide > *{break-inside:avoid;page-break-inside:avoid}
+.sn.sn-wide h2{column-span:all;border-bottom:1px solid var(--g200);padding-bottom:12px;margin-bottom:16px}
+
+/* Common */
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--g50);padding-bottom:12px}
+.bot{padding:8px 16px 12px;background:#fff;border-top:1px solid var(--g200);flex-shrink:0}
+.bot-i{font-size:11px;color:var(--g400);text-align:center;margin-bottom:8px}
+.bot-i b{color:var(--g700)}
+.bbtn{width:100%;padding:14px;border:none;border-radius:var(--r);font-size:16px;font-weight:600;cursor:pointer;transition:all .15s}
+.bbtn.rdy{background:var(--pri);color:#fff}
+.bbtn.rdy:active{background:var(--pri-d)}
+.bbtn.dis{background:var(--g100);color:var(--g400)}
+/* Card */
+.tc{margin:0 16px 8px;background:#fff;border-radius:var(--r);box-shadow:var(--shadow-sm);overflow:hidden}
+.tch{display:flex;align-items:center;padding:12px 14px;gap:10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tch:active{background:var(--g50)}
+.tci{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;color:#fff}
+.tcf{flex:1;min-width:0}
+.tcn{font-size:14px;font-weight:600;color:var(--g800)}
+.tcs{font-size:11px;color:var(--g400);margin-top:2px}
+.tcb{display:inline-block;font-size:11px;padding:3px 8px;border-radius:4px;font-weight:500;white-space:nowrap}
+.b-prog{background:var(--pri-l);color:var(--pri-d)}
+.b-judge{background:var(--warn-l);color:#92400E;animation:pu 2s infinite}
+.b-done{background:var(--ok-l);color:#1B7A34}
+.b-ret{background:var(--ng-l);color:var(--ng);animation:pu 2s infinite}
+@keyframes pu{0%,100%{opacity:1}50%{opacity:.55}}
+.tca{color:var(--g300);font-size:18px;flex-shrink:0;margin-left:4px}
+/* Role */
+.rs{display:flex;margin:8px 16px;background:var(--g100);border-radius:var(--rs);padding:2px}
+.ro{flex:1;padding:8px;text-align:center;font-size:12px;font-weight:500;cursor:pointer;border-radius:6px;color:var(--g500);transition:all .15s}
+.ro.on{background:#fff;color:var(--g800);box-shadow:var(--shadow-sm)}
+/* Cam */
+.cm{display:none;flex-direction:column;height:100%}.cm.on{display:flex}
+.lm{display:flex;flex-direction:column;height:100%}.lm.hid{display:none}
+.vf{position:relative;height:200px;background:#1a1a1a;flex-shrink:0;overflow:hidden}
+.vfg{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr;pointer-events:none}
+.vfg span{border:.5px solid rgba(255,255,255,.1)}
+.vfp{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:rgba(255,255,255,.35);font-size:12px}
+.vfl{position:absolute;bottom:10px;left:10px;right:10px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:var(--rs);padding:8px 12px;display:none;align-items:center;gap:8px}
+.vfl.vis{display:flex}
+.vld{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.vlt{color:#fff;font-size:13px;font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vlc{color:rgba(255,255,255,.5);font-size:11px;flex-shrink:0}
+.vff{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .08s}.vff.fire{opacity:.7}
+/* (缩略条已移除，照片预览改为slot展开网格) */
+/* Cam items */
+.ci{display:flex;align-items:center;padding:12px 14px;border-bottom:1px solid var(--g100);cursor:pointer;-webkit-tap-highlight-color:transparent;min-height:48px;transition:background .12s}
+.ci:active{background:var(--g50)}.ci.sel{background:var(--pri-l)}
+.cid{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-right:12px;border:2px solid var(--g300)}
+.cid.dp{border-color:var(--warn);background:var(--warn)}.cid.dd{border-color:var(--ok);background:var(--ok)}.cid.dc{border-color:var(--pri);background:var(--pri);box-shadow:0 0 0 3px var(--pri-l)}
+.cin{flex:1;font-size:14px;color:var(--g700)}.ci.sel .cin{color:var(--pri-d);font-weight:600}
+.cic{font-size:11px;color:var(--g400);background:var(--g100);padding:2px 8px;border-radius:10px}
+/* 展开的照片网格 */
+.ci-photos{display:flex;gap:6px;padding:6px 14px 10px 36px;flex-wrap:wrap;background:var(--pri-l);border-bottom:1px solid var(--g100)}
+.ci-ph{width:52px;height:52px;border-radius:var(--rs);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;font-size:10px;font-weight:600}
+.ci-ph.filled{background:#fff;color:var(--pri-d);border:1px solid var(--pri);box-shadow:var(--shadow-sm)}
+.ci-ph .ph-idx{font-size:13px}
+.ci-ph .ph-who{font-size:8px;color:var(--g500);margin-top:1px}
+.ci-ph .ph-del{position:absolute;top:-5px;right:-5px;width:18px;height:18px;border-radius:50%;background:var(--ng);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.ci-ph .ph-del:active{transform:scale(.85)}
+.ci-ph.add-ph{background:var(--g50);border:1.5px dashed var(--g300);color:var(--g400);cursor:pointer}
+.ci-ph.add-ph:active{background:var(--pri-l);border-color:var(--pri)}
+/* Cam ctrl */
+.cc{padding:6px 16px 12px;background:#fff;border-top:1px solid var(--g200);flex-shrink:0}
+.cd{display:flex;justify-content:center;gap:5px;padding:4px 0 8px;align-items:center}
+.cdd{width:8px;height:8px;border-radius:50%;transition:all .15s}
+.cde{background:var(--g200)}.cdf{background:var(--pri)}
+.cdn{font-size:11px;color:var(--g400);margin-left:6px}
+.cr{display:flex;align-items:center;justify-content:center}
+.sh{width:60px;height:60px;border-radius:50%;border:3.5px solid var(--pri);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:all .1s;position:relative}
+.sh:active{transform:scale(.88)}.shi{width:46px;height:46px;border-radius:50%;background:var(--pri);transition:all .1s}
+.sh:active .shi{background:var(--pri-d)}.sh.dis{opacity:.2;pointer-events:none}
+.shc{position:absolute;top:-6px;right:-6px;background:var(--pri-d);color:#fff;font-size:10px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+/* 判定面板（内嵌在拍照模式底部） */
+.cjp{display:none;background:#fff;border-top:1px solid var(--g200);flex-shrink:0;max-height:50%;overflow-y:auto}
+.cjp.vis{display:block;animation:su .25s ease-out}
+.cjp-ok{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 14px;background:rgba(52,199,89,.06);font-size:13px;color:#16a34a;font-weight:600}
+.cjp-wait{padding:12px 14px;text-align:center;font-size:12px;color:var(--g400)}
+.cjp-form{padding:12px 14px 0}
+.cjp-lbl{font-size:13px;font-weight:600;color:var(--g700);margin-bottom:6px}
+.cjp-sub{font-size:11px;color:var(--g400);margin-bottom:8px}
+.cjp-btns{display:flex;gap:10px;padding:10px 14px 14px}
+.cjp-btn{flex:1;padding:12px;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;text-align:center;border:none}
+.cjp-btn:active{opacity:.8}
+.cjp-cancel{background:var(--g100);color:var(--g600)}
+.cjp-submit{background:var(--pri);color:#fff}
+.cjp-submit.dis{background:var(--g200);color:var(--g400);pointer-events:none}
+/* Radio */
+.rg{display:flex;flex-direction:column;gap:0;background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-sm)}
+.ri{display:flex;align-items:center;padding:14px;border-bottom:1px solid var(--g100);cursor:pointer;-webkit-tap-highlight-color:transparent;min-height:48px}
+.ri:last-child{border-bottom:none}
+.ri:active{background:var(--g50)}
+.rir{width:20px;height:20px;border-radius:50%;border:2px solid var(--g300);margin-right:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.ri.on .rir{border-color:var(--pri);background:var(--pri)}
+.ri.on .rir::after{content:'';width:8px;height:8px;border-radius:50%;background:#fff}
+.ri.on-ng .rir{border-color:var(--ng);background:var(--ng)}
+.ri.on-ng .rir::after{content:'';width:8px;height:8px;border-radius:50%;background:#fff}
+.rit{font-size:14px;color:var(--g700)}
+/* Checkbox */
+.cg{display:flex;flex-direction:column;gap:0;background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-sm)}
+.cgi{display:flex;align-items:center;padding:12px 14px;border-bottom:1px solid var(--g100);cursor:pointer;-webkit-tap-highlight-color:transparent;min-height:48px}
+.cgi:last-child{border-bottom:none}
+.cgi:active{background:var(--g50)}
+.cgk{width:20px;height:20px;border-radius:4px;border:2px solid var(--g300);margin-right:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.cgi.on .cgk{border-color:var(--ng);background:var(--ng)}
+.cgi.on .cgk::after{content:'✓';color:#fff;font-size:12px;font-weight:700}
+.cgt{font-size:13px;color:var(--g700)}
+/* NG photos */
+.ngp{display:flex;gap:8px;flex-wrap:wrap}
+.ngps{width:60px;height:60px;border-radius:var(--rs);display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ngps.fi{background:var(--ng-l);color:var(--ng);font-size:12px;font-weight:600;flex-direction:column}
+.ngps.ad{background:var(--g100);border:1.5px dashed var(--g300);color:var(--g400);font-size:20px}
+.ngps.ad:active{background:var(--pri-l);border-color:var(--pri)}
+.ngpw{font-size:8px;color:var(--g500);margin-top:2px}
+/* (judge bot removed - now inline in cjp) */
+/* Toast */
+.toast{display:none;position:fixed;top:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.82);color:#fff;padding:10px 20px;border-radius:var(--r-pill);font-size:13px;z-index:999;max-width:300px;text-align:center}
+.toast.show{display:block;animation:ti .25s ease-out}
+@keyframes ti{from{opacity:0;transform:translateX(-50%) translateY(8px)}}
+/* BS */
+.shbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:800;align-items:flex-end;justify-content:center}
+.shbg.vis{display:flex}
+.shp{width:100%;max-width:360px;background:#fff;border-radius:16px 16px 0 0;padding:20px 16px 28px;animation:su .2s ease-out}
+@keyframes su{from{transform:translateY(100%)}}
+.sht{font-size:16px;font-weight:700;color:var(--g800);margin-bottom:16px}
+.shca{margin-top:8px;padding:14px;text-align:center;font-size:14px;color:var(--g400);cursor:pointer;border-top:1px solid var(--g100)}
+/* P3 Review */
+.rv-sec{padding:14px 16px;background:#fff;margin-bottom:8px}
+.rv-lbl{font-size:12px;color:var(--g400);margin-bottom:6px}
+.rv-row{display:flex;align-items:center;padding:8px 0;border-bottom:1px solid var(--g100)}
+.rv-row:last-child{border-bottom:none}
+/* 旧badge类已移除，统一使用 b-prog/b-judge/b-done/b-ret */
+</style>
+</head>
+<body>
+<div class="ptabs">
+  <div class="ptab on" onclick="sp(0)">P1 核查分工<small>工作负责人</small></div>
+  <div class="ptab" onclick="sp(1)">P2 核查执行<small>检测人员视角</small></div>
+  <div class="ptab" onclick="sp(2)">P3 核查确认<small>工作负责人</small></div>
+</div>
+<div class="pbody">
+
+<!-- P1 -->
+<div class="pw on" id="p0">
+<div class="phone">
+  <div class="sbar">9:41</div><div class="nbar"><div class="back">←</div><div class="title">核查分工</div></div>
+  <div class="scroll" id="p1s"></div>
+  <div class="bot"><div class="bot-i" id="p1i"></div><button class="bbtn dis" id="p1b" onclick="sp(1)"></button></div>
+  <div class="toast" id="t0"></div>
+</div>
+<div class="sn">
+  <h2>P1 · 核查分工（简化展示）</h2>
+  <p>工作负责人将6~8项核查任务按人分配给4名试验人员。完整分工交互见独立Demo。</p>
+
+  <h3>设计决策</h3>
+  <ul>
+    <li><b>按人分配，没有"组"的概念</b>——4张人员卡片+任务chip标签，"先想人再分活"</li>
+    <li><b>每项任务只有1个试验负责人</b>——负责判定，其他人可协助拍照</li>
+    <li><b>必须全部分配才能提交</b>——提交前强制校验，未分配项高亮提示</li>
+    <li><b>本页为简化展示</b>——仅展示分工结果预览，完整交互（添加/移动/取消/提交确认弹窗）见 <code>demo_核查分工.html</code></li>
+  </ul>
+
+  <h3>业务规则</h3>
+  <table>
+    <tr><th>规则</th><th>说明</th></tr>
+    <tr><td>候选人</td><td>4名试验人员（工作负责人不参与核查）</td></tr>
+    <tr><td>任务列表</td><td>基础6项固定 + 充电/居民设施条件出现 = 6~8项</td></tr>
+    <tr><td>提交后不可修改</td><td>全员可见+可协同天然缓解分配不合理</td></tr>
+    <tr><td>默认推荐</td><td>V3.0不做，V3.1做后台配置默认分工模板</td></tr>
+  </table>
+
+  <details>
+  <summary>📋 开发参考（点击展开）</summary>
+  <p>Flowable节点: <code>check_assign</code> | UserTask | 工作负责人</p>
+  <p>提交数据: 8项任务的试验负责人分配（task_id → user_id映射）+ 时间 + 操作人</p>
+  </details>
+</div>
+</div>
+
+<!-- P2 -->
+<div class="pw" id="p1">
+<div style="display:flex; flex-direction:column; gap:8px">
+<!-- 角色切换（在手机壳外部，不占APP页面空间） -->
+<div class="rs" id="rs" style="margin:0;width:100%;box-sizing:border-box"><div class="ro on" onclick="sr('zhangsan',0)">张三（我）</div><div class="ro" onclick="sr('lisi',1)">李四视角</div></div>
+
+<div class="phone">
+  <div class="sbar">10:00</div>
+  <!-- 列表 -->
+  <div class="lm" id="lm">
+    <div class="nbar"><div class="back">←</div><div class="title">现场核查</div></div>
+    <div class="scroll" id="p2l"></div>
+  </div>
+  <!-- 拍照 -->
+  <div class="cm" id="cm">
+    <div class="nbar"><div class="back" onclick="xc()">←</div><div class="title" id="ct"></div><div id="cg" style="font-size:11px;padding:3px 8px;border-radius:4px;margin-right:12px"></div></div>
+    <div class="vf"><div class="vfg"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="vfp" id="vp"><span style="font-size:28px;opacity:.4">📷</span><span>选择拍照项，每项最多5张</span></div>
+      <div class="vfl" id="vl"><span class="vld" id="vd"></span><span class="vlt" id="vt"></span><span class="vlc" id="vc"></span></div>
+      <div class="vff" id="vff"></div>
+    </div>
+    <!-- 缩略条已移除：照片预览改为选中slot时展开照片网格 -->
+    <div class="scroll" id="cis"></div>
+    <div class="cc" id="ccr"><div class="cd" id="cds"></div><div class="cr"><div class="sh dis" id="sht" onclick="snp()"><div class="shi"></div></div></div></div>
+    <!-- 拍完后：判定表单（同页面内嵌） -->
+    <div class="cjp" id="cjp"></div>
+  </div>
+  <div class="toast" id="t1"></div>
+</div>
+</div>
+<div class="sn sn-wide">
+<h2>P2 · 核查执行 + 判定</h2>
+<p>试验人员并行执行6~8项核查任务——拍照留证+整项判定。</p>
+
+<h3>设计决策</h3>
+<ul>
+  <li><b>拍照只留证，判定只有一层</b>——拍照回答"现场长什么样"，不回答"合不合格"。每项核查由试验负责人做一次整体判定（合格/不合格），去掉2.4系统的逐照片判定</li>
+  <li><b>电源核查按电缆状态条件显隐</b>——不再固定拍N张照片。执行人先确认上级电源侧状态（未敷设/未搭接/已搭接），再确认本地侧状态，系统据此动态生成对应的具名拍照项。未敷设也需按进线段数拍确认照（证明确实未铺设）</li>
+  <li><b>同一页面完成拍照+判定</b>——拍完后快门区域原地替换为判定表单，取景窗和拍照列表始终可见，不跳页</li>
+  <li><b>不合格用Bottom Sheet承载</b>——原因勾选+留证拍照在覆盖层中完成，不压缩页面。留证拍照复用同一套取景窗和快门</li>
+  <li><b>全部核查项并行，无前置关卡</b>——2.4系统的"电源核查强制关卡"已取消，4人各做各的，干完帮别人</li>
+</ul>
+
+<h3>请试试以下操作</h3>
+<ul>
+  <li><b>电源核查（条件显隐）</b>：点击"电源核查"→ 弹出电缆状态选择 → 选上级状态 → 选本地状态 → 预览拍照项 → 确认后进入拍照模式</li>
+  <li><b>普通拍照</b>：点"建设情况"→ 选拍照项 → 按快门连续拍 → 拍满自动跳下一个</li>
+  <li><b>查看/删除照片</b>：点击已拍的项 → 展开照片网格 → 点×删除</li>
+  <li><b>判定合格</b>：全部至少1张后 → 底部展开判定表单 → 选合格 → 提交</li>
+  <li><b>判定不合格</b>：选不合格 → 勾选原因 → 去拍留证照片 → 完成后提交</li>
+  <li><b>帮别人拍</b>：点"送电痕迹"（李四负责）→ 拍完显示"等待李四判定"</li>
+  <li><b>切换视角</b>：切到"李四视角"看协同效果</li>
+</ul>
+
+<h3 style="break-before:column">业务规则</h3>
+<table>
+  <tr><th>规则</th><th>说明</th></tr>
+  <tr><td>两种任务类型</td><td>📷拍照型5项（电源/建设/居民入住/充电/居民设施）+ 📋直接判定型3项（送电痕迹/临电电源/安全风险）</td></tr>
+  <tr><td>拍照上限</td><td>每项最多5张（客户端），服务端硬上限10张（并发溢出兜底）。照片可多不可少</td></tr>
+  <tr><td>判定权限</td><td>仅试验负责人可判定（后端校验），协助者只能拍照</td></tr>
+  <tr><td>电缆状态选择权限</td><td>仅试验负责人可选择（配置决策=决定拍什么）。协助者看到"等待XX确认电缆状态"</td></tr>
+  <tr><td>照片删除权限</td><td>试验负责人可删所有照片（自己+协助者），协助者只能删自己拍的。删别人照片时弹窗注明"这张由XX拍摄"</td></tr>
+  <tr><td>协作提示</td><td>拍照模式顶部显示谁帮拍了什么；主列表卡片展开协助明细</td></tr>
+  <tr><td>帮拍中断</td><td>试验负责人提交判定后→协助者页面通知条+快门禁用+取景窗变灰。依赖WebSocket实时推送，降级为轮询（最多延迟15秒）</td></tr>
+  <tr><td>提交后锁定</td><td>判定提交→"待确认"→P2不可修改。工作负责人P3确认→永久锁定，退回→清空重做</td></tr>
+  <tr><td>离线</td><td>断网回退单人模式，不做协同。恢复后批量上传+服务端校验</td></tr>
+  <tr><td>中间状态必须保留</td><td>照片拍一张存一张（存本地），APP退出/崩溃不丢数据</td></tr>
+</table>
+
+<h3>核查项状态（4态）</h3>
+<table>
+  <tr><th>状态</th><th>颜色</th><th>含义</th></tr>
+  <tr><td>进行中</td><td>主色</td><td>拍照进度<100%（含未开始），数字X/Y已表达详情</td></tr>
+  <tr><td>待判定</td><td>橙色</td><td>拍照100%，等试验负责人判定。直接判定型默认此状态</td></tr>
+  <tr><td>已完成</td><td>绿色</td><td>判定已提交（含待确认/已确认）</td></tr>
+  <tr><td>已退回</td><td>红色</td><td>工作负责人退回，需重做</td></tr>
+</table>
+
+<h3>版本边界</h3>
+<table>
+  <tr><th>能力</th><th>V3.0</th><th>V3.1</th></tr>
+  <tr><td>电源核查</td><td>前端条件显隐（if/else硬编码）</td><td>后台配置表（规则引擎）</td></tr>
+  <tr><td>不合格原因</td><td>固定5项</td><td>PC端可配置</td></tr>
+  <tr><td>实时在线状态</td><td>不做</td><td>WebSocket在线头像</td></tr>
+  <tr><td>帮拍中断通知</td><td>WebSocket或轮询降级</td><td>WebSocket</td></tr>
+</table>
+
+<details>
+<summary>📋 开发参考（点击展开）</summary>
+
+<h3>低代码评估</h3>
+<table>
+  <tr><th>UI元素</th><th>状态</th></tr>
+  <tr><td>自定义取景窗+快门</td><td>❌ 需开发（核心自定义组件）</td></tr>
+  <tr><td>slot列表+照片网格</td><td>❌ 需开发</td></tr>
+  <tr><td>电源核查状态选择→动态slot</td><td>❌ 需开发</td></tr>
+  <tr><td>协作提示栏</td><td>❌ 需开发（实时数据）</td></tr>
+  <tr><td>不合格原因Bottom Sheet</td><td>❌ 需开发（多选+留证联动）</td></tr>
+  <tr><td>判定表单（radio+提交）</td><td>✅ 标准组件</td></tr>
+</table>
+
+<h3>多人协同技术方案</h3>
+<ul>
+  <li>数据模型：追加模型（拍照POST追加，判定PUT覆盖）</li>
+  <li>同步：有网时轮询（10-15秒）或WebSocket；无网时本地存储+恢复批量上传</li>
+  <li>帮拍中断：依赖WebSocket推送或轮询检测判定状态变更。降级方案：轮询最多15秒延迟，已拍照片仍上传</li>
+  <li>照片双层限制：客户端5张/slot + 服务端10张/slot，溢出标记待清理</li>
+</ul>
+
+<h3>电源核查条件显隐（V3.0）</h3>
+<p>前端if/else硬编码。状态→拍照项映射：</p>
+<table>
+  <tr><th>上级状态</th><th>本地状态</th><th>生成的拍照项</th></tr>
+  <tr><td>未敷设</td><td>—</td><td>每段进线1张"未敷设确认照"（按进线段数生成）</td></tr>
+  <tr><td>未搭接</td><td>本地未搭接</td><td>电缆端子悬空照+临时接地线照+进线柜分闸照</td></tr>
+  <tr><td>未搭接</td><td>本地已搭接</td><td>进线柜分闸照+隔离刀闸断开照+接地刀闸合闸照</td></tr>
+  <tr><td>已搭接</td><td>检修</td><td>进线柜分闸照+接地刀闸合闸照</td></tr>
+  <tr><td>已搭接</td><td>冷备用</td><td>进线柜分闸照+高压验电确认照</td></tr>
+</table>
+<p>V3.1：抽为后台配置表。详见 <code>电源核查规则引擎_V3.1设计方向.md</code></p>
+
+<h3>提交数据（每项核查）</h3>
+<p>核查项ID + 判定结果 + 不合格原因（多选）+ 留证照片 + 拍照记录（所有slot含photographer_id+时间戳）+ 试验负责人ID + 判定时间</p>
+
+</details>
+</div>
+</div>
+
+<!-- P3 -->
+<div class="pw" id="p2">
+<div class="phone">
+  <div class="sbar">10:30</div>
+  <div class="lm" id="p3lm">
+    <div class="nbar"><div class="back">←</div><div class="title">核查确认</div></div>
+    <div class="scroll" id="p3l"></div>
+  </div>
+  <div class="lm hid" id="p3rm">
+    <div class="nbar"><div class="back" onclick="closeRv()">←</div><div class="title" id="p3rt"></div></div>
+    <div class="scroll" id="p3rc"></div>
+    <div class="bot" id="p3bot"></div>
+  </div>
+  <div class="toast" id="t2"></div>
+</div>
+<div class="sn">
+  <h2>P3 · 核查确认</h2>
+  <p>工作负责人审核全部核查结果，逐项确认通过或退回重做。</p>
+
+  <h3>设计决策</h3>
+  <ul>
+    <li><b>工作负责人独有页面</b>——试验人员不操作P3，只在P2提交判定后等待确认</li>
+    <li><b>确认即锁定，退回即清空</b>——确认后永久锁定；退回后照片+判定全部清空，原试验负责人重做</li>
+    <li><b>退回原因选填不强制</b>——现场口头沟通更高效，系统不强制填写</li>
+    <li><b>非阻塞</b>——不阻塞后续工作（抽检对象确认、安措等），工作负责人抽空确认</li>
+  </ul>
+
+  <h3>请试试以下操作</h3>
+  <ul>
+    <li><b>1.</b> 先去P2完成几项核查并提交判定</li>
+    <li><b>2.</b> 回到P3，看到"待确认"的项</li>
+    <li><b>3.</b> 点击待确认项 → 查看照片+判定详情</li>
+    <li><b>4.</b> 点"确认通过"→ 该项锁定</li>
+    <li><b>5.</b> 或点"退回"→ 填写原因（选填）→ 该项清空</li>
+    <li><b>6.</b> 回到P2查看退回效果（状态变红，点击显示退回原因）</li>
+  </ul>
+
+  <h3>业务规则</h3>
+  <table>
+    <tr><th>规则</th><th>说明</th></tr>
+    <tr><td>确认通过</td><td>该核查项永久锁定，P2中不可修改</td></tr>
+    <tr><td>退回</td><td>照片+判定全部清空，原试验负责人重做。退回原因选填</td></tr>
+    <tr><td>退回后不改派</td><td>分工不变，原人重做。改派留V3.1</td></tr>
+    <tr><td>审核内容</td><td>判定结果+拍照记录（每slot几张、谁拍的）+不合格原因+留证照片</td></tr>
+  </table>
+
+  <h3>状态流转</h3>
+  <table>
+    <tr><th>流转</th><th>说明</th></tr>
+    <tr><td>未提交 → 待确认</td><td>试验人员提交判定后</td></tr>
+    <tr><td>待确认 → 已确认</td><td>工作负责人确认通过（锁定）</td></tr>
+    <tr><td>待确认 → 已退回</td><td>工作负责人退回（清空重做）</td></tr>
+    <tr><td>已退回 → 未提交</td><td>试验人员点击后看到原因，重新核查</td></tr>
+  </table>
+
+  <h3>版本边界</h3>
+  <table>
+    <tr><th>能力</th><th>V3.0</th><th>V3.1</th></tr>
+    <tr><td>确认/退回</td><td>逐项确认或退回</td><td>同V3.0</td></tr>
+    <tr><td>退回后改派</td><td>不做</td><td>退回时可更换试验负责人</td></tr>
+    <tr><td>非阻塞</td><td>不阻塞后续工作</td><td>同V3.0</td></tr>
+  </table>
+
+  <details>
+  <summary>📋 开发参考（点击展开）</summary>
+  <p>Flowable节点: 核查确认为非阻塞旁支，不在主链路上。试验人员完成核查后主链路直接推进到抽检对象确认。</p>
+  <p>退回操作: 清空该核查项的 photos[] + judgment + reasons，重置状态标记为 returned，保留 retReason。</p>
+  <p>确认操作: 设置 confirmed=true，该项在P2永久锁定。</p>
+  </details>
+</div>
+</div>
+
+</div>
+
+<!-- 不合格详情 BS（拍照型任务用） -->
+<div class="shbg" id="ngbs">
+<div class="shp" style="max-height:80vh;overflow-y:auto" id="ngbsc"></div>
+</div>
+
+<!-- 直接判定 BS -->
+<div class="shbg" id="djs">
+<div class="shp">
+  <div class="sht" id="djt"></div>
+  <div id="djc"></div>
+  <div class="shca" onclick="cdj()">取消</div>
+</div>
+</div>
+
+<!-- 退回 BS -->
+<div class="shbg" id="retbs">
+<div class="shp">
+  <div class="sht">退回核查项</div>
+  <div style="font-size:13px;color:var(--g500);margin-bottom:12px">退回后该项的照片和判定将被清空，试验人员需重新核查</div>
+  <div style="font-size:13px;font-weight:600;color:var(--g700);margin-bottom:6px">退回原因（选填）</div>
+  <textarea id="retrea" style="width:100%;min-height:80px;border:1px solid var(--g200);border-radius:var(--r);padding:10px;font-size:13px;resize:vertical;box-sizing:border-box;font-family:inherit" placeholder="如有需要，请说明退回原因…"></textarea>
+  <div style="display:flex;gap:10px;margin-top:16px">
+    <button class="cjp-btn cjp-cancel" onclick="closeRetBS()">取消</button>
+    <button class="cjp-btn" style="flex:1;background:var(--ng);color:#fff" onclick="submitRet()">确认退回</button>
+  </div>
+</div>
+</div>
+
+<!-- 确认通过弹窗 -->
+<div class="shbg" id="cfmRvSh">
+<div class="shp">
+  <div class="sht">确认通过该核查项？</div>
+  <div style="font-size:13px;color:var(--g500);margin-bottom:16px">确认后不可撤回，该核查项将永久锁定</div>
+  <div style="display:flex;gap:10px">
+    <button class="cjp-btn cjp-cancel" onclick="closeCfmRv()">取消</button>
+    <button class="cjp-btn cjp-submit" onclick="doConfirmRv()">确认通过</button>
+  </div>
+</div>
+</div>
+
+<!-- 电源核查状态选择 BS -->
+<div class="shbg" id="pwrSh">
+<div class="shp" style="max-height:85vh;overflow-y:auto">
+  <div class="sht">电源核查 — 确认电缆状态</div>
+  <div style="font-size:12px;color:var(--g500);margin-bottom:16px">根据电缆实际状态确认，系统将自动生成对应拍照项</div>
+
+  <!-- Step 1: 上级电源侧状态 -->
+  <div id="pwrStep1">
+    <div style="font-size:13px;font-weight:600;color:var(--g700);margin-bottom:8px">上级电源侧电缆状态</div>
+    <div class="rg" style="margin-bottom:16px">
+      <div class="ri" onclick="pwrS1('none')"><div class="rir"></div><div class="rit">未敷设（电缆未铺设）</div></div>
+      <div class="ri" onclick="pwrS1('open')"><div class="rir"></div><div class="rit">未搭接（悬空）</div></div>
+      <div class="ri" onclick="pwrS1('connected')"><div class="rir"></div><div class="rit">已搭接</div></div>
+    </div>
+  </div>
+
+  <!-- Step 2: 本地侧状态（动态渲染） -->
+  <div id="pwrStep2" style="display:none"></div>
+
+  <!-- 结果预览 -->
+  <div id="pwrPreview" style="display:none"></div>
+
+  <!-- 按钮 -->
+  <div style="display:flex;gap:10px;margin-top:12px">
+    <button class="cjp-btn cjp-cancel" onclick="closePwr()">取消</button>
+    <button class="cjp-btn cjp-submit dis" id="pwrConfirm" onclick="confirmPwr()">确认，开始拍照</button>
+  </div>
+</div>
+</div>
+
+<script>
+var MAX_PH=5;
+var P={zhangsan:{n:'张三',c:'#3B82F6'},lisi:{n:'李四',c:'#D97706'},wangwu:{n:'王五',c:'#6366F1'},zhaoliu:{n:'赵六',c:'#059669'}};
+var REASONS=['与报检资料不一致','存在安全隐患','设备缺陷或损坏','施工不规范','其他'];
+// ph: {slotName: [{w:'zhangsan'},{w:'lisi'},...], ...}  每slot数组最多5
+var T=[
+  {id:'power',n:'电源核查',tp:'photo',ow:'zhangsan',slots:[],ph:{},j:null,jr:[],jp:[],st:null,retReason:''},
+  {id:'build',n:'建设情况',tp:'photo',ow:'zhangsan',slots:['1#开关站外景','1#开关站内景','2#配电室外景','2#配电室内景','3#配电室外景','3#配电室内景'],ph:{},j:null,jr:[],jp:[],st:null,retReason:''},
+  {id:'trace',n:'送电痕迹',tp:'judge',ow:'lisi',slots:[],ph:{},j:null,jr:[],jp:[],st:null,retReason:''},
+  {id:'safety',n:'安全风险',tp:'judge',ow:'lisi',slots:[],ph:{},j:null,jr:[],jp:[],st:null,retReason:''},
+  {id:'temppow',n:'临电电源',tp:'judge',ow:'wangwu',slots:[],ph:{},j:null,jr:[],jp:[],st:null,retReason:''},
+  {id:'resident',n:'居民入住',tp:'photo',ow:'wangwu',slots:['入住情况'],ph:{},j:null,jr:[],jp:[],st:null,retReason:''},
+  {id:'charging',n:'充电设施',tp:'photo',ow:'zhaoliu',slots:['分支箱外观','分支箱内景','表箱外观','表箱内景'],ph:{},j:null,jr:[],jp:[],st:null,retReason:''},
+  {id:'resfac',n:'居民设施',tp:'photo',ow:'zhaoliu',slots:['分支箱外观','分支箱内景','表箱外观','表箱内景'],ph:{},j:null,jr:[],jp:[],st:null,retReason:''}
+];
+var me='zhangsan',cid=null,csl=null,djid=null,rvId=null;
+// 临时判定状态
+var jVal=null,jReasons=[],jPhotos=[];
+var ngMode=false; // 不合格留证拍照模式
+
+function gt(id){return T.find(function(x){return x.id===id})}
+function slotCnt(t,s){return(t.ph[s]||[]).length}
+function allDone(t){for(var i=0;i<t.slots.length;i++){if(!t.ph[t.slots[i]]||!t.ph[t.slots[i]].length)return false}return true}
+function totalPh(t){var c=0;for(var s in t.ph)c+=t.ph[s].length;return c}
+function EL(id){return document.getElementById(id)}
+
+/* P1 */
+function rP1(){
+  var bp={};T.forEach(function(t){if(!bp[t.ow])bp[t.ow]=[];bp[t.ow].push(t)});
+  var lc={indoor:'#DBEAFE;color:#1D4ED8',outdoor:'#FEF3C7;color:#92400E',mixed:'#E0E7FF;color:#4338CA'};
+  var h='<div style="padding:12px 16px 4px;font-size:12px;color:var(--g500)">分工预览</div>';
+  for(var pid in bp){var p=P[pid];
+    h+='<div class="tc"><div class="tch"><div class="tci" style="background:'+p.c+'">'+p.n[0]+'</div>';
+    h+='<div class="tcf"><div class="tcn">'+p.n+'</div><div class="tcs">'+bp[pid].length+'项</div></div></div>';
+    h+='<div style="display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 12px">';
+    bp[pid].forEach(function(t){h+='<span style="padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;background:'+lc[t.ow?t.tp==='photo'?t.loc:t.loc:t.loc]+'">'+t.n+'</span>'});
+    // fix: use t.loc
+    h+='</div></div>';
+  }
+  EL('p1s').innerHTML=h;EL('p1i').innerHTML='已分配 <b>8</b>/8';
+  var b=EL('p1b');b.className='bbtn rdy';b.textContent='确认分工，开始核查 →';
+}
+
+/* P2 List */
+function sr(r,i){me=r;document.querySelectorAll('#rs .ro').forEach(function(e,j){e.classList.toggle('on',j===i)});rL()}
+function rL(){
+  var h='<div style="padding:8px 16px 4px;font-size:12px;color:var(--g500)">点击任务进入核查</div>';
+  T.forEach(function(t){
+    var p=P[t.ow],mine=t.ow===me,done=t.tp==='photo'?allDone(t):true,tp=totalPh(t);
+    var bc,bt;
+    /* 4态计算：已退回 > 已完成 > 待判定 > 进行中 */
+    if(t.st==='returned'){bc='b-ret';bt='已退回'}
+    else if(t.st==='submitted'||t.st==='confirmed'){bc='b-done';bt='已完成'}
+    else if(done&&(t.tp!=='photo'||tp>0)){bc='b-judge';bt='待判定'}
+    else{bc='b-prog';bt='进行中'}
+    // 按人按slot统计协助详情
+    var hd={};for(var s in t.ph)t.ph[s].forEach(function(x){if(x.w!==t.ow){if(!hd[x.w])hd[x.w]={slots:{},total:0};if(!hd[x.w].slots[s])hd[x.w].slots[s]=0;hd[x.w].slots[s]++;hd[x.w].total++}});
+    var hks=Object.keys(hd);
+    var tl='';
+    h+='<div class="tc"><div class="tch" onclick="tap(\''+t.id+'\')">';
+    h+='<div class="tci" style="background:'+p.c+'">'+p.n[0]+'</div>';
+    h+='<div class="tcf"><div class="tcn">'+t.n;
+    if(t.tp==='photo'){var ds=0;t.slots.forEach(function(s){if(t.ph[s]&&t.ph[s].length)ds++});h+=' <span style="font-size:11px;color:var(--g400);font-weight:400">'+ds+'/'+t.slots.length+'</span>'}
+    h+='</div><div class="tcs">'+p.n+'负责';
+    if(hks.length)h+=' · '+hks.map(function(k){return P[k].n}).join('、')+'协助';
+    h+='</div></div>';
+    h+='<span class="tcb '+bc+'">'+bt+'</span><span class="tca">›</span></div>';
+    // 协助明细行（只在"我负责"的任务上展示）
+    if(mine&&hks.length){
+      h+='<div style="padding:6px 14px 10px;border-top:1px solid var(--g100)">';
+      hks.forEach(function(w){
+        var hi=hd[w],snames=[];for(var sn in hi.slots)snames.push(sn+'('+hi.slots[sn]+'张)');
+        h+='<div style="font-size:11px;color:var(--g600);line-height:1.6;display:flex;align-items:baseline;gap:4px">';
+        h+='<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:'+P[w].c+';color:#fff;font-size:7px;text-align:center;line-height:14px;flex-shrink:0">'+P[w].n[0]+'</span>';
+        h+='<span>'+P[w].n+'帮拍：'+snames.join('、')+'</span></div>';
+      });
+      h+='</div>';
+    }
+    h+='</div>';
+  });
+  EL('p2l').innerHTML=h;
+}
+function tap(id){
+  var t=gt(id);
+  if(t.st==='confirmed'){toast('t1','已确认，无法修改');return}
+  if(t.st==='submitted'){toast('t1','已提交，等待工作负责人确认');return}
+  if(t.st==='returned'){
+    var msg='该项已被退回，请重新核查';if(t.retReason)msg+='。原因：'+t.retReason;
+    toast('t1',msg);t.st=null;t.retReason='';rL();
+  }
+  if(id==='power'&&t.slots.length===0&&!t.j){
+    if(t.ow===me) openPwrSheet();
+    else toast('t1','等待'+P[t.ow].n+'确认电缆状态后才能帮拍');
+    return;
+  }
+  if(t.tp==='photo')ec(id);else odj(id)
+}
+
+/* Cam */
+function ec(id){
+  cid=id;
+  var t=gt(id),mine=t.ow===me;
+  // 重置判定临时状态
+  jVal=t.j;jReasons=t.jr?t.jr.slice():[];jPhotos=t.jp?t.jp.slice():[];
+  EL('lm').classList.add('hid');EL('cm').classList.add('on');EL('ct').textContent=t.n;
+  var g=EL('cg');
+  if(mine){g.textContent='我负责';g.style.cssText='font-size:11px;padding:3px 8px;border-radius:4px;margin-right:12px;background:var(--pri-l);color:var(--pri-d)'}
+  else{g.textContent=P[t.ow].n+'负责';g.style.cssText='font-size:11px;padding:3px 8px;border-radius:4px;margin-right:12px;background:var(--g100);color:var(--g500)'}
+  csl=null;for(var i=0;i<t.slots.length;i++){if(slotCnt(t,t.slots[i])<1){csl=t.slots[i];break}}
+  rc();
+}
+function xc(){EL('cm').classList.remove('on');EL('lm').classList.remove('hid');cid=null;csl=null;ngMode=false;rL()}
+
+function rc(){
+  var t=gt(cid),done=allDone(t),mine=t.ow===me;
+  // Items
+  var h='';
+  // 协作提示栏：显示谁在帮我拍、拍了哪些项
+  var chelp={};
+  for(var sk in t.ph){t.ph[sk].forEach(function(x){if(x.w!==me){if(!chelp[x.w])chelp[x.w]={slots:{},count:0};if(!chelp[x.w].slots[sk])chelp[x.w].slots[sk]=0;chelp[x.w].slots[sk]++;chelp[x.w].count++}})}
+  var chks=Object.keys(chelp);
+  if(chks.length){
+    h+='<div style="padding:8px 14px;background:var(--pri-l);border-bottom:1px solid var(--g100)">';
+    chks.forEach(function(w){
+      var hi=chelp[w],snames=[];for(var sn in hi.slots)snames.push(sn+'('+hi.slots[sn]+'张)');
+      h+='<div style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:11px">';
+      h+='<span style="width:18px;height:18px;border-radius:50%;background:'+P[w].c+';color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">'+P[w].n[0]+'</span>';
+      h+='<span style="color:var(--pri-d);font-weight:600">'+P[w].n+'</span>';
+      h+='<span style="color:var(--g600)">帮拍了：'+snames.join('、')+'</span>';
+      h+='</div>';
+    });
+    h+='</div>';
+  }
+  t.slots.forEach(function(s){
+    var arr=t.ph[s]||[],sel=s===csl,has=arr.length>0;
+    var dc=has?'dd':sel?'dc':'dp';
+    // 计算该slot的协助者
+    var sh={};arr.forEach(function(x){if(x.w!==me){if(!sh[x.w])sh[x.w]=0;sh[x.w]++}});
+    var shks=Object.keys(sh);
+    h+='<div class="ci'+(sel?' sel':'')+'" onclick="ss(\''+esc(s)+'\')">';
+    h+='<div class="cid '+dc+'"></div><div class="cin">'+s+'</div>';
+    if(shks.length){shks.forEach(function(w){h+='<span style="font-size:9px;padding:1px 5px;border-radius:8px;background:'+P[w].c+'18;color:'+P[w].c+';margin-right:3px;font-weight:500">'+P[w].n+'·'+sh[w]+'</span>'})}
+    if(arr.length)h+='<div class="cic">'+arr.length+'/'+MAX_PH+'</div>';
+    h+='</div>';
+    // 选中且有照片时：展开照片网格
+    if(sel&&has){
+      h+='<div class="ci-photos">';
+      arr.forEach(function(p,i){
+        h+='<div class="ci-ph filled">';
+        h+='<div class="ph-idx">📷'+(i+1)+'</div>';
+        h+='<div class="ph-who">'+P[p.w].n+'</div>';
+        h+='<div class="ph-del" onclick="event.stopPropagation();delPhAt(\''+esc(s)+'\','+i+')">×</div>';
+        h+='</div>';
+      });
+      if(arr.length<MAX_PH){
+        h+='<div class="ci-ph add-ph" onclick="event.stopPropagation();snp()"><div style="font-size:16px">+</div><div style="font-size:8px">继续拍</div></div>';
+      }
+      h+='</div>';
+    }
+  });
+  EL('cis').innerHTML=h;
+  // VF
+  if(csl){
+    EL('vp').style.display='none';EL('vl').classList.add('vis');
+    var sc=slotCnt(t,csl);
+    EL('vd').style.background=sc?'var(--ok)':'var(--warn)';
+    EL('vt').textContent=csl;EL('vc').textContent=sc+'/'+MAX_PH;
+  } else if(done){
+    EL('vp').style.display='none';EL('vl').classList.add('vis');
+    EL('vd').style.background='var(--ok)';EL('vt').textContent='全部拍摄完成';EL('vc').textContent='';
+  } else {EL('vp').style.display='flex';EL('vl').classList.remove('vis')}
+  // Dots
+  var dots='',ds=0;t.slots.forEach(function(s){if((t.ph[s]||[]).length)ds++});
+  if(t.slots.length<=10){for(var i=0;i<t.slots.length;i++)dots+='<div class="cdd '+(i<ds?'cdf':'cde')+'"></div>'}
+  dots+='<span class="cdn">'+ds+'/'+t.slots.length+'</span>';
+  EL('cds').innerHTML=dots;
+  // Shutter
+  var sh=EL('sht');
+  if(csl&&slotCnt(t,csl)<MAX_PH)sh.classList.remove('dis');else sh.classList.add('dis');
+  var ce=sh.querySelector('.shc');var tp=totalPh(t);
+  if(tp>0){if(!ce){ce=document.createElement('div');ce.className='shc';sh.appendChild(ce)}ce.textContent=tp}
+  else if(ce)ce.remove();
+  // Bottom panels
+  var ctrl=EL('ccr'),jp=EL('cjp');
+  ctrl.style.display='none';jp.classList.remove('vis');
+
+  if(ngMode){
+    // 不合格留证拍照模式：快门重新激活，拍照存入jPhotos
+    ctrl.style.display='block';
+    // 取景窗显示红色标签
+    EL('vp').style.display='none';EL('vl').classList.add('vis');
+    EL('vd').style.background='var(--ng)';
+    EL('vt').textContent='不合格留证拍照';
+    EL('vc').textContent=jPhotos.length+'/'+MAX_PH;
+    // 快门可用（只要没拍满）
+    var nsh=EL('sht');
+    if(jPhotos.length<MAX_PH)nsh.classList.remove('dis');else nsh.classList.add('dis');
+    // 进度点阵显示留证照片
+    var ndots='';
+    for(var ni=0;ni<MAX_PH;ni++)ndots+='<div class="cdd '+(ni<jPhotos.length?'cdf':'cde')+'" style="'+(ni<jPhotos.length?'background:var(--ng)':'')+'"></div>';
+    ndots+='<span class="cdn">'+jPhotos.length+'/'+MAX_PH+'</span>';
+    EL('cds').innerHTML=ndots;
+    // 列表显示留证照片
+    var nh='<div style="padding:10px 14px 6px;font-size:13px;font-weight:600;color:var(--ng)">不合格留证照片（至少1张）</div>';
+    if(jPhotos.length>0){
+      nh+='<div class="ci-photos" style="background:var(--ng-l)">';
+      jPhotos.forEach(function(p,i){
+        nh+='<div class="ci-ph filled" style="border-color:var(--ng)"><div class="ph-idx">📷'+(i+1)+'</div><div class="ph-who">'+P[p.w].n+'</div>';
+        nh+='<div class="ph-del" onclick="delNgPh('+i+')">×</div></div>';
+      });
+      nh+='</div>';
+    }
+    nh+='<div style="padding:8px 14px;font-size:11px;color:var(--g400)">按快门拍摄留证照片，拍完点击下方"完成"</div>';
+    if(jPhotos.length>0){
+      nh+='<div style="padding:4px 14px 12px"><button class="cjp-btn cjp-submit" onclick="exitNgMode()">完成留证拍照（'+jPhotos.length+'张）</button></div>';
+    }
+    EL('cis').innerHTML=nh;
+    return; // ngMode下不执行后面的正常逻辑
+  }
+
+  if(!done){
+    ctrl.style.display='block';
+  } else {
+    jp.classList.add('vis');
+    renderJudgePanel(t,mine);
+  }
+}
+function ss(s){csl=s;rc()}
+function delPhAt(s,i){
+  var t=gt(cid);if(!t.ph[s])return;
+  var who=P[t.ph[s][i].w].n;
+  t.ph[s].splice(i,1);
+  if(!t.ph[s].length)delete t.ph[s];
+  toast('t1','已删除 '+s+' 第'+(i+1)+'张（'+who+'拍摄）');
+  rc();
+}
+function snp(){
+  if(!cid)return;
+  var fl=EL('vff');fl.classList.add('fire');setTimeout(function(){fl.classList.remove('fire')},120);
+
+  if(ngMode){
+    // 不合格留证拍照
+    if(jPhotos.length>=MAX_PH)return;
+    jPhotos.push({w:me});
+    toast('t1','留证照片 '+jPhotos.length+'/'+MAX_PH);
+    rc();return;
+  }
+
+  if(!csl)return;var t=gt(cid);if(slotCnt(t,csl)>=MAX_PH)return;
+  if(!t.ph[csl])t.ph[csl]=[];
+  t.ph[csl].push({w:me});
+  toast('t1',P[me].n+' 拍摄了 '+csl+' ('+t.ph[csl].length+'/'+MAX_PH+')');
+  if(slotCnt(t,csl)>=MAX_PH){
+    csl=null;for(var i=0;i<t.slots.length;i++){if(slotCnt(t,t.slots[i])<1){csl=t.slots[i];break}}
+  }
+  rc();
+}
+
+function delNgPh(i){jPhotos.splice(i,1);toast('t1','已删除留证照片');rc()}
+function exitNgMode(){ngMode=false;rc()}
+
+/* 判定面板（内嵌在拍照模式底部，只放radio+按钮，不合格详情用BS） */
+function renderJudgePanel(t,mine){
+  var jp=EL('cjp'),h='';
+  if(!mine){
+    h+='<div class="cjp-ok">✓ 你帮拍的照片已全部完成</div>';
+    h+='<div class="cjp-wait">等待 '+P[t.ow].n+' 进行判定</div>';
+    h+='<div class="cjp-btns"><button class="cjp-btn cjp-cancel" onclick="xc()" style="flex:1">返回任务列表</button></div>';
+  } else if(t.j){
+    var stMsg=t.st==='confirmed'?'已确认':t.st==='submitted'?'已提交，等待工作负责人确认':'已判定';
+    h+='<div class="cjp-ok">✓ '+stMsg+'：'+(t.j==='ok'?'合格':'不合格')+'</div>';
+    h+='<div class="cjp-btns"><button class="cjp-btn cjp-cancel" onclick="xc()" style="flex:1">返回任务列表</button></div>';
+  } else {
+    h+='<div class="cjp-ok">✓ 所有拍照项已完成</div>';
+    h+='<div class="cjp-form"><div class="cjp-lbl">判定结果</div>';
+    h+='<div class="rg">';
+    h+='<div class="ri'+(jVal==='ok'?' on':'')+'" onclick="jv(\'ok\')"><div class="rir"></div><div class="rit">合格</div></div>';
+    h+='<div class="ri'+(jVal==='ng'?' on-ng':'')+'" onclick="jv(\'ng\')"><div class="rir"></div><div class="rit">不合格</div></div>';
+    h+='</div></div>';
+    // 不合格已填完信息时显示摘要
+    if(jVal==='ng'&&jReasons.length>0&&jPhotos.length>0){
+      h+='<div style="padding:8px 14px 0;font-size:11px;color:var(--ng)">已填：'+jReasons.length+'项原因 + '+jPhotos.length+'张留证照片 <span style="color:var(--g400);cursor:pointer;text-decoration:underline" onclick="openNgSheet()">修改</span></div>';
+    }
+    var canSubmit=jVal==='ok'||(jVal==='ng'&&jReasons.length>0&&jPhotos.length>0);
+    h+='<div class="cjp-btns">';
+    h+='<button class="cjp-btn cjp-cancel" onclick="xc()">取消</button>';
+    h+='<button class="cjp-btn cjp-submit'+(canSubmit?'':' dis')+'" onclick="submitJ()">提交判定</button>';
+    h+='</div>';
+  }
+  jp.innerHTML=h;
+}
+
+function jv(v){
+  jVal=v;
+  if(v==='ok'){jReasons=[];jPhotos=[];var t=gt(cid);renderJudgePanel(t,true)}
+  else if(v==='ng'){openNgSheet()}
+}
+
+/* 不合格详情 Bottom Sheet */
+function openNgSheet(){
+  var t=gt(cid);
+  renderNgSheet(t);
+  EL('ngbs').classList.add('vis');
+}
+function closeNgSheet(){EL('ngbs').classList.remove('vis')}
+function renderNgSheet(t){
+  var h='<div style="font-size:16px;font-weight:700;color:var(--g800);margin-bottom:4px">'+t.n+' — 不合格</div>';
+  h+='<div style="font-size:12px;color:var(--g500);margin-bottom:16px">请勾选原因，然后拍摄留证照片</div>';
+  // 原因
+  h+='<div style="font-size:13px;font-weight:600;color:var(--g700);margin-bottom:8px">不合格原因（至少选1项）</div>';
+  h+='<div class="cg" style="margin-bottom:16px">';
+  REASONS.forEach(function(r,i){
+    var on=jReasons.indexOf(r)!==-1;
+    h+='<div class="cgi'+(on?' on':'')+'" onclick="ngtr('+i+')"><div class="cgk"></div><div class="cgt">'+r+'</div></div>';
+  });
+  h+='</div>';
+  // 已拍留证照片预览（如果有）
+  if(jPhotos.length>0){
+    h+='<div style="font-size:13px;font-weight:600;color:var(--g700);margin-bottom:8px">已拍留证照片 '+jPhotos.length+'张</div>';
+    h+='<div class="ngp" style="margin-bottom:16px">';
+    jPhotos.forEach(function(p,i){h+='<div class="ngps fi">📷<div class="ngpw">'+P[p.w].n+'</div></div>'});
+    h+='</div>';
+  }
+  // 按钮
+  h+='<div style="display:flex;gap:10px">';
+  h+='<button class="cjp-btn cjp-cancel" onclick="cancelNg()">取消</button>';
+  if(jReasons.length>0){
+    if(jPhotos.length>0){
+      h+='<button class="cjp-btn cjp-submit" onclick="confirmNg()">确认不合格</button>';
+    } else {
+      h+='<button class="cjp-btn cjp-submit" onclick="goNgPhoto()">去拍摄留证照片 →</button>';
+    }
+  } else {
+    h+='<button class="cjp-btn cjp-submit dis">请先勾选原因</button>';
+  }
+  h+='</div>';
+  EL('ngbsc').innerHTML=h;
+}
+function ngtr(i){var r=REASONS[i],idx=jReasons.indexOf(r);if(idx===-1)jReasons.push(r);else jReasons.splice(idx,1);renderNgSheet(gt(cid))}
+function cancelNg(){jVal=null;jReasons=[];jPhotos=[];closeNgSheet();var t=gt(cid);renderJudgePanel(t,true)}
+function goNgPhoto(){
+  // 关闭BS，进入留证拍照模式
+  closeNgSheet();
+  ngMode=true;
+  rc();
+}
+function confirmNg(){
+  if(jReasons.length===0||jPhotos.length===0)return;
+  closeNgSheet();
+  var t=gt(cid);renderJudgePanel(t,true);
+}
+
+function submitJ(){
+  if(!jVal)return;
+  if(jVal==='ng'&&(jReasons.length===0||jPhotos.length===0)){openNgSheet();return}
+  var t=gt(cid);t.j=jVal;t.jr=jReasons.slice();t.jp=jPhotos.slice();t.st='submitted';
+  toast('t1',t.n+'：'+(jVal==='ok'?'✓ 合格':'✗ 不合格')+'（已提交）');
+  rc();
+}
+
+/* Direct judge BS */
+function odj(id){
+  djid=id;var t=gt(id),mine=t.ow===me;
+  EL('djt').textContent=t.n;
+  // 里面放简化的判定表单
+  var h='';
+  if(!mine){h='<div style="font-size:13px;color:var(--g500);padding:10px 0">'+P[t.ow].n+'负责此项判定</div>'}
+  else {
+    h+='<div style="font-size:13px;color:var(--g500);margin-bottom:12px">你是负责人，请判定</div>';
+    h+='<div class="rg" style="margin-bottom:12px">';
+    h+='<div class="ri'+(t.j==='ok'?' on':'')+'" onclick="djv(\'ok\')"><div class="rir"></div><div class="rit">合格</div></div>';
+    h+='<div class="ri'+(t.j==='ng'?' on-ng':'')+'" onclick="djv(\'ng\')"><div class="rir"></div><div class="rit">不合格</div></div>';
+    h+='</div>';
+    // 如果已选不合格
+    if(t.j==='ng'){
+      h+='<div style="font-size:13px;font-weight:600;color:var(--g700);margin-bottom:8px">不合格原因</div><div class="cg" style="margin-bottom:12px">';
+      REASONS.forEach(function(r,i){
+        var on=t.jr&&t.jr.indexOf(r)!==-1;
+        h+='<div class="cgi'+(on?' on':'')+'" onclick="djtr('+i+')"><div class="cgk"></div><div class="cgt">'+r+'</div></div>';
+      });
+      h+='</div>';
+      h+='<div style="font-size:13px;font-weight:600;color:var(--g700);margin-bottom:4px">留证照片 <span style="font-weight:400;color:var(--g400)">'+(t.jp?t.jp.length:0)+'/5（至少1张）</span></div>';
+      h+='<div style="font-size:11px;color:var(--g400);margin-bottom:8px">点击拍照将调用系统相机</div>';
+      h+='<div class="ngp" style="margin-bottom:12px">';
+      if(t.jp)t.jp.forEach(function(p,i){h+='<div class="ngps fi" onclick="djdp('+i+')" title="点击删除">📷<div class="ngpw">'+P[p.w].n+'</div><div style="font-size:7px;color:var(--ng);margin-top:1px">删除</div></div>'});
+      if(!t.jp||t.jp.length<5)h+='<div class="ngps ad" onclick="djap()" title="调用系统相机拍照"><span style="font-size:16px">📷</span><div style="font-size:8px;color:var(--g400);margin-top:1px">拍照</div></div>';
+      h+='</div>';
+    }
+    // 提交按钮
+    var canSubmit=t.j==='ok'||(t.j==='ng'&&t.jr&&t.jr.length>0&&t.jp&&t.jp.length>0);
+    h+='<button style="width:100%;padding:14px;border:none;border-radius:var(--r);font-size:15px;font-weight:600;cursor:pointer;'+(canSubmit?'background:var(--pri);color:#fff':'background:var(--g200);color:var(--g400);pointer-events:none')+'" onclick="djs()">提交判定</button>';
+  }
+  EL('djc').innerHTML=h;
+  EL('djs').classList.add('vis');
+}
+function cdj(){EL('djs').classList.remove('vis');djid=null;rL()}
+function djv(v){var t=gt(djid);t.j=v;if(v==='ok'){t.jr=[];t.jp=[]}odj(djid)}
+function djtr(i){var t=gt(djid),r=REASONS[i];if(!t.jr)t.jr=[];var idx=t.jr.indexOf(r);if(idx===-1)t.jr.push(r);else t.jr.splice(idx,1);odj(djid)}
+function djap(){var t=gt(djid);if(!t.jp)t.jp=[];if(t.jp.length>=5)return;t.jp.push({w:me});toast('t1','已拍摄留证照片');odj(djid)}
+function djdp(i){var t=gt(djid);t.jp.splice(i,1);toast('t1','已删除留证照片');odj(djid)}
+function djs(){var t=gt(djid);t.st='submitted';toast('t1',t.n+'：'+(t.j==='ok'?'✓ 合格':'✗ 不合格')+'（已提交）');cdj()}
+
+/* Utils */
+function esc(s){return s.replace(/'/g,"\\'")}
+function sp(i){document.querySelectorAll('.ptab').forEach(function(e,j){e.classList.toggle('on',j===i)});document.querySelectorAll('.pw').forEach(function(e,j){e.classList.toggle('on',j===i)});if(cid)xc();if(rvId)closeRv();if(i===2)rP3()}
+/* P3 核查确认 */
+function rP3(){
+  var confirmed=0,submitted=0,returned=0;
+  T.forEach(function(t){if(t.st==='confirmed')confirmed++;if(t.st==='submitted')submitted++;if(t.st==='returned')returned++});
+  var h='<div style="padding:12px 16px 4px">';
+  h+='<div style="font-size:14px;font-weight:600;color:var(--g700)">已确认 <span style="color:var(--pri)">'+confirmed+'</span>/'+T.length+'</div>';
+  if(submitted)h+='<div style="font-size:12px;color:#92400E;margin-top:4px">'+submitted+'项待确认</div>';
+  if(returned)h+='<div style="font-size:12px;color:var(--ng);margin-top:2px">'+returned+'项已退回</div>';
+  h+='</div>';
+  T.forEach(function(t){
+    var p=P[t.ow],bc,bt,click=false;
+    if(t.st==='confirmed'){bc='b-done';bt='已完成'}
+    else if(t.st==='submitted'){bc='b-judge';bt='待确认';click=true}
+    else if(t.st==='returned'){bc='b-ret';bt='已退回'}
+    else{bc='b-prog';bt='进行中'}
+    h+='<div class="tc"><div class="tch"'+(click?' onclick="openRv(\''+t.id+'\')" style="cursor:pointer"':' style="cursor:default"')+'>';
+    h+='<div class="tci" style="background:'+p.c+'">'+p.n[0]+'</div>';
+    h+='<div class="tcf"><div class="tcn">'+t.n+'</div><div class="tcs">'+p.n+'负责</div></div>';
+    h+='<span class="tcb '+bc+'">'+bt+'</span>';
+    if(click)h+='<span class="tca">›</span>';
+    h+='</div></div>';
+  });
+  EL('p3l').innerHTML=h;
+}
+function openRv(id){
+  rvId=id;var t=gt(id),p=P[t.ow];
+  EL('p3lm').classList.add('hid');EL('p3rm').classList.remove('hid');
+  EL('p3rt').textContent=t.n+' · 审核';
+  var h='';
+  // 1. 判定结果
+  h+='<div class="rv-sec"><div class="rv-lbl">判定结果</div>';
+  if(t.j==='ok')h+='<div style="font-size:16px;font-weight:700;color:var(--ok)">✓ 合格</div>';
+  else{
+    h+='<div style="font-size:16px;font-weight:700;color:var(--ng)">✗ 不合格</div>';
+  }
+  h+='<div style="font-size:12px;color:var(--g400);margin-top:8px">判定人：'+p.n+'</div></div>';
+  // 2. 不合格原因（红色背景块）
+  if(t.j==='ng'&&t.jr&&t.jr.length){
+    h+='<div class="rv-sec" style="background:var(--ng-l)"><div class="rv-lbl" style="color:var(--ng)">不合格原因</div>';
+    h+='<ul style="margin:4px 0 0;padding-left:16px">';
+    t.jr.forEach(function(r){h+='<li style="font-size:13px;color:var(--ng);line-height:1.8">'+r+'</li>'});
+    h+='</ul></div>';
+  }
+  // 3. 不合格留证照片（红色边框缩略图）
+  if(t.j==='ng'&&t.jp&&t.jp.length){
+    h+='<div class="rv-sec" style="background:var(--ng-l)"><div class="rv-lbl" style="color:var(--ng)">留证照片（'+t.jp.length+'张）</div>';
+    h+='<div style="display:flex;flex-wrap:wrap;gap:6px">';
+    t.jp.forEach(function(x,i){
+      h+='<div style="width:52px;height:52px;border-radius:6px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;border:2px solid var(--ng);color:var(--ng)">';
+      h+='<span style="font-size:13px">📸</span>';
+      h+='<span style="font-size:8px;color:var(--g500)">'+P[x.w].n+'</span>';
+      h+='</div>';
+    });
+    h+='</div></div>';
+  }
+  // 4. 拍照记录（正常缩略图按slot）
+  if(t.tp==='photo'&&t.slots.length){
+    h+='<div class="rv-sec"><div class="rv-lbl">拍照记录</div>';
+    t.slots.forEach(function(s){
+      var arr=t.ph[s]||[];
+      h+='<div style="font-size:13px;color:var(--g700);margin-bottom:4px">'+s+'（'+arr.length+'张）</div>';
+      if(arr.length){
+        h+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">';
+        arr.forEach(function(ph,i){
+          h+='<div style="width:52px;height:52px;border-radius:6px;background:var(--pri-l);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;border:1px solid var(--pri);color:var(--pri-d)">';
+          h+='<span style="font-size:13px">📷</span>';
+          h+='<span style="font-size:8px;color:var(--g500)">'+P[ph.w].n+'</span>';
+          h+='</div>';
+        });
+        h+='</div>';
+      } else {
+        h+='<div style="font-size:12px;color:var(--g400);margin-bottom:12px">未拍摄</div>';
+      }
+    });
+    h+='</div>';
+  }
+  EL('p3rc').innerHTML=h;
+  EL('p3bot').innerHTML='<div style="display:flex;gap:10px"><button class="cjp-btn cjp-cancel" onclick="openRetBS()">退回</button><button class="cjp-btn cjp-submit" onclick="openCfmRv()">确认通过</button></div>';
+}
+function closeRv(){EL('p3rm').classList.add('hid');EL('p3lm').classList.remove('hid');rvId=null;rP3()}
+function confirmRv(){openCfmRv()}
+function openCfmRv(){EL('cfmRvSh').classList.add('vis')}
+function closeCfmRv(){EL('cfmRvSh').classList.remove('vis')}
+function doConfirmRv(){
+  closeCfmRv();
+  if(!rvId)return;
+  var t=gt(rvId);t.st='confirmed';
+  toast('t2',t.n+'：已确认通过');
+  var allDone=true;
+  T.forEach(function(ti){if(ti.st!=='confirmed')allDone=false});
+  if(allDone) setTimeout(function(){toast('t2','核查确认全部完成')},1500);
+  closeRv();
+}
+function openRetBS(){EL('retbs').classList.add('vis');EL('retrea').value=''}
+function closeRetBS(){EL('retbs').classList.remove('vis')}
+function submitRet(){if(!rvId)return;var t=gt(rvId),reason=EL('retrea').value.trim();t.st='returned';t.retReason=reason;t.j=null;t.jr=[];t.jp=[];t.ph={};if(t.id==='power')t.slots=[];toast('t2',t.n+'：已退回');closeRetBS();closeRv()}
+
+var tts={};function toast(id,m){var e=EL(id);e.textContent=m;e.className='toast show';clearTimeout(tts[id]);tts[id]=setTimeout(function(){e.className='toast'},2200)}
+
+/* 电源核查条件显隐 */
+var pwrS1Val=null, pwrS2Val=null;
+
+// 状态→拍照项映射
+// Demo模拟进线段数=2（实际从建设情况确认获取）
+var INLINE_NUM = 2;
+var INLINE_LABELS = ['I段','II段','III段'];
+
+var PWR_SLOTS = {
+  'open_open': ['本地电缆端子悬空照','人工临时接地线挂设照','进线柜主开关分闸照'],
+  'open_connected': ['进线柜主开关分闸照','隔离刀闸断开/手车摇出照','线路侧接地刀闸合闸照'],
+  'connected_repair': ['进线柜主开关分闸照','接地刀闸合闸/接地线照'],
+  'connected_cold': ['进线柜主开关分闸照','高压验电确认照']
+};
+// 未敷设：按进线段数生成确认照
+function getNoneSlots(){var s=[];for(var i=0;i<INLINE_NUM;i++)s.push(INLINE_LABELS[i]+'进线电缆未敷设确认照');return s}
+
+function openPwrSheet(){
+  pwrS1Val=null;pwrS2Val=null;
+  EL('pwrStep1').querySelectorAll('.ri').forEach(function(r){r.className='ri'});
+  EL('pwrStep2').style.display='none';
+  EL('pwrStep2').innerHTML='';
+  EL('pwrPreview').style.display='none';
+  EL('pwrConfirm').className='cjp-btn cjp-submit dis';
+  EL('pwrSh').classList.add('vis');
+}
+
+function pwrS1(val){
+  pwrS1Val=val;pwrS2Val=null;
+  // Update radio visual
+  var items=EL('pwrStep1').querySelectorAll('.ri');
+  items[0].className='ri'+(val==='none'?' on':'');
+  items[1].className='ri'+(val==='open'?' on':'');
+  items[2].className='ri'+(val==='connected'?' on':'');
+
+  if(val==='none'){
+    // 未敷设：无需本地状态，直接跳过
+    EL('pwrStep2').style.display='none';
+    renderPwrPreview();
+    return;
+  }
+
+  // Show step 2 based on step 1
+  var h='<div style="font-size:13px;font-weight:600;color:var(--g700);margin-bottom:8px">本地电缆状态</div><div class="rg" style="margin-bottom:16px">';
+  if(val==='open'){
+    h+='<div class="ri" onclick="pwrS2(\'open\')"><div class="rir"></div><div class="rit">本地也未搭接（悬空）</div></div>';
+    h+='<div class="ri" onclick="pwrS2(\'connected\')"><div class="rir"></div><div class="rit">本地已搭接（紧固在柜内）</div></div>';
+  } else {
+    h+='<div class="ri" onclick="pwrS2(\'repair\')"><div class="rir"></div><div class="rit">检修状态（已挂接地）</div></div>';
+    h+='<div class="ri" onclick="pwrS2(\'cold\')"><div class="rir"></div><div class="rit">冷备用（无接地）</div></div>';
+  }
+  h+='</div>';
+  EL('pwrStep2').innerHTML=h;
+  EL('pwrStep2').style.display='block';
+  EL('pwrPreview').style.display='none';
+  EL('pwrConfirm').className='cjp-btn cjp-submit dis';
+}
+
+function pwrS2(val){
+  pwrS2Val=val;
+  var items=EL('pwrStep2').querySelectorAll('.ri');
+  items.forEach(function(r){r.className='ri'});
+  if(val==='open'||val==='connected') items[val==='open'?0:1].className='ri on';
+  else if(val==='repair'||val==='cold') items[val==='repair'?0:1].className='ri on';
+  renderPwrPreview();
+}
+
+function renderPwrPreview(){
+  var slots;
+  if(pwrS1Val==='none') slots=getNoneSlots();
+  else slots=PWR_SLOTS[pwrS1Val+'_'+pwrS2Val]||[];
+
+  var h='<div style="font-size:13px;font-weight:600;color:var(--g700);margin-bottom:8px">将生成的拍照项</div>';
+  if(pwrS1Val==='none'){
+    h+='<div style="padding:8px 12px;background:var(--warn-l);border-radius:var(--rs);font-size:12px;color:#92400E;margin-bottom:8px">未敷设也需拍照确认——每路进线拍1张证明电缆确实未铺设</div>';
+  }
+  h+='<div style="background:var(--pri-l);border-radius:var(--rs);padding:10px 12px">';
+  slots.forEach(function(s,i){
+    h+='<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;color:var(--pri-d)">';
+    h+='<span style="font-size:16px">📸</span> '+(i+1)+'. '+s+'</div>';
+  });
+  h+='</div>';
+  EL('pwrPreview').innerHTML=h;
+  EL('pwrPreview').style.display='block';
+  EL('pwrConfirm').className='cjp-btn cjp-submit';
+}
+
+function closePwr(){EL('pwrSh').classList.remove('vis');pwrS1Val=null;pwrS2Val=null}
+
+function confirmPwr(){
+  var slots;
+  if(pwrS1Val==='none') slots=getNoneSlots();
+  else slots=PWR_SLOTS[pwrS1Val+'_'+pwrS2Val]||[];
+
+  // Update the power task's slots dynamically
+  var t=gt('power');
+  t.slots=slots;
+  t.ph={};
+
+  EL('pwrSh').classList.remove('vis');
+
+  if(slots.length===0){
+    // 理论上不会走到这里，未敷设现在也有确认照
+    toast('t1','电源核查无拍照项');
+    // 可以直接弹出判定面板
+    odj('power');
+  } else {
+    toast('t1','已生成'+slots.length+'个拍照项');
+    ec('power');
+  }
+}
+
+rP1();rL();rP3();
+</script>
+</body>
+</html>

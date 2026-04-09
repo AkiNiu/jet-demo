@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>项目工作台（BIGA）— 检e通V3.0 Demo</title>
+<link rel="stylesheet" href="demo_shared_base.css">
+<style>
+.demo-layout{display:flex;gap:40px;max-width:1100px;margin:0 auto;padding:32px 24px;align-items:flex-start}
+.demo-left{flex-shrink:0;position:sticky;top:24px}
+.demo-right{flex:1;min-width:0}
+.demo-right h2{font-size:18px;font-weight:700;color:#374151;margin-bottom:16px}
+.demo-right h3{font-size:14px;font-weight:600;color:#4B5563;margin:20px 0 8px}
+.demo-right p,.demo-right li{font-size:13px;color:#6B7280;line-height:1.8}
+.demo-right ul{padding-left:20px}
+.demo-right table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0 16px}
+.demo-right th{background:#F3F4F6;padding:8px 10px;text-align:left;font-weight:600;color:#4B5563;border-bottom:1px solid #E5E7EB}
+.demo-right td{padding:8px 10px;border-bottom:1px solid #F3F4F6;color:#6B7280}
+.demo-right td:first-child{color:#374151;font-weight:500}
+.demo-right details{margin-top:24px;border-top:1px solid #E5E7EB;padding-top:12px}
+.demo-right summary{font-size:14px;font-weight:600;color:#4B5563;cursor:pointer;padding:8px 0}
+.demo-right code{background:#F3F4F6;padding:1px 5px;border-radius:3px;font-size:11px}
+
+/* Tab */
+.dtabs{display:flex;border-bottom:1px solid var(--g200);background:#fff}
+.dtab{flex:1;text-align:center;padding:12px 0;font-size:13px;font-weight:500;color:var(--g400);cursor:pointer;border-bottom:2.5px solid transparent;transition:all .15s}
+.dtab.on{color:var(--pri);border-bottom-color:var(--pri)}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--g50);padding-bottom:16px}
+
+/* Role switcher */
+.role-bar{display:flex;margin:8px 12px;background:var(--g100);border-radius:6px;padding:2px}
+.role-btn{flex:1;padding:7px;text-align:center;font-size:11px;font-weight:500;cursor:pointer;border-radius:5px;color:var(--g500);transition:all .15s}
+.role-btn.on{background:#fff;color:var(--g800);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+
+/* 分组标题 */
+.grp-title{padding:14px 16px 6px;font-size:12px;font-weight:600;color:var(--g500);letter-spacing:.5px}
+
+/* 卡片网格 */
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 4px}
+
+/* 阶段卡片 */
+.stage-card{background:#fff;border-radius:var(--r);padding:14px;box-shadow:var(--shadow-sm);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;border-left:3px solid transparent;min-height:80px;display:flex;flex-direction:column;justify-content:space-between}
+.stage-card:active{background:var(--g50)}
+.stage-card.s-todo{border-left-color:var(--g200);opacity:.55;cursor:default}
+.stage-card.s-doing{border-left-color:var(--pri)}
+.stage-card.s-done{border-left-color:var(--ok)}
+
+.sc-top{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.sc-icon{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.s-todo .sc-icon{background:var(--g200);color:var(--g400)}
+.s-doing .sc-icon{background:var(--pri);color:#fff}
+.s-done .sc-icon{background:var(--ok);color:#fff}
+.sc-name{font-size:13px;font-weight:600;color:var(--g800)}
+.s-todo .sc-name{color:var(--g400)}
+
+.sc-role{font-size:11px;color:var(--g400);margin-bottom:4px}
+.sc-status{font-size:11px;font-weight:500}
+.s-todo .sc-status{color:var(--g400)}
+.s-doing .sc-status{color:var(--pri)}
+.s-done .sc-status{color:var(--ok)}
+.sc-meta{font-size:10px;color:var(--g400);margin-top:2px}
+
+/* 项目摘要 */
+.proj-summary{margin:12px 16px 4px;background:#fff;border-radius:var(--r);padding:14px;box-shadow:var(--shadow-sm)}
+.ps-row{display:flex;justify-content:space-between;margin-bottom:4px}
+.ps-row:last-child{margin-bottom:0}
+.ps-label{font-size:12px;color:var(--g500)}
+.ps-val{font-size:12px;color:var(--g800);font-weight:500}
+
+/* 基本信息Tab */
+.info-card{margin:12px 16px 0;background:#fff;border-radius:var(--r);padding:14px;box-shadow:var(--shadow-sm)}
+.info-card h4{font-size:13px;font-weight:600;color:var(--g700);margin:0 0 10px}
+.info-kv{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--g100)}
+.info-kv:last-child{border-bottom:none}
+.info-k{font-size:12px;color:var(--g500)}
+.info-v{font-size:12px;color:var(--g800);font-weight:500;text-align:right;max-width:60%}
+
+/* 检测记录卡片 */
+.wo-record{margin:6px 16px;background:#fff;border-radius:var(--r);box-shadow:var(--shadow-sm);padding:14px;cursor:pointer;transition:background .15s;border-left:3px solid transparent}
+.wo-record:active{background:var(--g50)}
+.wo-record.current{border-left-color:var(--pri)}
+.wo-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.wo-date{font-size:13px;font-weight:600;color:var(--g800)}
+.wo-status{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:600}
+.wo-status.s-dispatched{background:rgba(60,200,180,.1);color:#2BA89A}
+.wo-status.s-accepted{background:rgba(52,199,89,.1);color:#16a34a}
+.wo-status.s-completed{background:rgba(99,102,241,.1);color:#4F46E5}
+.wo-meta{font-size:12px;color:var(--g500);line-height:1.7}
+.wo-meta span{margin-right:6px}
+
+/* Bottom Sheet item */
+.wo-sh-item{padding:14px;border-bottom:1px solid var(--g100);font-size:14px;color:var(--g700);cursor:pointer;min-height:48px;display:flex;align-items:center}
+.wo-sh-item:last-child{border-bottom:none}
+.wo-sh-item:active{background:var(--g50)}
+.wo-sh-item.danger{color:var(--ng)}
+
+/* Toast */
+.toast{display:none;position:fixed;top:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.82);color:#fff;padding:10px 20px;border-radius:var(--r-pill);font-size:13px;z-index:999;max-width:300px;text-align:center}
+.toast.show{display:block;animation:ti .25s ease-out}
+@keyframes ti{from{opacity:0;transform:translateX(-50%) translateY(8px)}}
+</style>
+</head>
+<body>
+
+<!-- 角色切换（Demo辅助控件，放在手机壳外部） -->
+<div style="display:flex;justify-content:center;gap:8px;margin-bottom:12px;padding:0 24px">
+  <span style="font-size:12px;color:#9CA3AF;line-height:32px">切换视角：</span>
+  <button class="role-sw" id="rsw-pm" onclick="switchGlobalRole('pm')" style="padding:6px 14px;border:1.5px solid var(--pri);border-radius:20px;background:var(--pri);color:#fff;font-size:12px;font-weight:600;cursor:pointer">项目经理</button>
+  <button class="role-sw" id="rsw-leader" onclick="switchGlobalRole('leader')" style="padding:6px 14px;border:1.5px solid #D1D5DB;border-radius:20px;background:#fff;color:#6B7280;font-size:12px;font-weight:600;cursor:pointer">工作负责人</button>
+  <button class="role-sw" id="rsw-member" onclick="switchGlobalRole('member')" style="padding:6px 14px;border:1.5px solid #D1D5DB;border-radius:20px;background:#fff;color:#6B7280;font-size:12px;font-weight:600;cursor:pointer">试验人员</button>
+</div>
+
+<div class="demo-layout">
+  <div class="demo-left">
+    <div class="phone">
+      <div class="sbar">10:00</div>
+      <div class="nbar"><div class="back">←</div><div class="title">建湖复兴花园一期</div></div>
+
+      <!-- Tab切换 -->
+      <div class="dtabs">
+        <div class="dtab on" onclick="switchTab('info')">项目信息</div>
+        <div class="dtab" onclick="switchTab('flow')">本次检测</div>
+      </div>
+
+      <!-- 项目信息Tab -->
+      <div class="scroll" id="tab-info">
+        <!-- 项目摘要卡片 -->
+        <div class="proj-summary">
+          <div class="ps-row"><span class="ps-label">建湖复兴花园一期</span><span class="ps-val">盐城建湖</span></div>
+          <div class="ps-row"><span class="ps-label" style="color:var(--g400)">检测 2 次</span></div>
+        </div>
+
+        <!-- 检测记录列表 -->
+        <div style="padding:8px 16px 4px"><div style="font-size:12px;font-weight:600;color:var(--g500);letter-spacing:.5px">检测记录</div></div>
+        <div id="wo-list"></div>
+      </div>
+
+      <!-- 流程进度Tab（本次检测） -->
+      <div class="scroll" id="tab-flow" style="display:none">
+        <!-- 项目摘要 -->
+        <div class="proj-summary">
+          <div class="ps-row"><span class="ps-label">建湖复兴花园一期</span><span class="ps-val">2026-03-20</span></div>
+          <div class="ps-row"><span class="ps-label">江苏省盐城市建湖县</span><span class="ps-val">站2 合建4 房0 箱变1</span></div>
+        </div>
+
+        <!-- 卡片网格 -->
+        <div id="flow-grid"></div>
+      </div>
+
+      <div class="toast" id="toast"></div>
+    </div>
+
+    <!-- Bottom Sheet 工单操作菜单 -->
+    <div class="sh-bg" id="woActionSh" onclick="closeWoSh(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:800;align-items:flex-end;justify-content:center">
+      <div class="sh-panel" onclick="event.stopPropagation()" style="width:100%;max-width:360px;background:#fff;border-radius:16px 16px 0 0;padding:16px 16px 24px;animation:su .2s ease-out">
+        <div style="font-size:14px;font-weight:600;text-align:center;margin-bottom:12px;color:var(--g700)" id="woShTitle"></div>
+        <div id="woShItems"></div>
+        <div style="margin-top:8px;padding:14px;text-align:center;font-size:14px;color:var(--g500);cursor:pointer;border-top:1px solid var(--g200);min-height:48px;display:flex;align-items:center;justify-content:center" onclick="closeWoSh()">取消</div>
+      </div>
+    </div>
+
+    <!-- 确认接收弹窗 -->
+    <div class="dlg-bg" id="acceptDlg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:900;align-items:center;justify-content:center">
+      <div style="width:300px;background:#fff;border-radius:16px;padding:20px" onclick="event.stopPropagation()">
+        <div style="font-size:15px;font-weight:700;text-align:center;margin-bottom:12px;color:var(--g800)">确认接收此工单？</div>
+        <div style="font-size:13px;color:var(--g600);text-align:center;margin-bottom:16px">接收后将进入现场核查流程</div>
+        <div style="display:flex;gap:10px">
+          <button style="flex:1;padding:12px;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;background:var(--g100);color:var(--g600)" onclick="closeAcceptDlg()">取消</button>
+          <button style="flex:1;padding:12px;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;background:var(--pri);color:#fff" onclick="doAccept()">确认接收</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 删除确认弹窗 -->
+    <div class="dlg-bg" id="deleteDlg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:900;align-items:center;justify-content:center">
+      <div style="width:300px;background:#fff;border-radius:16px;padding:20px" onclick="event.stopPropagation()">
+        <div style="font-size:15px;font-weight:700;text-align:center;margin-bottom:12px;color:var(--g800)">确定删除该工单？</div>
+        <div style="font-size:13px;color:var(--g600);text-align:center;margin-bottom:16px">删除后不可恢复</div>
+        <div style="display:flex;gap:10px">
+          <button style="flex:1;padding:12px;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;background:var(--g100);color:var(--g600)" onclick="closeDeleteDlg()">取消</button>
+          <button style="flex:1;padding:12px;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;background:var(--ng);color:#fff" onclick="doDelete()">确认删除</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="demo-right">
+    <h2>项目工作台（BIGA）</h2>
+    <p>工单列表点击卡片直接进入。从项目维度统一管理所有工单和流程进度。</p>
+
+    <h3>设计决策</h3>
+    <ul>
+      <li><b>项目信息Tab + 本次检测Tab</b>——取消了独立的P3接收确认页和P4工单详情页，全部合并到项目工作台</li>
+      <li><b>一个项目可有多个工单</b>——如龙泉家园小区可能有2次检测（2次工单），项目信息Tab展示检测记录列表</li>
+      <li><b>工单级操作收纳到Bottom Sheet</b>——点击检测记录弹出操作菜单（查看流程/确认接收/删除工单），菜单项按角色×状态动态生成</li>
+      <li><b>本次检测Tab展示BIGA流程进度</b>——卡片网格按核查/检测/包裹三组分组，3态（未开始/进行中/已完成）</li>
+    </ul>
+
+    <h3>业务规则</h3>
+    <table>
+      <tr><th>规则</th><th>说明</th></tr>
+      <tr><td>Bottom Sheet菜单（项目经理+已派发）</td><td>查看检测流程 / 删除工单（红色）</td></tr>
+      <tr><td>Bottom Sheet菜单（工作负责人+待接收）</td><td>确认接收 / 查看检测流程</td></tr>
+      <tr><td>Bottom Sheet菜单（其他情况）</td><td>仅查看检测流程</td></tr>
+      <tr><td>删除约束</td><td>仅已派发未接收可删，创建人+管理员有权限，逻辑删除</td></tr>
+      <tr><td>流程卡片点击（操作人）</td><td>进行中→操作页面，已完成→只读回看，未开始→提示"前置环节未完成"</td></tr>
+      <tr><td>流程卡片点击（非操作人）</td><td>进行中/已完成→只读视图，未开始→不可点击</td></tr>
+    </table>
+
+    <h3>版本边界</h3>
+    <table>
+      <tr><th>能力</th><th>V3.0</th><th>V3.1</th></tr>
+      <tr><td>项目信息Tab</td><td>项目摘要+检测记录+Bottom Sheet</td><td>可能增加项目级统计</td></tr>
+      <tr><td>检测记录操作</td><td>查看流程/接收/删除</td><td>新增撤回修改/退回修改</td></tr>
+      <tr><td>流程卡片</td><td>全部环节固定显示</td><td>可配置增删</td></tr>
+      <tr><td>进度统计</td><td>不做</td><td>顶部进度条</td></tr>
+    </table>
+
+    <h3>试试以下操作</h3>
+    <ul>
+      <li><b>项目信息Tab</b>：切换角色（项目经理/工作负责人），点击不同状态的工单记录，观察Bottom Sheet菜单差异</li>
+      <li><b>项目经理+待接收工单</b>：点击 → "删除工单" → 二次确认 → 工单从列表消失</li>
+      <li><b>工作负责人+待接收工单</b>：点击 → "确认接收" → 二次确认 → 状态变为"已接收"</li>
+      <li><b>本次检测Tab</b>：切换角色看流程卡片的不同点击反馈</li>
+    </ul>
+
+    <details>
+      <summary>开发参考</summary>
+      <h3>数据来源</h3>
+      <ul>
+        <li>项目摘要：项目名称+行政区划从项目主表获取，检测次数=工单数count</li>
+        <li>检测记录列表：按project_id查询所有工单，倒序排列</li>
+        <li>各环节状态从Flowable流程引擎获取（节点状态：INITIAL/RUNNING/COMPLETE）</li>
+      </ul>
+      <h3>环节→页面路由映射</h3>
+      <table>
+        <tr><th>环节</th><th>节点Key</th><th>页面路由</th></tr>
+        <tr><td>作业前准备</td><td>pre_work</td><td>/prework</td></tr>
+        <tr><td>现场准备</td><td>site_prep</td><td>/siteprep</td></tr>
+        <tr><td>建设情况确认</td><td>construction_confirm</td><td>/construction</td></tr>
+        <tr><td>核查分工</td><td>check_assign</td><td>/checkassign</td></tr>
+        <tr><td>核查执行</td><td>check_execute</td><td>/checkexec</td></tr>
+        <tr><td>核查确认</td><td>check_confirm</td><td>/checkconfirm</td></tr>
+        <tr><td>抽检对象确认</td><td>inspect_confirm</td><td>/inspectconf</td></tr>
+        <tr><td>安措执行</td><td>safety_measure</td><td>/safety</td></tr>
+        <tr><td>开工会</td><td>kickoff_meeting</td><td>/kickoff</td></tr>
+        <tr><td>检测分工</td><td>test_assign</td><td>/testassign</td></tr>
+        <tr><td>检测执行</td><td>test_execute</td><td>/testexec</td></tr>
+        <tr><td>包裹生成</td><td>package_gen</td><td>/package</td></tr>
+      </table>
+    </details>
+  </div>
+</div>
+
+<script>
+/* === 检测记录数据（模拟） === */
+var WORK_ORDERS = [
+  {id:'wo2',date:'2026-04-15',ticket:'CP20260415A',type:'市检',team:'陈雷检测队',leader:'陈雷',status:'dispatched',statusText:'待接收',current:true},
+  {id:'wo1',date:'2026-03-20',ticket:'CP20260320A',type:'市检',team:'华工检测队',leader:'华工',status:'completed',statusText:'已完成',current:false}
+];
+
+var globalRole = 'pm'; // pm, leader, member
+var activeWoId = null; // 当前操作的工单ID
+
+function switchGlobalRole(role) {
+  globalRole = role;
+  ['pm','leader','member'].forEach(function(r){
+    var btn = document.getElementById('rsw-'+r);
+    if(r===role) {
+      btn.style.background = 'var(--pri)';
+      btn.style.color = '#fff';
+      btn.style.borderColor = 'var(--pri)';
+    } else {
+      btn.style.background = '#fff';
+      btn.style.color = '#6B7280';
+      btn.style.borderColor = '#D1D5DB';
+    }
+  });
+  renderWoList();
+  renderFlow();
+}
+
+function renderWoList() {
+  var h = '';
+  WORK_ORDERS.forEach(function(wo){
+    var cls = wo.current ? 'wo-record current' : 'wo-record';
+    var sCls = 's-' + wo.status;
+    h += '<div class="'+cls+'" onclick="openWoAction(\''+wo.id+'\')">';
+    h += '<div class="wo-top"><span class="wo-date">'+wo.date+' · '+wo.ticket+'</span><span class="wo-status '+sCls+'">'+wo.statusText+'</span></div>';
+    h += '<div class="wo-meta"><span>'+wo.type+'</span><span>'+wo.team+'</span><span>负责人: '+wo.leader+'</span></div>';
+    h += '</div>';
+  });
+  document.getElementById('wo-list').innerHTML = h;
+}
+
+function openWoAction(woId) {
+  activeWoId = woId;
+  var wo = WORK_ORDERS.find(function(w){return w.id===woId});
+  document.getElementById('woShTitle').textContent = wo.date + ' · ' + wo.ticket;
+  var items = '';
+  items += '<div class="wo-sh-item" onclick="viewWoFlow(\''+woId+'\')">查看检测流程</div>';
+  if(globalRole==='leader' && wo.status==='dispatched') {
+    items += '<div class="wo-sh-item" onclick="confirmAccept()">确认接收</div>';
+  }
+  if(globalRole==='pm' && wo.status==='dispatched') {
+    items += '<div class="wo-sh-item danger" onclick="confirmDelete()">删除工单</div>';
+  }
+  document.getElementById('woShItems').innerHTML = items;
+  document.getElementById('woActionSh').style.display = 'flex';
+}
+
+function closeWoSh(e) {
+  if(!e || e.target.id==='woActionSh') document.getElementById('woActionSh').style.display = 'none';
+}
+
+function viewWoFlow(woId) {
+  closeWoSh();
+  switchTab('flow');
+  showToast('加载 '+woId+' 的检测流程');
+}
+
+function confirmAccept() {
+  closeWoSh();
+  document.getElementById('acceptDlg').style.display = 'flex';
+}
+function closeAcceptDlg() { document.getElementById('acceptDlg').style.display = 'none'; }
+function doAccept() {
+  closeAcceptDlg();
+  var wo = WORK_ORDERS.find(function(w){return w.id===activeWoId});
+  if(wo) { wo.status='accepted'; wo.statusText='已接收'; }
+  renderWoList();
+  showToast('已接收，可进入现场流程');
+}
+
+function confirmDelete() {
+  closeWoSh();
+  document.getElementById('deleteDlg').style.display = 'flex';
+}
+function closeDeleteDlg() { document.getElementById('deleteDlg').style.display = 'none'; }
+function doDelete() {
+  closeDeleteDlg();
+  WORK_ORDERS = WORK_ORDERS.filter(function(w){return w.id!==activeWoId});
+  renderWoList();
+  document.querySelector('.proj-summary .ps-row:last-child .ps-label').textContent = '检测 '+WORK_ORDERS.length+' 次';
+  showToast('工单已删除');
+}
+
+renderWoList();
+
+/* === 流程进度数据 === */
+var STAGES = [
+  {group:'核查阶段', items:[
+    {id:'prework',name:'作业前准备',role:'工作负责人',st:'done',who:'陈雷',time:'08:15'},
+    {id:'siteprep',name:'现场准备',role:'工作负责人',st:'done',who:'陈雷',time:'08:22'},
+    {id:'construction',name:'建设情况确认',role:'工作负责人',st:'doing',who:'',time:''},
+    {id:'checkassign',name:'核查分工',role:'工作负责人',st:'todo',who:'',time:''},
+    {id:'checkexec',name:'核查执行',role:'试验负责人+试验人员',st:'todo',who:'',time:''},
+    {id:'checkconfirm',name:'核查确认',role:'工作负责人',st:'todo',who:'',time:''}
+  ]},
+  {group:'检测阶段', items:[
+    {id:'inspectconf',name:'抽检对象确认',role:'工作负责人',st:'todo',who:'',time:''},
+    {id:'safety',name:'安措执行',role:'工作负责人+试验人员',st:'todo',who:'',time:''},
+    {id:'kickoff',name:'开工会',role:'工作负责人',st:'todo',who:'',time:''},
+    {id:'testassign',name:'检测分工',role:'工作负责人(及全员防盲查阅)',st:'todo',who:'',time:''},
+    {id:'testexec',name:'检测执行',role:'试验负责人+试验人员',st:'todo',who:'',time:''}
+  ]},
+  {group:'包裹阶段', items:[
+    {id:'package',name:'包裹生成与导出',role:'工作负责人',st:'todo',who:'',time:''}
+  ]}
+];
+
+/* curRole已被globalRole替代 */
+
+function switchTab(tab) {
+  document.querySelectorAll('.dtab').forEach(function(e,i){e.classList.toggle('on', (tab==='info'&&i===0)||(tab==='flow'&&i===1))});
+  document.getElementById('tab-info').style.display = tab==='info'?'block':'none';
+  document.getElementById('tab-flow').style.display = tab==='flow'?'block':'none';
+  if(tab==='flow') renderFlow();
+  if(tab==='info') renderWoList();
+}
+
+/* switchRole已被switchGlobalRole替代 */
+
+function renderFlow() {
+  var h = '';
+  STAGES.forEach(function(g){
+    h += '<div class="grp-title">' + g.group + '</div><div class="card-grid">';
+    g.items.forEach(function(s){
+      var cls = 's-' + s.st;
+      var icon = s.st==='done'?'✓':s.st==='doing'?'●':'○';
+      var stText = s.st==='done'?'已完成':s.st==='doing'?'进行中':'未开始';
+      h += '<div class="stage-card '+cls+'" onclick="tapStage(\''+s.id+'\',\''+s.st+'\',\''+s.name+'\',\''+s.role+'\')">';
+      h += '<div><div class="sc-top"><div class="sc-icon">'+icon+'</div><div class="sc-name">'+s.name+'</div></div>';
+      h += '<div class="sc-role">'+s.role+'</div></div>';
+      h += '<div><div class="sc-status">'+stText+'</div>';
+      if(s.st==='done') h += '<div class="sc-meta">'+s.who+' · '+s.time+'</div>';
+      h += '</div></div>';
+    });
+    h += '</div>';
+  });
+  document.getElementById('flow-grid').innerHTML = h;
+}
+
+function tapStage(id, st, name, role) {
+  var isOp = false;
+  if(globalRole==='leader' && role.indexOf('工作负责人')!==-1) isOp = true;
+  if(globalRole==='member' && role.indexOf('试验')!==-1) isOp = true;
+
+  if(st==='todo') {
+    if(isOp) showToast('前置环节未完成，暂时无法进入');
+    // non-operator: no response for todo
+    return;
+  }
+  if(st==='done') {
+    if(isOp) showToast('进入"'+name+'"只读回看');
+    else showToast('查看"'+name+'"（只读）');
+    return;
+  }
+  if(st==='doing') {
+    if(isOp) showToast('进入"'+name+'"操作页面');
+    else showToast('查看"'+name+'"（只读）');
+    return;
+  }
+}
+
+var toastTimer;
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){t.className='toast'},2200);
+}
+
+renderFlow();
+</script>
+</body>
+</html>

@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>开工会 — 检e通V3.0 Demo</title>
+<link rel="stylesheet" href="demo_shared_base.css">
+<style>
+/* 左右布局 */
+.demo-layout{display:flex;gap:40px;max-width:1100px;margin:0 auto;padding:32px 24px;align-items:flex-start}
+.demo-left{flex-shrink:0;position:sticky;top:24px}
+.demo-right{flex:1;min-width:0}
+.demo-right h2{font-size:18px;font-weight:700;color:#374151;margin-bottom:16px}
+.demo-right h3{font-size:14px;font-weight:600;color:#4B5563;margin:20px 0 8px}
+.demo-right p,.demo-right li{font-size:13px;color:#6B7280;line-height:1.8}
+.demo-right ul{padding-left:20px}
+.demo-right table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0 16px}
+.demo-right th{background:#F3F4F6;padding:8px 10px;text-align:left;font-weight:600;color:#4B5563;border-bottom:1px solid #E5E7EB}
+.demo-right td{padding:8px 10px;border-bottom:1px solid #F3F4F6;color:#6B7280}
+.demo-right td:first-child{color:#374151;font-weight:500}
+
+/* 手机壳 */
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--g50);padding-bottom:80px}
+
+/* 项目摘要卡片 — 与现场准备Demo一致 */
+.prj-card{margin:8px 12px 4px;padding:10px 14px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm)}
+.prj-row{display:flex;justify-content:space-between;align-items:center}
+.prj-row+.prj-row{margin-top:6px}
+.prj-name{font-size:14px;font-weight:600;color:var(--g800)}
+.prj-date{font-size:12px;color:var(--g500)}
+.prj-addr{font-size:12px;color:var(--g500)}
+.prj-scale{font-size:11px;color:var(--g400)}
+
+/* Tab — 复用 shared_base 的 .tab-bar .tab-item */
+.tabs{display:flex;margin:8px 12px;background:#fff;border-radius:var(--rs);overflow:hidden;box-shadow:var(--shadow-sm)}
+.tabs .t{flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:600;color:var(--g400);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.tabs .t.on{color:var(--pri);border-bottom-color:var(--pri);background:var(--pri-l)}
+.tab-pane{display:none}
+.tab-pane.on{display:block}
+
+/* ====== 拍照项分组（复用安措执行的分组模式） ====== */
+.group-hd{display:flex;align-items:center;padding:14px 14px 6px;gap:8px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.group-hd .arrow{font-size:10px;color:var(--g400);transition:transform .2s;width:16px}
+.group-hd .arrow.up{transform:rotate(0deg)}
+.group-hd .arrow.down{transform:rotate(-90deg)}
+.group-hd .lbl{font-size:12px;font-weight:600;color:var(--g500);flex:1}
+.group-hd .cnt{font-size:11px;color:var(--g400)}
+.group-body{overflow:hidden;transition:max-height .25s ease}
+
+/* 拍照项卡片（复用安措执行的 item-card 模式） */
+.ph-card{margin:0 12px 6px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm);overflow:hidden;border-left:3px solid var(--g300);transition:all .15s}
+.ph-card.done{border-left-color:var(--ok)}
+.ph-inner{display:flex;align-items:center;padding:12px 14px;gap:10px;min-height:48px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ph-inner:active{background:var(--g50)}
+.ph-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.ph-icon.cam{background:var(--pri-l);color:var(--pri)}
+.ph-icon.ok{background:var(--ok-l);color:var(--ok)}
+.ph-info{flex:1;min-width:0}
+.ph-name{font-size:13px;font-weight:600;color:var(--g800)}
+.ph-meta{font-size:11px;color:var(--g400);margin-top:2px}
+.ph-chevron{color:var(--g300);font-size:14px}
+
+/* 展开的照片网格 */
+.ph-expand{display:none;padding:0 14px 12px}
+.ph-expand.show{display:block}
+.ph-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.ph-thumb{width:56px;height:56px;border-radius:6px;background:linear-gradient(135deg,#e2e8f0,#cbd5e1);display:flex;align-items:center;justify-content:center;font-size:18px;position:relative;cursor:pointer}
+.ph-thumb .wm{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);font-size:7px;color:#fff;text-align:center;padding:2px;border-radius:0 0 6px 6px;line-height:1.2}
+.ph-add{width:56px;height:56px;border-radius:6px;border:1.5px dashed var(--g300);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--g400);cursor:pointer;transition:all .12s}
+.ph-add:active{background:var(--g100);transform:scale(.95)}
+
+/* ====== Tab2: 核查情况 ====== */
+.check-info{margin:8px 12px}
+.check-info .info-card{padding:12px 14px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm);margin-bottom:8px}
+.check-info .info-title{font-size:12px;color:var(--g400);margin-bottom:4px}
+.check-info .info-val{font-size:13px;color:var(--g800);font-weight:500}
+.ck-list{margin:0 12px}
+.ck-row{display:flex;align-items:flex-start;padding:10px 14px;background:#fff;border-bottom:1px solid var(--g50)}
+.ck-row:first-child{border-radius:var(--rs) var(--rs) 0 0}
+.ck-row:last-child{border-radius:0 0 var(--rs) var(--rs);border-bottom:none}
+.ck-num{font-size:12px;color:var(--g400);width:24px;flex-shrink:0;padding-top:1px}
+.ck-body{flex:1;min-width:0}
+.ck-name{font-size:13px;font-weight:600;color:var(--g700)}
+.ck-desc{font-size:12px;margin-top:2px}
+.ck-desc.ok{color:var(--ok)}
+.ck-desc.ng{color:var(--ng)}
+
+/* 底部 */
+.bot-bar{position:absolute;bottom:0;left:0;right:0;padding:12px 16px;background:#fff;border-top:1px solid var(--g100);z-index:10}
+.bot-btn{width:100%;height:48px;border:none;border-radius:var(--r);font-size:15px;font-weight:700;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.bot-btn:active{transform:scale(.98)}
+.bot-btn.primary{background:var(--pri);color:#fff}
+.bot-btn.primary:disabled{background:var(--g200);color:var(--g400);cursor:not-allowed;transform:none}
+.bot-btn.ok-btn{background:var(--ok-l);color:var(--ok);cursor:default;transform:none}
+.bot-info{text-align:center;font-size:12px;color:var(--g400);margin-bottom:8px}
+
+/* 弹窗 */
+.sh-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:999;justify-content:center;align-items:flex-end}
+.sh-bg.show{display:flex}
+.sh-panel{width:360px;background:#fff;border-radius:16px 16px 0 0;padding:24px 20px;animation:su .2s ease-out}
+@keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sh-title{font-size:16px;font-weight:700;color:var(--g800);margin-bottom:12px;text-align:center}
+.sh-desc{font-size:13px;color:var(--g500);line-height:1.6;margin-bottom:20px;text-align:center}
+.sh-btns{display:flex;gap:10px}
+.sh-btns .btn{flex:1;height:44px;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;transition:all .15s}
+.sh-btns .btn:active{transform:scale(.97)}
+.sh-btns .cancel{background:var(--g100);color:var(--g600)}
+.sh-btns .ok{background:var(--pri);color:#fff}
+
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;white-space:nowrap;z-index:1000;display:none;animation:fadeUp .3s}
+.toast.show{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* 删除确认 */
+.del-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:999;justify-content:center;align-items:center}
+.del-bg.show{display:flex}
+.del-dialog{background:#fff;border-radius:14px;padding:24px 20px;width:280px;text-align:center}
+
+/* ====== Tab3: 汇报信息 ====== */
+.rpt-summary{margin:8px 12px;padding:14px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm);display:flex;gap:16px}
+.rpt-kv{flex:1;text-align:center}
+.rpt-kv .num{font-size:20px;font-weight:700;color:var(--pri)}
+.rpt-kv .num .sub{font-size:13px;font-weight:400;color:var(--g400)}
+.rpt-kv .lbl{font-size:11px;color:var(--g400);margin-top:2px}
+.rpt-section{padding:8px 14px 4px;font-size:11px;color:var(--g400);font-weight:600}
+.rpt-card{margin:0 12px 8px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm);overflow:hidden;border-left:3px solid var(--pri)}
+.rpt-card.skip{border-left-color:var(--g200);opacity:.55}
+.rpt-st-hd{display:flex;align-items:center;padding:10px 14px;gap:8px}
+.rpt-st-name{font-size:13px;font-weight:600;color:var(--g800);flex:1}
+.rpt-st-tag{font-size:10px;padding:2px 8px;border-radius:10px;background:var(--pri-l);color:var(--pri);font-weight:500}
+.rpt-card.skip .rpt-st-tag{background:var(--g100);color:var(--g400)}
+.rpt-equips{padding:0 14px 10px}
+.rpt-eq{display:flex;align-items:center;padding:6px 0;border-top:1px solid var(--g50);gap:8px}
+.rpt-eq:first-child{border-top:none}
+.rpt-eq-dot{width:6px;height:6px;border-radius:50%;background:var(--pri);flex-shrink:0}
+.rpt-eq-name{font-size:12px;color:var(--g700);flex:1}
+.rpt-eq-model{font-size:11px;color:var(--g400)}
+.rpt-skip-label{padding:2px 14px 10px;font-size:12px;color:var(--g400)}
+
+/* 已完成覆盖 */
+.done-overlay{display:none;margin:12px;padding:16px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:var(--r);text-align:center}
+.done-overlay.show{display:block}
+.done-overlay .chk{font-size:36px;margin-bottom:8px}
+.done-overlay .msg{font-size:14px;font-weight:600;color:#065F46;margin-bottom:4px}
+.done-overlay .time{font-size:12px;color:#6B7280}
+</style>
+</head>
+<body>
+
+<div class="demo-layout">
+  <div class="demo-left">
+    <div class="phone">
+      <div class="sbar">9:41</div>
+      <div class="nbar"><div class="back" onclick="showToast('返回项目工作台')">←</div><div class="title">开工会</div></div>
+
+      <div class="scroll">
+        <!-- 项目摘要 -->
+        <div class="prj-card">
+          <div class="prj-row"><span class="prj-name">建湖复兴花园一期</span><span class="prj-date">2026-03-31</span></div>
+          <div class="prj-row"><span class="prj-addr">江苏省盐城市建湖县</span><span class="prj-scale">项目规模 2-0-4-1</span></div>
+        </div>
+
+        <!-- Tab -->
+        <div class="tabs">
+          <div class="t on" onclick="switchTab(0)">开工过程</div>
+          <div class="t" onclick="switchTab(1)">核查情况</div>
+          <div class="t" onclick="switchTab(2)">汇报信息</div>
+        </div>
+
+        <!-- ====== Tab1: 开工过程 ====== -->
+        <div class="tab-pane on" id="tab0">
+
+          <!-- 安全教育 -->
+          <div class="group-hd" onclick="toggleGroup(this)"><span class="arrow up">▼</span><span class="lbl">安全教育</span><span class="cnt" id="g0cnt">0/1</span></div>
+          <div class="group-body" id="g0">
+            <div class="ph-card" id="item0" onclick="toggleItem(0)">
+              <div class="ph-inner"><div class="ph-icon cam">📷</div><div class="ph-info"><div class="ph-name">安全教育</div><div class="ph-meta" id="item0meta">未拍摄</div></div><div class="ph-chevron">›</div></div>
+              <div class="ph-expand" id="item0expand"><div class="ph-grid" id="item0grid"><div class="ph-add" onclick="event.stopPropagation();takePhoto(0)">+</div></div></div>
+            </div>
+          </div>
+
+          <!-- 工牌录入 -->
+          <div class="group-hd" onclick="toggleGroup(this)"><span class="arrow up">▼</span><span class="lbl">工牌录入</span><span class="cnt" id="g1cnt">0/2</span></div>
+          <div class="group-body" id="g1">
+            <div class="ph-card" id="item1" onclick="toggleItem(1)">
+              <div class="ph-inner"><div class="ph-icon cam">📷</div><div class="ph-info"><div class="ph-name">工作负责人工牌</div><div class="ph-meta" id="item1meta">未拍摄</div></div><div class="ph-chevron">›</div></div>
+              <div class="ph-expand" id="item1expand"><div class="ph-grid" id="item1grid"><div class="ph-add" onclick="event.stopPropagation();takePhoto(1)">+</div></div></div>
+            </div>
+            <div class="ph-card" id="item2" onclick="toggleItem(2)">
+              <div class="ph-inner"><div class="ph-icon cam">📷</div><div class="ph-info"><div class="ph-name">班组成员工牌</div><div class="ph-meta" id="item2meta">未拍摄</div></div><div class="ph-chevron">›</div></div>
+              <div class="ph-expand" id="item2expand"><div class="ph-grid" id="item2grid"><div class="ph-add" onclick="event.stopPropagation();takePhoto(2)">+</div></div></div>
+            </div>
+          </div>
+
+          <!-- 抽取记录 -->
+          <div class="group-hd" onclick="toggleGroup(this)"><span class="arrow up">▼</span><span class="lbl">抽取记录</span><span class="cnt" id="g2cnt">0/1</span></div>
+          <div class="group-body" id="g2">
+            <div class="ph-card" id="item3" onclick="toggleItem(3)">
+              <div class="ph-inner"><div class="ph-icon cam">📷</div><div class="ph-info"><div class="ph-name">抽取记录单</div><div class="ph-meta" id="item3meta">未拍摄</div></div><div class="ph-chevron">›</div></div>
+              <div class="ph-expand" id="item3expand"><div class="ph-grid" id="item3grid"><div class="ph-add" onclick="event.stopPropagation();takePhoto(3)">+</div></div></div>
+            </div>
+          </div>
+
+          <!-- 开工过程 -->
+          <div class="group-hd" onclick="toggleGroup(this)"><span class="arrow up">▼</span><span class="lbl">开工过程</span><span class="cnt" id="g3cnt">0/1</span></div>
+          <div class="group-body" id="g3">
+            <div class="ph-card" id="item4" onclick="toggleItem(4)">
+              <div class="ph-inner"><div class="ph-icon cam">📷</div><div class="ph-info"><div class="ph-name">检测作业开工会</div><div class="ph-meta" id="item4meta">未拍摄</div></div><div class="ph-chevron">›</div></div>
+              <div class="ph-expand" id="item4expand"><div class="ph-grid" id="item4grid"><div class="ph-add" onclick="event.stopPropagation();takePhoto(4)">+</div></div></div>
+            </div>
+          </div>
+
+          <!-- 记录仪 -->
+          <div class="group-hd" onclick="toggleGroup(this)"><span class="arrow up">▼</span><span class="lbl">记录仪</span><span class="cnt" id="g4cnt">0/2</span></div>
+          <div class="group-body" id="g4">
+            <div class="ph-card" id="item5" onclick="toggleItem(5)">
+              <div class="ph-inner"><div class="ph-icon cam">📷</div><div class="ph-info"><div class="ph-name">执法记录仪</div><div class="ph-meta" id="item5meta">未拍摄</div></div><div class="ph-chevron">›</div></div>
+              <div class="ph-expand" id="item5expand"><div class="ph-grid" id="item5grid"><div class="ph-add" onclick="event.stopPropagation();takePhoto(5)">+</div></div></div>
+            </div>
+            <div class="ph-card" id="item6" onclick="toggleItem(6)">
+              <div class="ph-inner"><div class="ph-icon cam">📷</div><div class="ph-info"><div class="ph-name">布控球</div><div class="ph-meta" id="item6meta">未拍摄</div></div><div class="ph-chevron">›</div></div>
+              <div class="ph-expand" id="item6expand"><div class="ph-grid" id="item6grid"><div class="ph-add" onclick="event.stopPropagation();takePhoto(6)">+</div></div></div>
+            </div>
+          </div>
+
+          <!-- 已完成覆盖 -->
+          <div class="done-overlay" id="doneOverlay">
+            <div class="chk">✅</div>
+            <div class="msg">开工会已完成</div>
+            <div class="time" id="doneTime"></div>
+          </div>
+        </div>
+
+        <!-- ====== Tab2: 核查情况 ====== -->
+        <div class="tab-pane" id="tab1">
+          <div class="check-info">
+            <div class="info-card">
+              <div class="info-title">传票号</div>
+              <div class="info-val">JH-2026-0331-001</div>
+            </div>
+          </div>
+          <div style="padding:8px 14px;font-size:11px;color:var(--g400);font-weight:600">站房内核查（A组）</div>
+          <div class="ck-list">
+            <div class="ck-row"><span class="ck-num">A1</span><div class="ck-body"><div class="ck-name">电源核查</div><div class="ck-desc ng">1#开关站 I段进线电缆未敷设，已记录跳过</div></div></div>
+            <div class="ck-row"><span class="ck-num">A2</span><div class="ck-body"><div class="ck-name">建设情况</div><div class="ck-desc ok">4个站房建设情况已核实，1#开关站新增1台环网柜</div></div></div>
+            <div class="ck-row"><span class="ck-num">A3</span><div class="ck-body"><div class="ck-name">送电痕迹</div><div class="ck-desc ok">全部站房未发现送电痕迹</div></div></div>
+            <div class="ck-row"><span class="ck-num">A4</span><div class="ck-body"><div class="ck-name">临电电源</div><div class="ck-desc ng">2#开关站发现临时电源接入，已断开处理</div></div></div>
+          </div>
+          <div style="padding:8px 14px;margin-top:8px;font-size:11px;color:var(--g400);font-weight:600">站房外核查（B组）</div>
+          <div class="ck-list">
+            <div class="ck-row"><span class="ck-num">B1</span><div class="ck-body"><div class="ck-name">居民入住</div><div class="ck-desc ok">小区已部分入住，约40%入住率</div></div></div>
+            <div class="ck-row"><span class="ck-num">B2</span><div class="ck-body"><div class="ck-name">充电设施</div><div class="ck-desc ok">地下车库有充电桩设施，不影响检测</div></div></div>
+            <div class="ck-row"><span class="ck-num">B3</span><div class="ck-body"><div class="ck-name">居民设施</div><div class="ck-desc ok">站房周边无居民堆放杂物</div></div></div>
+            <div class="ck-row"><span class="ck-num">B4</span><div class="ck-body"><div class="ck-name">安全风险</div><div class="ck-desc ng">3#合建站通道口地面湿滑，已设置警示牌</div></div></div>
+          </div>
+        </div>
+
+        <!-- ====== Tab3: 汇报信息 ====== -->
+        <div class="tab-pane" id="tab2">
+          <div class="rpt-summary">
+            <div class="rpt-kv"><div class="num">4<span class="sub"> / 7</span></div><div class="lbl">抽检站房</div></div>
+            <div class="rpt-kv"><div class="num">10</div><div class="lbl">抽检设备（台）</div></div>
+          </div>
+
+          <div class="rpt-section">抽检站房</div>
+
+          <div class="rpt-card">
+            <div class="rpt-st-hd"><span class="rpt-st-name">1#开关站</span><span class="rpt-st-tag">独立开关站</span></div>
+            <div class="rpt-equips">
+              <div class="rpt-eq"><span class="rpt-eq-dot"></span><span class="rpt-eq-name">1#中置柜（进线）</span></div>
+              <div class="rpt-eq"><span class="rpt-eq-dot"></span><span class="rpt-eq-name">2#中置柜（进线）</span></div>
+              <div class="rpt-eq"><span class="rpt-eq-dot"></span><span class="rpt-eq-name">PT柜</span></div>
+            </div>
+          </div>
+
+          <div class="rpt-card">
+            <div class="rpt-st-hd"><span class="rpt-st-name">2#开关站</span><span class="rpt-st-tag">独立开关站</span></div>
+            <div class="rpt-equips">
+              <div class="rpt-eq"><span class="rpt-eq-dot"></span><span class="rpt-eq-name">1#中置柜（出线）</span></div>
+              <div class="rpt-eq"><span class="rpt-eq-dot"></span><span class="rpt-eq-name">联络柜</span></div>
+              <div class="rpt-eq"><span class="rpt-eq-dot"></span><span class="rpt-eq-name">高压电缆</span></div>
+            </div>
+          </div>
+
+          <div class="rpt-card">
+            <div class="rpt-st-hd"><span class="rpt-st-name">2#配电室</span><span class="rpt-st-tag">独立配电室</span></div>
+            <div class="rpt-equips">
+              <div class="rpt-eq"><span class="rpt-eq-dot"></span><span class="rpt-eq-name">1#干式变压器</span></div>
+              <div class="rpt-eq"><span class="rpt-eq-dot"></span><span class="rpt-eq-name">断路器</span></div>
+            </div>
+          </div>
+
+          <div class="rpt-card">
+            <div class="rpt-st-hd"><span class="rpt-st-name">1#箱变</span><span class="rpt-st-tag">箱式变电站</span></div>
+            <div class="rpt-equips">
+              <div class="rpt-eq"><span class="rpt-eq-dot"></span><span class="rpt-eq-name">1#变压器</span></div>
+              <div class="rpt-eq"><span class="rpt-eq-dot"></span><span class="rpt-eq-name">断路器</span></div>
+            </div>
+          </div>
+
+          <div class="rpt-section">未抽检站房</div>
+
+          <div class="rpt-card skip">
+            <div class="rpt-st-hd"><span class="rpt-st-name">1#配电室</span><span class="rpt-st-tag">独立配电室</span></div>
+            <div class="rpt-skip-label">不抽检</div>
+          </div>
+
+          <div class="rpt-card skip">
+            <div class="rpt-st-hd"><span class="rpt-st-name">3#配电室</span><span class="rpt-st-tag">独立配电室</span></div>
+            <div class="rpt-skip-label">不抽检</div>
+          </div>
+
+          <div class="rpt-card skip">
+            <div class="rpt-st-hd"><span class="rpt-st-name">4#配电室</span><span class="rpt-st-tag">独立配电室</span></div>
+            <div class="rpt-skip-label">不抽检</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 底部 -->
+      <div class="bot-bar" id="botBar">
+        <div class="bot-info" id="botInfo">已拍 <b>0</b>/7 项</div>
+        <button class="bot-btn primary" id="submitBtn" disabled onclick="showConfirm()">确认开工</button>
+      </div>
+
+      <div class="toast" id="toast"></div>
+    </div>
+  </div>
+
+  <div class="demo-right">
+    <h2>开工会 — 设计说明</h2>
+
+    <h3>设计决策说明</h3>
+    <ul>
+      <li><strong>工单级硬闸门，不绑定任何站房</strong> — 2.4系统将开工会绑定在"首站房"上（firstTestFlag），3.0删除首站房概念。开工会提升为工单级独立节点，任意站房安措完成后即可发起。</li>
+      <li><strong>沿用2.4系统"开工及汇报"的三Tab结构，V3.0全部保留</strong> — 开工过程（拍照留痕）+ 核查情况（向全员汇报核查发现的问题）+ 汇报信息（向全员通报抽检范围：哪些站房、哪些设备）。三个Tab服务于开工会的会议场景。</li>
+      <li><strong>开工过程保留全部拍照项</strong> — 沿用2.4系统配置：安全教育、工牌录入（负责人+班组）、抽取记录单、检测作业开工会、记录仪（执法记录仪+布控球）。共5组7项，后续可根据业务需要增减。</li>
+      <li><strong>水印复用现场准备定位基准</strong> — 不独立定位，水印沿用现场准备已确认的结果。V3.1需升级定位防篡改。</li>
+      <li><strong>工作交底V3.0不做</strong> — 2.4系统工作交底是纯只读过门页+隐蔽分工调整入口。3.0分工调整归检测分工模块就地覆写，推3.1+。</li>
+    </ul>
+
+    <h3>业务规则摘要</h3>
+    <table>
+      <tr><th style="width:28%">规则</th><th>说明</th></tr>
+      <tr><td><strong>触发条件</strong></td><td>任意一个站房安措执行状态=已完成（SR-71）</td></tr>
+      <tr><td><strong>操作角色</strong></td><td>工作负责人（独占操作）</td></tr>
+      <tr><td><strong>闸门效果</strong></td><td>完成前，工单内所有站房的检测执行均不可开始（SR-70）</td></tr>
+      <tr><td><strong>拍照要求</strong></td><td>每项至少1张水印照片，必须实时拍摄，不允许从相册选取（SR-72）</td></tr>
+      <tr><td><strong>水印内容</strong></td><td>时间 + 定位地址（复用现场准备已确认的水印基准）</td></tr>
+      <tr><td><strong>提交条件</strong></td><td>全部7项拍照项均至少拍1张照片</td></tr>
+      <tr><td><strong>提交后不可变</strong></td><td>全部数据锁定，不可撤回、不可修改</td></tr>
+      <tr><td><strong>省检报告归类</strong></td><td>照片按 province_report_type = "101" 归入省检报告包裹</td></tr>
+    </table>
+
+    <h3>拍照项清单（沿用2.4系统配置）</h3>
+    <table>
+      <tr><th>分组</th><th>拍照项</th><th>说明</th></tr>
+      <tr><td><strong>安全教育</strong></td><td>安全教育</td><td>安全教育培训现场照片</td></tr>
+      <tr><td rowspan="2"><strong>工牌录入</strong></td><td>工作负责人工牌</td><td>工作负责人持证上岗留痕</td></tr>
+      <tr><td>班组成员工牌</td><td>全体班组成员工牌留痕</td></tr>
+      <tr><td><strong>抽取记录</strong></td><td>抽取记录单</td><td>抽检对象抽取过程留痕</td></tr>
+      <tr><td><strong>开工过程</strong></td><td>检测作业开工会</td><td>开工会现场照片（安措全景）</td></tr>
+      <tr><td rowspan="2"><strong>记录仪</strong></td><td>执法记录仪</td><td>执法记录仪开机/佩戴留痕</td></tr>
+      <tr><td>布控球</td><td>布控球开机/架设留痕</td></tr>
+    </table>
+
+    <h3>操作引导</h3>
+    <ul>
+      <li>点击拍照项卡片 — 展开照片网格，点"+"拍照</li>
+      <li>点击分组标题 — 折叠/展开该分组</li>
+      <li>底部进度条 — 实时显示已拍/总数，全部拍完后按钮激活</li>
+      <li>确认开工 — 二次确认弹窗 → 提交 → 页面变为只读</li>
+      <li>切换到"核查情况"Tab — 查看核查阶段各环节问题汇总（只读）</li>
+      <li>切换到"汇报信息"Tab — 查看本次抽检范围：抽了哪些站房、每个站房检哪些设备（只读）</li>
+    </ul>
+
+    <h3>版本边界</h3>
+    <table>
+      <tr><th style="width:28%">功能</th><th>V3.0</th><th>V3.1+</th></tr>
+      <tr><td><strong>开工过程（Tab1）</strong></td><td>5组7项拍照打卡</td><td>拍照项可能增减</td></tr>
+      <tr><td><strong>核查情况（Tab2）</strong></td><td>汇报核查问题（8大项/6大项）</td><td>展示形式优化</td></tr>
+      <tr><td><strong>汇报信息（Tab3）</strong></td><td>通报抽检范围（站房+设备）</td><td>展示形式优化</td></tr>
+      <tr><td><strong>工作交底</strong></td><td>不做</td><td>重新设计</td></tr>
+      <tr><td><strong>首站房标记</strong></td><td>已移除</td><td>—</td></tr>
+      <tr><td><strong>定位防篡改</strong></td><td>复用现场准备</td><td>首次锚定+分层校验</td></tr>
+    </table>
+
+    <h3>上下游关系</h3>
+    <table>
+      <tr><th style="width:15%">方向</th><th style="width:30%">模块</th><th>数据</th></tr>
+      <tr><td>上游</td><td>安措执行(1.1.6)</td><td>站房安措完成状态 → 触发开工会解锁</td></tr>
+      <tr><td>上游</td><td>现场准备(1.1.1)</td><td>定位水印基准 → 开工会照片复用</td></tr>
+      <tr><td>上游</td><td>核查确认(1.1.4)</td><td>核查问题记录 → 核查情况Tab展示</td></tr>
+      <tr><td>上游</td><td>抽检对象确认(1.1.5)</td><td>抽检范围（站房+设备） → 汇报信息Tab展示</td></tr>
+      <tr><td>下游</td><td>检测执行(1.2)</td><td>开工会完成状态 → 解锁条件之一</td></tr>
+      <tr><td>下游</td><td>包裹导出(1.3)</td><td>开工会照片 → 省检报告包裹</td></tr>
+    </table>
+
+    <details style="margin-top:24px;border:1px solid #E5E7EB;border-radius:8px;padding:12px 16px;background:#ebfdfa">
+      <summary style="font-size:14px;font-weight:600;color:#047857;cursor:pointer;outline:none">📋 开发参考（点击展开）</summary>
+      <div style="margin-top:12px;font-size:13px;color:#4B5563;line-height:1.6">
+        <p style="font-weight:600;margin-bottom:8px">状态模型</p>
+        <p><code>[未解锁] → [待开工] → [已完成]</code></p>
+        <p>解锁条件：<code>count(站房安措状态 == 'safety_done') >= 1</code></p>
+        <p style="font-weight:600;margin:12px 0 8px">2.4系统对照</p>
+        <p>2.4系统"开工及汇报"（<code>workReportDashboard.vue</code>）有3个Tab：开工过程(ManageSet code=14) / 核查情况 / 汇报信息。拍照项配置在 <code>conf_manage_item_info</code> 表（数据库配置，非代码硬编码）。</p>
+        <p style="font-weight:600;margin:12px 0 8px">拍照项数据来源</p>
+        <p>开工过程Tab调用 <code>queryManageItemInfoList</code>，传入 <code>manageSetId</code>（code=14），返回按 <code>manage_group_id</code> 分组的管理项列表。每项的 <code>input_type_dict_code=105</code>（照片类型），<code>province_report_type_dict_code=101</code>（归入开工会报告）。</p>
+        <p style="font-weight:600;margin:12px 0 8px">核查情况数据来源</p>
+        <p><code>WorkReportServiceImpl.getCheckIssueInfoNew()</code> → 遍历 <code>PrjCheckSetInfo</code> + <code>DataIssueRecord</code>。3.0沿用此数据来源，展示形式待优化。</p>
+        <p style="font-weight:600;margin:12px 0 8px">检测执行解锁条件</p>
+        <p><code>station.safety_done AND kickoff_meeting.completed AND station.test_divide_done → unlock</code></p>
+        <p style="font-weight:600;margin:12px 0 8px">2.4遗留字段</p>
+        <ul style="padding-left:20px;list-style-type:disc">
+          <li><code>firstTestFlag</code> — 首站房标记，3.0已移除</li>
+          <li><code>EnumManageSetCode.START_WORK("14")</code> — 管理项集编码</li>
+          <li><code>START_MEETING_TYPE("101")</code> — 省检报告类型，3.0沿用</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+</div>
+
+<!-- 确认弹窗 -->
+<div class="sh-bg" id="confirmSheet">
+  <div class="sh-panel">
+    <div class="sh-title">确认开工</div>
+    <div class="sh-desc">确认开工后不可撤回，所有人员将可以开始检测作业。请确认全部拍照项已完成。</div>
+    <div class="sh-btns">
+      <button class="btn cancel" onclick="closeConfirm()">取消</button>
+      <button class="btn ok" onclick="doSubmit()">确认开工</button>
+    </div>
+  </div>
+</div>
+
+<!-- 删除照片确认 -->
+<div class="del-bg" id="delDialog" onclick="closeDelDialog()">
+  <div class="del-dialog" onclick="event.stopPropagation()">
+    <div class="title" style="font-size:15px;font-weight:700;color:var(--g800);margin-bottom:8px">删除照片</div>
+    <div class="desc" style="font-size:13px;color:var(--g500);margin-bottom:20px">确定要删除这张照片吗？</div>
+    <div style="display:flex;gap:10px">
+      <button style="flex:1;height:40px;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;background:var(--g100);color:var(--g600)" onclick="closeDelDialog()">取消</button>
+      <button style="flex:1;height:40px;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;background:var(--ng);color:#fff" onclick="confirmDelete()">删除</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ====== 数据 ====== */
+var ITEMS = [
+  {id:0, name:'安全教育', group:0},
+  {id:1, name:'工作负责人工牌', group:1},
+  {id:2, name:'班组成员工牌', group:1},
+  {id:3, name:'抽取记录单', group:2},
+  {id:4, name:'检测作业开工会', group:3},
+  {id:5, name:'执法记录仪', group:4},
+  {id:6, name:'布控球', group:4}
+];
+var GROUPS = [
+  {id:0, items:[0], total:1},
+  {id:1, items:[1,2], total:2},
+  {id:2, items:[3], total:1},
+  {id:3, items:[4], total:1},
+  {id:4, items:[5,6], total:2}
+];
+var photos = {}; // {itemId: [timestamp,...]}
+var submitted = false;
+var expandedItem = -1;
+var delTarget = {item:-1, photo:-1};
+var longPressTimer = null;
+
+for(var i=0;i<ITEMS.length;i++) photos[i]=[];
+
+/* ====== Tab ====== */
+function switchTab(idx){
+  var ts=document.querySelectorAll('.tabs .t');
+  var ps=document.querySelectorAll('.tab-pane');
+  ts.forEach(function(t,i){t.classList.toggle('on',i===idx)});
+  ps.forEach(function(p,i){p.classList.toggle('on',i===idx)});
+  document.getElementById('botBar').style.display = idx===0?'':'none';
+}
+
+/* ====== 分组折叠 ====== */
+function toggleGroup(el){
+  var arrow = el.querySelector('.arrow');
+  var body = el.nextElementSibling;
+  if(arrow.classList.contains('down')){
+    arrow.classList.remove('down');arrow.classList.add('up');
+    body.style.maxHeight = body.scrollHeight+'px';
+  } else {
+    arrow.classList.remove('up');arrow.classList.add('down');
+    body.style.maxHeight = '0';
+  }
+}
+
+/* ====== 展开/折叠拍照项 ====== */
+function toggleItem(idx){
+  if(submitted) return;
+  var exp = document.getElementById('item'+idx+'expand');
+  if(expandedItem === idx){
+    exp.classList.remove('show'); expandedItem=-1;
+  } else {
+    if(expandedItem>=0) document.getElementById('item'+expandedItem+'expand').classList.remove('show');
+    exp.classList.add('show'); expandedItem=idx;
+  }
+}
+
+/* ====== 拍照 ====== */
+function takePhoto(idx){
+  if(submitted) return;
+  var now = new Date();
+  var ts = now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+' '+pad(now.getHours())+':'+pad(now.getMinutes());
+  photos[idx].push(ts);
+  renderItem(idx);
+  updateProgress();
+  showToast(ITEMS[idx].name+' 已拍摄第'+photos[idx].length+'张');
+}
+
+function pad(n){return n<10?'0'+n:''+n}
+
+/* ====== 渲染单项 ====== */
+function renderItem(idx){
+  var cnt = photos[idx].length;
+  var card = document.getElementById('item'+idx);
+  var meta = document.getElementById('item'+idx+'meta');
+  var icon = card.querySelector('.ph-icon');
+  var grid = document.getElementById('item'+idx+'grid');
+
+  if(cnt>0){
+    card.classList.add('done');
+    icon.className='ph-icon ok'; icon.textContent='✓';
+    meta.textContent='已拍 '+cnt+' 张';
+  } else {
+    card.classList.remove('done');
+    icon.className='ph-icon cam'; icon.textContent='📷';
+    meta.textContent='未拍摄';
+  }
+
+  var html='';
+  for(var i=0;i<cnt;i++){
+    html+='<div class="ph-thumb" onclick="event.stopPropagation()" onmousedown="startLP('+idx+','+i+')" onmouseup="cancelLP()" onmouseleave="cancelLP()" ontouchstart="startLP('+idx+','+i+')" ontouchend="cancelLP()">📷<div class="wm">'+photos[idx][i]+'</div></div>';
+  }
+  if(!submitted) html+='<div class="ph-add" onclick="event.stopPropagation();takePhoto('+idx+')">+</div>';
+  grid.innerHTML=html;
+}
+
+/* ====== 进度更新 ====== */
+function updateProgress(){
+  var done=0;
+  for(var i=0;i<ITEMS.length;i++) if(photos[i].length>0) done++;
+  document.getElementById('botInfo').innerHTML='已拍 <b>'+done+'</b>/'+ITEMS.length+' 项';
+  document.getElementById('submitBtn').disabled = done < ITEMS.length;
+
+  // 更新分组计数
+  GROUPS.forEach(function(g){
+    var gDone=0;
+    g.items.forEach(function(iid){ if(photos[iid].length>0) gDone++; });
+    document.getElementById('g'+g.id+'cnt').textContent=gDone+'/'+g.total;
+  });
+}
+
+/* ====== 长按删除 ====== */
+function startLP(itemIdx, photoIdx){
+  if(submitted) return;
+  longPressTimer = setTimeout(function(){ showDelDialog(itemIdx, photoIdx); }, 500);
+}
+function cancelLP(){
+  if(longPressTimer){ clearTimeout(longPressTimer); longPressTimer=null; }
+}
+function showDelDialog(itemIdx, photoIdx){
+  cancelLP();
+  if(submitted) return;
+  delTarget = {item: itemIdx, photo: photoIdx};
+  document.getElementById('delDialog').classList.add('show');
+}
+function closeDelDialog(){
+  document.getElementById('delDialog').classList.remove('show');
+  delTarget = {item:-1, photo:-1};
+}
+function confirmDelete(){
+  if(delTarget.item>=0 && delTarget.photo>=0){
+    photos[delTarget.item].splice(delTarget.photo, 1);
+    renderItem(delTarget.item);
+    updateProgress();
+    showToast('照片已删除');
+  }
+  closeDelDialog();
+}
+
+/* ====== 确认弹窗 ====== */
+function showConfirm(){
+  if(submitted) return;
+  document.getElementById('confirmSheet').classList.add('show');
+}
+function closeConfirm(){
+  document.getElementById('confirmSheet').classList.remove('show');
+}
+
+/* ====== 提交 ====== */
+function doSubmit(){
+  closeConfirm();
+  submitted=true;
+
+  // 隐藏所有拍照项，显示完成
+  document.querySelectorAll('.group-hd,.group-body').forEach(function(el){el.style.display='none'});
+  var ov=document.getElementById('doneOverlay'); ov.classList.add('show');
+  var now=new Date();
+  var total=0; for(var i=0;i<ITEMS.length;i++) total+=photos[i].length;
+  document.getElementById('doneTime').textContent='提交时间: '+now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+' '+pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds())+' · 共 '+total+' 张照片';
+
+  var btn=document.getElementById('submitBtn');
+  btn.className='bot-btn ok-btn'; btn.textContent='✅ 已完成'; btn.disabled=true; btn.onclick=null;
+  document.getElementById('botInfo').innerHTML='全部拍照项已完成';
+  showToast('开工会已完成');
+}
+
+/* ====== Toast ====== */
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show')},2000);
+}
+</script>
+
+</body>
+</html>

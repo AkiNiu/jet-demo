@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>安措执行 — 检e通V3.0 Demo</title>
+<link rel="stylesheet" href="demo_shared_base.css">
+<style>
+/* 左右布局 */
+.demo-layout{display:flex;gap:40px;max-width:1100px;margin:0 auto;padding:32px 24px;align-items:flex-start}
+.demo-left{flex-shrink:0;position:sticky;top:24px}
+.demo-right{flex:1;min-width:0}
+.demo-right h2{font-size:18px;font-weight:700;color:#374151;margin-bottom:16px}
+.demo-right h3{font-size:14px;font-weight:600;color:#4B5563;margin:20px 0 8px}
+.demo-right p,.demo-right li{font-size:13px;color:#6B7280;line-height:1.8}
+.demo-right ul{padding-left:20px}
+.demo-right table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0 16px}
+.demo-right th{background:#F3F4F6;padding:8px 10px;text-align:left;font-weight:600;color:#4B5563;border-bottom:1px solid #E5E7EB}
+.demo-right td{padding:8px 10px;border-bottom:1px solid #F3F4F6;color:#6B7280}
+.demo-right td:first-child{color:#374151;font-weight:500}
+.demo-right .tag-info{display:inline-block;background:#E8F8F5;color:#2BA89A;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600}
+.demo-right .tag-warn{display:inline-block;background:#FEF3C7;color:#92400E;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600}
+
+/* 视角切换 */
+.view-switch{display:flex;gap:12px;margin-bottom:24px;justify-content:center}
+.view-btn{padding:10px 20px;border-radius:8px;border:2px solid var(--g200);background:#fff;font-size:14px;font-weight:600;color:var(--g500);cursor:pointer;transition:all .15s}
+.view-btn.active{border-color:var(--pri);background:var(--pri-l);color:var(--pri)}
+.view-btn:hover{border-color:var(--pri)}
+
+/* 手机壳 */
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--g50);padding-bottom:12px}
+
+/* 安措组标题 */
+.group-header{display:flex;align-items:center;padding:14px 14px 6px;gap:8px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.group-arrow{font-size:10px;color:var(--g400);transition:transform .2s;width:16px}
+.group-arrow.collapsed{transform:rotate(-90deg)}
+.group-label{font-size:12px;font-weight:600;color:var(--g500);flex:1}
+.group-count{font-size:11px;color:var(--g400)}
+.group-items{overflow:hidden;transition:max-height .25s ease}
+
+/* 安措项卡片（列表模式） */
+.item-card{margin:0 12px 6px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;overflow:hidden;border-left:3px solid var(--g300)}
+.item-card:active{background:var(--g50)}
+.item-card.done{border-left-color:var(--ok)}
+.item-card.rejected{border-left-color:var(--ng)}
+.item-card.pending-review{border-left-color:var(--warn)}
+.item-inner{display:flex;align-items:center;padding:12px 14px;gap:10px;min-height:48px}
+.item-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.item-icon.photo{background:var(--pri-l);color:var(--pri)}
+.item-icon.done{background:var(--ok-l);color:var(--ok)}
+.item-icon.rejected{background:var(--ng-l);color:var(--ng)}
+.item-icon.pending{background:var(--warn-l);color:var(--warn)}
+.item-info{flex:1;min-width:0}
+.item-name{font-size:13px;font-weight:600;color:var(--g800)}
+.item-meta{font-size:11px;color:var(--g400);margin-top:2px}
+.item-meta .who{color:var(--g600);font-weight:500}
+.item-chevron{color:var(--g300);font-size:14px}
+
+/* 照片网格（确认视角展开） */
+.photo-grid{display:none;padding:0 14px 12px;gap:6px;flex-wrap:wrap}
+.photo-grid.show{display:flex}
+.photo-thumb{width:56px;height:56px;border-radius:6px;background:var(--g200);display:flex;align-items:center;justify-content:center;font-size:18px;position:relative}
+.photo-thumb .ph-label{position:absolute;bottom:0;left:0;right:0;font-size:9px;color:#fff;background:rgba(0,0,0,.5);text-align:center;border-radius:0 0 6px 6px;padding:1px}
+
+/* 判定面板（确认视角） */
+.judge-panel{display:none;padding:0 14px 12px}
+.judge-panel.show{display:block}
+.judge-row{display:flex;gap:10px;margin-top:8px}
+.judge-opt{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:var(--r);cursor:pointer;font-size:13px;font-weight:600;border:2px solid var(--g200);transition:all .15s;min-height:44px;-webkit-tap-highlight-color:transparent}
+.judge-opt:active{transform:scale(.97)}
+.judge-opt.pass{color:var(--ok)}
+.judge-opt.pass.on{border-color:var(--ok);background:var(--ok-l)}
+.judge-opt.fail{color:var(--ng)}
+.judge-opt.fail.on{border-color:var(--ng);background:var(--ng-l)}
+
+/* ====== 拍照模式（核查同款：取景窗上 + 列表中 + 快门底） ====== */
+.cam-mode{display:none;flex-direction:column;flex:1;min-height:0}
+.cam-mode.on{display:flex}
+.list-mode{display:flex;flex-direction:column;flex:1;min-height:0}
+.list-mode.hid{display:none}
+
+/* 取景窗 */
+.vf{position:relative;height:200px;background:#1a1a1a;flex-shrink:0;overflow:hidden}
+.vf-grid{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr;pointer-events:none}
+.vf-grid span{border:.5px solid rgba(255,255,255,.1)}
+.vf-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:rgba(255,255,255,.35);font-size:12px}
+.vf-placeholder .icon{font-size:28px;opacity:.4}
+.vf-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .08s}
+.vf-flash.fire{opacity:.7}
+/* 取景窗底部浮层：当前拍摄项 */
+.vf-label{position:absolute;bottom:10px;left:10px;right:10px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:var(--rs);padding:8px 12px;display:none;align-items:center;gap:8px}
+.vf-label.vis{display:flex}
+.vf-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--pri)}
+.vf-text{color:#fff;font-size:13px;font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vf-count{color:rgba(255,255,255,.5);font-size:11px;flex-shrink:0}
+
+/* 拍照项列表（中部可滚动） */
+.cam-scroll{flex:1;overflow-y:auto;background:#fff}
+.cam-item{display:flex;align-items:center;padding:12px 14px;border-bottom:1px solid var(--g100);cursor:pointer;-webkit-tap-highlight-color:transparent;min-height:48px;transition:background .12s}
+.cam-item:active{background:var(--g50)}
+.cam-item.sel{background:var(--pri-l)}
+.cam-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-right:12px;border:2px solid var(--g300);transition:all .15s}
+.cam-dot.doing{border-color:var(--pri);background:var(--pri);box-shadow:0 0 0 3px var(--pri-l)}
+.cam-dot.done{border-color:var(--ok);background:var(--ok)}
+.cam-item-name{flex:1;font-size:14px;color:var(--g700)}
+.cam-item.sel .cam-item-name{color:var(--pri-d);font-weight:600}
+.cam-item-count{font-size:11px;color:var(--g400);background:var(--g100);padding:2px 8px;border-radius:10px}
+/* 展开的照片网格 */
+.cam-photos{display:flex;gap:6px;padding:6px 14px 10px 36px;flex-wrap:wrap;background:var(--pri-l);border-bottom:1px solid var(--g100)}
+.cam-ph{width:52px;height:52px;border-radius:var(--rs);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;font-size:10px;font-weight:600}
+.cam-ph.filled{background:#fff;color:var(--pri-d);border:1px solid var(--pri);box-shadow:var(--shadow-sm)}
+.cam-ph .ph-idx{font-size:13px}
+.cam-ph .ph-who{font-size:8px;color:var(--g500);margin-top:1px}
+.cam-ph .ph-del{position:absolute;top:-5px;right:-5px;width:18px;height:18px;border-radius:50%;background:var(--ng);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.cam-ph .ph-del:active{transform:scale(.85)}
+
+/* 快门控制区（底部） */
+.cam-ctrl{padding:6px 16px 12px;background:#fff;border-top:1px solid var(--g200);flex-shrink:0}
+.cam-progress{display:flex;justify-content:center;gap:5px;padding:4px 0 8px;align-items:center}
+.cam-progress .pd{width:8px;height:8px;border-radius:50%;transition:all .15s}
+.cam-progress .pd.empty{background:var(--g200)}
+.cam-progress .pd.full{background:var(--pri)}
+.cam-progress .pn{font-size:11px;color:var(--g400);margin-left:6px}
+.cam-shutter-row{display:flex;align-items:center;justify-content:center;gap:24px}
+.shutter{width:60px;height:60px;border-radius:50%;border:3.5px solid var(--pri);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:all .1s;position:relative}
+.shutter:active{transform:scale(.88)}
+.shutter-inner{width:46px;height:46px;border-radius:50%;background:var(--pri);transition:all .1s}
+.shutter:active .shutter-inner{background:var(--pri-d)}
+.shutter.dis{opacity:.2;pointer-events:none}
+/* 快门左右导航按钮 */
+.shutter-nav{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--g400);background:var(--g100);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;user-select:none}
+.shutter-nav:active{transform:scale(.88);background:var(--g200)}
+.shutter-nav.hint{color:var(--pri);background:var(--pri-l);animation:pulse-nav .8s ease-in-out infinite}
+.shutter-nav.dis{opacity:.15;pointer-events:none}
+@keyframes pulse-nav{0%,100%{box-shadow:0 0 0 0 rgba(60,200,180,0)}50%{box-shadow:0 0 0 6px rgba(60,200,180,.25)}}
+.cam-hint{text-align:center;font-size:11px;color:var(--g400);padding:4px 0 0;min-height:18px}
+.cam-hint .hint-next{color:var(--pri);font-weight:600}
+
+/* 列表模式内的照片展开网格 */
+.exec-photos{display:none;padding:6px 14px 10px;gap:6px;flex-wrap:wrap;background:var(--g50);border-top:1px solid var(--g100)}
+.exec-photos.show{display:flex}
+.exec-ph{width:52px;height:52px;border-radius:var(--rs);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;font-weight:600;background:#fff;color:var(--pri-d);border:1px solid var(--pri);box-shadow:var(--shadow-sm)}
+.exec-ph .ep-idx{font-size:13px}
+.exec-ph-more{width:52px;height:52px;border-radius:var(--rs);display:flex;align-items:center;justify-content:center;background:var(--pri-l);border:1.5px dashed var(--pri);color:var(--pri);font-size:12px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.exec-ph-more:active{background:var(--pri);color:#fff}
+
+/* 底部 */
+.bot{padding:8px 12px 12px;background:#fff;border-top:1px solid var(--g200);flex-shrink:0}
+.bot-info{font-size:11px;color:var(--g400);text-align:center;margin-bottom:8px}
+.bot-info b{color:var(--g700)}
+.bot-btn{width:100%;padding:14px;border:none;border-radius:var(--r);font-size:16px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.bot-btn.ready{background:var(--pri);color:#fff}
+.bot-btn.ready:active{background:var(--pri-d)}
+.bot-btn.wait{background:var(--g100);color:var(--g400);pointer-events:none}
+
+/* Bottom Sheet */
+.sh-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:800;align-items:flex-end;justify-content:center}
+.sh-bg.show{display:flex}
+.sh-panel{width:100%;max-width:360px;background:#fff;border-radius:16px 16px 0 0;padding:16px 16px 24px;animation:su .2s ease-out;max-height:80vh;overflow-y:auto}
+@keyframes su{from{transform:translateY(100%)}}
+.sh-title{font-size:15px;font-weight:600;text-align:center;margin-bottom:14px;color:var(--g800)}
+.confirm-content{font-size:13px;color:var(--g600);line-height:1.8;padding:0 4px 16px}
+.confirm-btns{display:flex;gap:10px}
+.confirm-btns .cbtn{flex:1;padding:12px;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent;border:none}
+.cbtn.cancel{background:var(--g100);color:var(--g600)}
+.cbtn.ok{background:var(--pri);color:#fff}
+.cbtn.ok:active{background:var(--pri-d)}
+
+/* Toast */
+.toast{display:none;position:absolute;left:50%;bottom:80px;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;z-index:999;white-space:nowrap}
+.toast.show{display:block;animation:fadeInUp .3s}
+@keyframes fadeInUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}}
+</style>
+</head>
+<body>
+
+<!-- 视角切换 -->
+<div class="view-switch">
+  <div class="view-btn active" onclick="switchView('exec')">试验人员 — 安措执行</div>
+  <div class="view-btn" onclick="switchView('confirm')">工作负责人 — 安措确认</div>
+  <div class="view-btn" onclick="switchView('rejected')">试验人员 — 退回后重拍</div>
+</div>
+
+<!-- ====== 视角1：安措执行（试验人员） ====== -->
+<div class="demo-layout" id="viewExec">
+  <div class="demo-left">
+    <div class="phone">
+      <div class="sbar">9:41</div>
+
+      <!-- 列表模式 -->
+      <div class="list-mode" id="listMode">
+        <div class="nbar"><div class="back" onclick="showToast('toastExec','返回我的任务列表')">←</div><div class="title">1#开关站 安措执行</div></div>
+        <div class="scroll" id="execScroll">
+
+          <!-- 通道安措 -->
+          <div class="group-header" onclick="toggleGroup(this)">
+            <span class="group-arrow">▼</span>
+            <span class="group-label">通道安措</span>
+            <span class="group-count" id="g1count">0/1</span>
+          </div>
+          <div class="group-items">
+            <div class="item-card" id="exec-item-0" onclick="onExecItemClick(0)">
+              <div class="item-inner">
+                <div class="item-icon photo">📷</div>
+                <div class="item-info"><div class="item-name">通道口安措</div><div class="item-meta">未拍照</div></div>
+                <div class="item-chevron">›</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- I段高压柜进线安措 -->
+          <div class="group-header" onclick="toggleGroup(this)">
+            <span class="group-arrow">▼</span>
+            <span class="group-label">I段高压柜进线安措</span>
+            <span class="group-count" id="g2count">0/3</span>
+          </div>
+          <div class="group-items">
+            <div class="item-card" id="exec-item-1" onclick="onExecItemClick(1)"><div class="item-inner"><div class="item-icon photo">📷</div><div class="item-info"><div class="item-name">高压进线电缆验电</div><div class="item-meta">未拍照</div></div><div class="item-chevron">›</div></div></div>
+            <div class="item-card" id="exec-item-2" onclick="onExecItemClick(2)"><div class="item-inner"><div class="item-icon photo">📷</div><div class="item-info"><div class="item-name">高压进线电缆接地</div><div class="item-meta">未拍照</div></div><div class="item-chevron">›</div></div></div>
+            <div class="item-card" id="exec-item-3" onclick="onExecItemClick(3)"><div class="item-inner"><div class="item-icon photo">📷</div><div class="item-info"><div class="item-name">高压进线柜挂牌</div><div class="item-meta">未拍照</div></div><div class="item-chevron">›</div></div></div>
+          </div>
+
+          <!-- II段高压柜进线安措 -->
+          <div class="group-header" onclick="toggleGroup(this)">
+            <span class="group-arrow">▼</span>
+            <span class="group-label">II段高压柜进线安措</span>
+            <span class="group-count" id="g3count">0/3</span>
+          </div>
+          <div class="group-items">
+            <div class="item-card" id="exec-item-4" onclick="onExecItemClick(4)"><div class="item-inner"><div class="item-icon photo">📷</div><div class="item-info"><div class="item-name">高压进线电缆验电</div><div class="item-meta">未拍照</div></div><div class="item-chevron">›</div></div></div>
+            <div class="item-card" id="exec-item-5" onclick="onExecItemClick(5)"><div class="item-inner"><div class="item-icon photo">📷</div><div class="item-info"><div class="item-name">高压进线电缆接地</div><div class="item-meta">未拍照</div></div><div class="item-chevron">›</div></div></div>
+            <div class="item-card" id="exec-item-6" onclick="onExecItemClick(6)"><div class="item-inner"><div class="item-icon photo">📷</div><div class="item-info"><div class="item-name">高压进线柜挂牌</div><div class="item-meta">未拍照</div></div><div class="item-chevron">›</div></div></div>
+          </div>
+        </div>
+        <div class="bot">
+          <div class="bot-info" id="execBotInfo">已完成 <b>0</b>/7 · 未完成 <b>7</b></div>
+          <button class="bot-btn wait" id="execSubmitBtn" onclick="submitExec()">提交安措</button>
+        </div>
+      </div>
+
+      <!-- 拍照模式（取景窗上 + 列表中 + 快门底） -->
+      <div class="cam-mode" id="camMode">
+        <div class="nbar"><div class="back" onclick="exitCam()">←</div><div class="title" id="camGroupTitle">I段高压柜进线安措</div></div>
+
+        <!-- 上部：取景窗 -->
+        <div class="vf">
+          <div class="vf-grid"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+          <div class="vf-placeholder" id="vfPlaceholder"><span class="icon">📷</span><span>选择安措项，拍摄存证照片</span></div>
+          <div class="vf-label" id="vfLabel">
+            <div class="vf-dot"></div>
+            <div class="vf-text" id="vfText">高压进线电缆验电</div>
+            <div class="vf-count" id="vfCount">0/5</div>
+          </div>
+          <div class="vf-flash" id="vfFlash"></div>
+        </div>
+
+        <!-- 中部：安措项列表（可滚动） -->
+        <div class="cam-scroll" id="camScroll"></div>
+
+        <!-- 底部：快门 -->
+        <div class="cam-ctrl">
+          <div class="cam-progress" id="camProgress"></div>
+          <div class="cam-shutter-row">
+            <div class="shutter-nav dis" id="prevBtn" onclick="navCamItem(-1)">‹</div>
+            <div class="shutter dis" id="shutterBtn" onclick="takePhoto()"><div class="shutter-inner"></div></div>
+            <div class="shutter-nav dis" id="nextBtn" onclick="navCamItem(1)">›</div>
+          </div>
+          <div class="cam-hint" id="camHint"></div>
+        </div>
+      </div>
+
+      <div class="toast" id="toastExec"></div>
+    </div>
+  </div>
+
+  <div class="demo-right">
+    <h2>安措执行 — 设计说明</h2>
+
+    <h3>设计决策说明</h3>
+    <ul>
+      <li><strong>单人负责制，不做多人协同</strong> — 2.4系统部分团队在安措环节存在多人交叉操作导致职责不清的问题。3.0系统每个站房强制指定1名试验人员作为执行人，各站房独立推进。多站房并行由不同人各做各的站房实现，职责清晰。</li>
+      <li><strong>应用内取景窗连续拍照，不调用原生相机</strong> — 进线安措（验电→接地→挂牌）是同一高压柜前的连续物理操作，如果每项都调用系统原生相机（弹出→拍照→返回APP→再弹出），"弹出-返回"的节奏严重打断现场操作流。3.0系统统一使用应用内取景窗（复用核查模块CameraView），进入安措组后取景窗常驻不关闭，快门两侧设‹ ›导航按钮，拍完1张后"下一项"按钮高亮脉冲引导切换，实现验电→接地→挂牌的无中断连拍。地下配电室无网络时照片存本地，恢复后批量上传。</li>
+      <li><strong>与检测分工并行</strong> — 2.4系统安措必须等检测分工完成后才能开始。3.0系统改为并行：安措和检测分工只依赖”站房已提交”这一共同前置条件，两者同时开始互不阻塞，减少现场等待时间。</li>
+      <li><strong>禁止工作负责人自选</strong> — 安措执行人只能从试验人员中选择，工作负责人不可指定自己，确保执行-确认异体分离。</li>
+    </ul>
+
+    <h3>业务规则摘要</h3>
+    <table>
+      <tr><th style=”width:28%”>规则</th><th>说明</th></tr>
+      <tr><td><strong>拍照要求</strong></td><td>每项安措至少拍1张，最多5张（客户端校验）。统一使用应用内取景窗连续拍照（不调用原生相机），按安措组进入后组内连拍不退出。安措项由后台字典根据站房类型和进线数量自动生成，前端不硬编码</td></tr>
+      <tr><td><strong>提交粒度</strong></td><td>整站一次性提交，全部安措项拍完后才能提交，不支持逐项提交</td></tr>
+      <tr><td><strong>离线支持</strong></td><td>照片存本地，断网不影响拍照操作。恢复网络后批量上传并提交</td></tr>
+      <tr><td><strong>换人规则</strong></td><td>安措未提交时工作负责人可在项目工作台换人。已拍照片保留（照片挂在安措项上，不挂在人上），新执行人可查看、删除、追加拍照</td></tr>
+      <tr><td><strong>检测解锁条件</strong></td><td>安措完成 AND 检测分工完成 → 该站房检测解锁</td></tr>
+    </table>
+
+    <h3>版本边界</h3>
+    <table>
+      <tr><th style=”width:28%”>功能</th><th>V3.0</th><th>V3.1+</th></tr>
+      <tr><td><strong>安措执行+确认</strong></td><td>逐项拍照 + 逐项判定</td><td>—</td></tr>
+      <tr><td><strong>安措拆除</strong></td><td>做（放在检测完成后环节）</td><td>—</td></tr>
+      <tr><td><strong>手动增补安措项</strong></td><td>不做</td><td>考虑增补 + 词库联想</td></tr>
+      <tr><td><strong>推送通知</strong></td><td>不做（项目工作台被动查看）</td><td>极光推送主动触达执行人</td></tr>
+    </table>
+
+    <details style=”margin-top: 24px; border: 1px solid #E5E7EB; border-radius: 8px; padding: 12px 16px; background: #ebfdfa;”>
+      <summary style=”font-size: 14px; font-weight: 600; color: #047857; cursor: pointer; outline: none;”>📋 开发参考（点击展开）</summary>
+      <div style=”margin-top: 12px; font-size: 13px; color: #4B5563; line-height: 1.6;”>
+        <p style=”font-weight:600;margin-bottom:8px”>低代码组件映射</p>
+        <table style=”width:100%;font-size:12px”>
+          <tr><th>UI元素</th><th>组件</th><th>状态</th></tr>
+          <tr><td>安措组分组列表</td><td>MetaList + 分组折叠</td><td>⚠️ 待验证</td></tr>
+          <tr><td>取景窗连续拍照（不调原生相机）</td><td>核查模块 CameraView 复用 + 组内导航</td><td>✅ 可复用</td></tr>
+          <tr><td>照片网格</td><td>MetaImageGrid</td><td>⚠️ 待验证</td></tr>
+          <tr><td>提交确认弹窗</td><td>MetaDialog</td><td>✅ 可配置</td></tr>
+        </table>
+        <p style=”font-weight:600;margin:12px 0 8px”>数据模型要点</p>
+        <ul style=”padding-left:20px;list-style-type:disc”>
+          <li>照片挂在 <code>safety_item_id</code> 上，不挂在执行人上。换人只改 <code>executor_id</code>，照片记录不动</li>
+          <li>安措项由配置表 <code>ConfManageItemInfo</code>（manage_set_id=4）根据 station_room_type × inline_num × transformer_num 生成</li>
+          <li>换人审计日志：<code>{operator, from_user, to_user, station_room, timestamp}</code></li>
+        </ul>
+      </div>
+    </details>
+  </div>
+</div>
+
+<!-- ====== 视角2：安措确认（工作负责人） ====== -->
+<div class="demo-layout" id="viewConfirm" style="display:none">
+  <div class="demo-left">
+    <div class="phone">
+      <div class="sbar">9:41</div>
+      <div class="nbar"><div class="back" onclick="showToast('toastConfirm','返回项目工作台')">←</div><div class="title">1#开关站 安措确认</div></div>
+      <div class="scroll" id="confirmScroll">
+
+        <!-- 通道安措 -->
+        <div class="group-header" onclick="toggleGroup(this)"><span class="group-arrow">▼</span><span class="group-label">通道安措</span><span class="group-count">0/1</span></div>
+        <div class="group-items">
+          <div class="item-card pending-review" onclick="toggleConfirmItem(this)">
+            <div class="item-inner"><div class="item-icon pending">⏳</div><div class="item-info"><div class="item-name">通道口安措</div><div class="item-meta">已拍 <b>2</b>张 · 拍摄人: <span class="who">王强</span></div></div><div class="item-chevron">›</div></div>
+            <div class="photo-grid"><div class="photo-thumb">🖼<div class="ph-label">王强</div></div><div class="photo-thumb">🖼<div class="ph-label">王强</div></div></div>
+            <div class="judge-panel"><div class="judge-row"><div class="judge-opt pass" onclick="judgeItem(this,'pass')">✓ 合格</div><div class="judge-opt fail" onclick="judgeItem(this,'fail')">✕ 不合格</div></div></div>
+          </div>
+        </div>
+
+        <!-- I段高压柜进线安措 -->
+        <div class="group-header" onclick="toggleGroup(this)"><span class="group-arrow">▼</span><span class="group-label">I段高压柜进线安措</span><span class="group-count">0/3</span></div>
+        <div class="group-items">
+          <div class="item-card pending-review" onclick="toggleConfirmItem(this)">
+            <div class="item-inner"><div class="item-icon pending">⏳</div><div class="item-info"><div class="item-name">高压进线电缆验电</div><div class="item-meta">已拍 <b>3</b>张 · 拍摄人: <span class="who">王强</span></div></div><div class="item-chevron">›</div></div>
+            <div class="photo-grid"><div class="photo-thumb">🖼<div class="ph-label">王强</div></div><div class="photo-thumb">🖼<div class="ph-label">王强</div></div><div class="photo-thumb">🖼<div class="ph-label">王强</div></div></div>
+            <div class="judge-panel"><div class="judge-row"><div class="judge-opt pass" onclick="judgeItem(this,'pass')">✓ 合格</div><div class="judge-opt fail" onclick="judgeItem(this,'fail')">✕ 不合格</div></div></div>
+          </div>
+          <div class="item-card pending-review" onclick="toggleConfirmItem(this)">
+            <div class="item-inner"><div class="item-icon pending">⏳</div><div class="item-info"><div class="item-name">高压进线电缆接地</div><div class="item-meta">已拍 <b>2</b>张 · 拍摄人: <span class="who">王强</span></div></div><div class="item-chevron">›</div></div>
+            <div class="photo-grid"><div class="photo-thumb">🖼<div class="ph-label">王强</div></div><div class="photo-thumb">🖼<div class="ph-label">王强</div></div></div>
+            <div class="judge-panel"><div class="judge-row"><div class="judge-opt pass" onclick="judgeItem(this,'pass')">✓ 合格</div><div class="judge-opt fail" onclick="judgeItem(this,'fail')">✕ 不合格</div></div></div>
+          </div>
+          <div class="item-card pending-review" onclick="toggleConfirmItem(this)">
+            <div class="item-inner"><div class="item-icon pending">⏳</div><div class="item-info"><div class="item-name">高压进线柜挂牌</div><div class="item-meta">已拍 <b>1</b>张 · 拍摄人: <span class="who">王强</span></div></div><div class="item-chevron">›</div></div>
+            <div class="photo-grid"><div class="photo-thumb">🖼<div class="ph-label">王强</div></div></div>
+            <div class="judge-panel"><div class="judge-row"><div class="judge-opt pass" onclick="judgeItem(this,'pass')">✓ 合格</div><div class="judge-opt fail" onclick="judgeItem(this,'fail')">✕ 不合格</div></div></div>
+          </div>
+        </div>
+
+        <!-- II段高压柜进线安措 -->
+        <div class="group-header" onclick="toggleGroup(this)"><span class="group-arrow">▼</span><span class="group-label">II段高压柜进线安措</span><span class="group-count">0/3</span></div>
+        <div class="group-items">
+          <div class="item-card pending-review" onclick="toggleConfirmItem(this)">
+            <div class="item-inner"><div class="item-icon pending">⏳</div><div class="item-info"><div class="item-name">高压进线电缆验电</div><div class="item-meta">已拍 <b>2</b>张 · 拍摄人: <span class="who">王强</span></div></div><div class="item-chevron">›</div></div>
+            <div class="photo-grid"><div class="photo-thumb">🖼<div class="ph-label">王强</div></div><div class="photo-thumb">🖼<div class="ph-label">王强</div></div></div>
+            <div class="judge-panel"><div class="judge-row"><div class="judge-opt pass" onclick="judgeItem(this,'pass')">✓ 合格</div><div class="judge-opt fail" onclick="judgeItem(this,'fail')">✕ 不合格</div></div></div>
+          </div>
+          <div class="item-card pending-review" onclick="toggleConfirmItem(this)">
+            <div class="item-inner"><div class="item-icon pending">⏳</div><div class="item-info"><div class="item-name">高压进线电缆接地</div><div class="item-meta">已拍 <b>2</b>张 · 拍摄人: <span class="who">王强</span></div></div><div class="item-chevron">›</div></div>
+            <div class="photo-grid"><div class="photo-thumb">🖼<div class="ph-label">王强</div></div><div class="photo-thumb">🖼<div class="ph-label">王强</div></div></div>
+            <div class="judge-panel"><div class="judge-row"><div class="judge-opt pass" onclick="judgeItem(this,'pass')">✓ 合格</div><div class="judge-opt fail" onclick="judgeItem(this,'fail')">✕ 不合格</div></div></div>
+          </div>
+          <div class="item-card pending-review" onclick="toggleConfirmItem(this)">
+            <div class="item-inner"><div class="item-icon pending">⏳</div><div class="item-info"><div class="item-name">高压进线柜挂牌</div><div class="item-meta">已拍 <b>1</b>张 · 拍摄人: <span class="who">王强</span></div></div><div class="item-chevron">›</div></div>
+            <div class="photo-grid"><div class="photo-thumb">🖼<div class="ph-label">王强</div></div></div>
+            <div class="judge-panel"><div class="judge-row"><div class="judge-opt pass" onclick="judgeItem(this,'pass')">✓ 合格</div><div class="judge-opt fail" onclick="judgeItem(this,'fail')">✕ 不合格</div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="bot">
+        <div class="bot-info" id="confirmBotInfo">已判定 <b>0</b>/7 · 未判定 <b>7</b></div>
+        <button class="bot-btn wait" id="confirmSubmitBtn" onclick="submitConfirm()">确认完成</button>
+      </div>
+      <div class="toast" id="toastConfirm"></div>
+    </div>
+  </div>
+
+  <div class="demo-right">
+    <h2>安措确认 — 设计说明</h2>
+
+    <h3>设计决策说明</h3>
+    <ul>
+      <li><strong>执行-确认异体分离</strong> — 试验人员执行拍照，工作负责人审核判定，两步操作不可合并。工作负责人从源头就不可选自己做安措（候选人仅限试验人员），从制度上杜绝合规风险。</li>
+      <li><strong>逐项退回不株连</strong> — 发现某项不合格时只退回该项，不整站退回。已合格项保持锁定状态，最大限度减少重拍工作量。与核查确认(1.1.4)保持一致的退回模式。</li>
+      <li><strong>BIGA工作台统一入口</strong> — 确认操作通过项目工作台的安措确认卡片进入，按角色权限自动显示，不增加独立入口。</li>
+    </ul>
+
+    <h3>业务规则摘要</h3>
+    <table>
+      <tr><th style=”width:28%”>规则</th><th>说明</th></tr>
+      <tr><td><strong>判定方式</strong></td><td>逐项展开照片缩略图（附拍摄人标记），判定合格或不合格。全部判定合格后才能点击”确认完成”</td></tr>
+      <tr><td><strong>退回规则</strong></td><td>不合格项退回给原执行人，退回原因选填。退回后该项照片清空，执行人需重新拍照。V3.0不支持退回时改派</td></tr>
+      <tr><td><strong>退回后执行端</strong></td><td>执行人看到退回项红色高亮 + 退回原因，已合格项绿色锁定。顶部退回提示横幅。重拍完成后点击”重新提交(N项)”</td></tr>
+      <tr><td><strong>解锁条件</strong></td><td>全部安措项合格 → 站房安措完成。结合检测分工完成 → 该站房检测解锁</td></tr>
+    </table>
+
+    <h3>版本边界</h3>
+    <table>
+      <tr><th style=”width:28%”>功能</th><th>V3.0</th><th>V3.1+</th></tr>
+      <tr><td><strong>逐项判定 + 退回</strong></td><td>合格/不合格 + 退回原因选填</td><td>—</td></tr>
+      <tr><td><strong>退回时改派</strong></td><td>不做（退回给原执行人）</td><td>考虑支持退回时改派</td></tr>
+      <tr><td><strong>AI辅助审核</strong></td><td>不做</td><td>探讨机器视觉辅助判定</td></tr>
+    </table>
+
+    <details style=”margin-top: 24px; border: 1px solid #E5E7EB; border-radius: 8px; padding: 12px 16px; background: #ebfdfa;”>
+      <summary style=”font-size: 14px; font-weight: 600; color: #047857; cursor: pointer; outline: none;”>📋 开发参考（点击展开）</summary>
+      <div style=”margin-top: 12px; font-size: 13px; color: #4B5563; line-height: 1.6;”>
+        <p style=”font-weight:600;margin-bottom:8px”>安措项级状态流转</p>
+        <p><code>pending → photographed → submitted → passed / rejected</code></p>
+        <p>站房级安措状态保持 <code>safety_submitted</code> 直到全部项 passed 后推进为 <code>safety_done</code></p>
+        <p style=”font-weight:600;margin:12px 0 8px”>退回数据处理</p>
+        <ul style=”padding-left:20px;list-style-type:disc”>
+          <li>判定不合格后，后端将该安措项状态置为 <code>rejected</code>，原照片关系软删除</li>
+          <li>执行人重新拍照后生成新的照片记录，重新提交后状态回到 <code>submitted</code></li>
+        </ul>
+        <p style=”font-weight:600;margin:12px 0 8px”>确认提交数据</p>
+        <p><code>{station_room_id, judgments[{item_id, result(pass/fail), reject_reason, operator_id, timestamp}]}</code></p>
+      </div>
+    </details>
+  </div>
+</div>
+
+<!-- ====== 视角3：退回后重拍（试验人员） ====== -->
+<div class="demo-layout" id="viewRejected" style="display:none">
+  <div class="demo-left">
+    <div class="phone">
+      <div class="sbar">9:41</div>
+
+      <!-- 列表模式 -->
+      <div class="list-mode" id="rejListMode">
+        <div class="nbar"><div class="back" onclick="showToast('toastRejected','返回项目工作台')">←</div><div class="title">1#开关站 安措执行</div></div>
+        <div class="scroll">
+
+          <!-- 退回提示横幅 -->
+          <div style="margin:8px 12px;padding:10px 14px;background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:10">
+            <span style="font-size:16px">⚠</span>
+            <span style="font-size:13px;color:#991B1B;font-weight:600" id="rejBanner">2项安措被退回，请重新拍照</span>
+          </div>
+
+          <!-- 通道安措 -->
+          <div class="group-header" onclick="toggleGroup(this)"><span class="group-arrow">▼</span><span class="group-label">通道安措</span><span class="group-count">1/1 ✓</span></div>
+          <div class="group-items">
+            <div class="item-card done" style="opacity:.7;pointer-events:none">
+              <div class="item-inner"><div class="item-icon done">✅</div><div class="item-info"><div class="item-name">通道口安措</div><div class="item-meta" style="color:var(--ok)">已合格</div></div></div>
+            </div>
+          </div>
+
+          <!-- I段高压柜进线安措 -->
+          <div class="group-header" onclick="toggleGroup(this)"><span class="group-arrow">▼</span><span class="group-label">I段高压柜进线安措</span><span class="group-count">1/3</span></div>
+          <div class="group-items">
+            <div class="item-card done" style="opacity:.7;pointer-events:none">
+              <div class="item-inner"><div class="item-icon done">✅</div><div class="item-info"><div class="item-name">高压进线电缆验电</div><div class="item-meta" style="color:var(--ok)">已合格</div></div></div>
+            </div>
+            <div class="item-card rejected" id="rej-item-0" onclick="onRejItemClick(0)">
+              <div class="item-inner"><div class="item-icon rejected">✕</div><div class="item-info"><div class="item-name">高压进线电缆接地</div><div class="item-meta" style="color:var(--ng)">退回：接地线未接牢固，请重新操作</div></div><div class="item-chevron">›</div></div>
+            </div>
+            <div class="item-card done" style="opacity:.7;pointer-events:none">
+              <div class="item-inner"><div class="item-icon done">✅</div><div class="item-info"><div class="item-name">高压进线柜挂牌</div><div class="item-meta" style="color:var(--ok)">已合格</div></div></div>
+            </div>
+          </div>
+
+          <!-- II段高压柜进线安措 -->
+          <div class="group-header" onclick="toggleGroup(this)"><span class="group-arrow">▼</span><span class="group-label">II段高压柜进线安措</span><span class="group-count">2/3</span></div>
+          <div class="group-items">
+            <div class="item-card done" style="opacity:.7;pointer-events:none">
+              <div class="item-inner"><div class="item-icon done">✅</div><div class="item-info"><div class="item-name">高压进线电缆验电</div><div class="item-meta" style="color:var(--ok)">已合格</div></div></div>
+            </div>
+            <div class="item-card done" style="opacity:.7;pointer-events:none">
+              <div class="item-inner"><div class="item-icon done">✅</div><div class="item-info"><div class="item-name">高压进线电缆接地</div><div class="item-meta" style="color:var(--ok)">已合格</div></div></div>
+            </div>
+            <div class="item-card rejected" id="rej-item-1" onclick="onRejItemClick(1)">
+              <div class="item-inner"><div class="item-icon rejected">✕</div><div class="item-info"><div class="item-name">高压进线柜挂牌</div><div class="item-meta" style="color:var(--ng)">退回：挂牌位置不正确</div></div><div class="item-chevron">›</div></div>
+            </div>
+          </div>
+
+        </div>
+        <div class="bot">
+          <div class="bot-info" id="rejBotInfo">合格 <b>5</b>/7 · 退回 <b>2</b></div>
+          <button class="bot-btn wait" id="rejSubmitBtn" onclick="submitRej()">重新提交(2项)</button>
+        </div>
+      </div>
+
+      <!-- 重拍取景窗模式 -->
+      <div class="cam-mode" id="rejCamMode">
+        <div class="nbar"><div class="back" onclick="exitRejCam()">←</div><div class="title" id="rejCamTitle">重拍</div></div>
+        <div class="vf">
+          <div class="vf-grid"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+          <div class="vf-label vis" id="rejVfLabel">
+            <div class="vf-dot" style="background:var(--ng)"></div>
+            <div class="vf-text" id="rejVfText">高压进线电缆接地</div>
+            <div class="vf-count" id="rejVfCount">0/5</div>
+          </div>
+          <div class="vf-flash" id="rejVfFlash"></div>
+        </div>
+        <div class="cam-scroll">
+          <div style="padding:16px 14px;background:#FEF2F2;border-bottom:1px solid #FECACA">
+            <div style="font-size:12px;color:#991B1B;font-weight:600;margin-bottom:4px">退回原因</div>
+            <div style="font-size:13px;color:#7F1D1D" id="rejCamReason">接地线未接牢固，请重新操作</div>
+          </div>
+          <div style="padding:20px 14px;text-align:center;color:var(--g400);font-size:13px" id="rejCamPhotoHint">照片已清空，请重新拍照存证</div>
+          <div style="display:flex;gap:6px;padding:0 14px;flex-wrap:wrap" id="rejCamPhotos"></div>
+        </div>
+        <div class="cam-ctrl">
+          <div class="cam-shutter-row">
+            <div class="shutter" id="rejShutterBtn" onclick="takeRejPhoto()"><div class="shutter-inner"></div></div>
+          </div>
+          <div class="cam-hint" id="rejCamHint">拍至少1张后可返回列表</div>
+        </div>
+      </div>
+
+      <div class="toast" id="toastRejected"></div>
+    </div>
+  </div>
+
+  <div class="demo-right">
+    <h2>退回后重拍 — 设计说明</h2>
+
+    <h3>页面状态说明</h3>
+    <ul>
+      <li><strong>退回提示横幅</strong> — 顶部红色横幅，显示退回项数量。使用 <code>position:sticky</code> 固定在滚动区域顶部</li>
+      <li><strong>已合格项（绿色锁定）</strong> — 工作负责人已判定合格的安措项，显示"已合格"绿色文字，半透明+不可点击，不可修改</li>
+      <li><strong>退回项（红色高亮）</strong> — 被退回的安措项，红色左边框+✕图标，显示退回原因。点击可进入重拍模式（照片已清空）</li>
+      <li><strong>底部按钮</strong> — "重新提交(N项)"仅在退回项全部重拍后激活，只提交退回项的新照片</li>
+    </ul>
+
+    <h3>退回-重拍流转</h3>
+    <table>
+      <tr><th style="width:15%">步骤</th><th>操作</th></tr>
+      <tr><td>1</td><td>工作负责人判定某项不合格 → 该项退回给执行人</td></tr>
+      <tr><td>2</td><td>执行人看到本页面 → 退回项红色高亮，显示退回原因</td></tr>
+      <tr><td>3</td><td>点击退回项 → 进入拍照模式（照片已清空，从零开始拍）</td></tr>
+      <tr><td>4</td><td>全部退回项重拍完成 → "重新提交"按钮激活</td></tr>
+      <tr><td>5</td><td>重新提交 → 工作负责人再次判定</td></tr>
+      <tr><td>6</td><td>如再次退回则重复以上流程，无最大退回次数限制</td></tr>
+    </table>
+
+    <details style="margin-top: 24px; border: 1px solid #E5E7EB; border-radius: 8px; padding: 12px 16px; background: #ebfdfa;">
+      <summary style="font-size: 14px; font-weight: 600; color: #047857; cursor: pointer; outline: none;">📋 开发参考（点击展开）</summary>
+      <div style="margin-top: 12px; font-size: 13px; color: #4B5563; line-height: 1.6;">
+        <ul style="padding-left:20px;list-style-type:disc">
+          <li>退回后安措项状态为 <code>rejected</code>，原照片软删除</li>
+          <li>重新提交的数据结构与首次提交一致，仅包含退回项的新照片</li>
+          <li>站房级安措状态在整个退回-重拍过程中保持 <code>safety_submitted</code></li>
+        </ul>
+      </div>
+    </details>
+  </div>
+</div>
+
+<!-- 确认弹窗 -->
+<div class="sh-bg" id="sheetConfirmSubmit"><div class="sh-panel"><div class="sh-title">确认安措完成</div><div class="confirm-content">确认1#开关站全部 <b>7</b> 项安措合格？<br>确认后该站房安措状态变为"已完成"，结合检测分工状态，符合条件时将解锁该站房的检测。</div><div class="confirm-btns"><div class="cbtn cancel" onclick="closeSheet('sheetConfirmSubmit')">取消</div><div class="cbtn ok" onclick="doConfirmSubmit()">确认完成</div></div></div></div>
+<div class="sh-bg" id="sheetExecSubmit"><div class="sh-panel"><div class="sh-title">提交安措</div><div class="confirm-content">全部 <b>7</b> 项安措已拍照存证，提交给工作负责人确认？</div><div class="confirm-btns"><div class="cbtn cancel" onclick="closeSheet('sheetExecSubmit')">取消</div><div class="cbtn ok" onclick="doExecSubmit()">确认提交</div></div></div></div>
+<div class="sh-bg" id="sheetReject"><div class="sh-panel"><div class="sh-title">退回重做</div><div class="confirm-content">判定该项安措<b style="color:var(--ng)">不合格</b>，退回给执行人重新布置并拍照。<br><br><div style="font-size:12px;color:var(--g500);margin-bottom:4px">退回原因（选填）</div><textarea id="rejectReason" style="width:100%;height:60px;border:1px solid var(--g200);border-radius:8px;padding:8px;font-size:13px;resize:none;box-sizing:border-box" placeholder="如：接地线未接牢固，请重新操作"></textarea></div><div class="confirm-btns"><div class="cbtn cancel" onclick="closeSheet('sheetReject')">取消</div><div class="cbtn ok" style="background:var(--ng)" onclick="doReject()">确认退回</div></div></div></div>
+
+<script>
+// ===== 数据 =====
+var GROUPS = [
+  {name:'通道安措', items:[0]},
+  {name:'I段高压柜进线安措', items:[1,2,3]},
+  {name:'II段高压柜进线安措', items:[4,5,6]}
+];
+var ITEMS = [
+  {name:'通道口安措', group:0},
+  {name:'高压进线电缆验电', group:1},
+  {name:'高压进线电缆接地', group:1},
+  {name:'高压进线柜挂牌', group:1},
+  {name:'高压进线电缆验电', group:2},
+  {name:'高压进线电缆接地', group:2},
+  {name:'高压进线柜挂牌', group:2}
+];
+var photos = [0,0,0,0,0,0,0];
+var selCamItem = -1; // 拍照模式中选中的项
+var camGroupIdx = -1; // 当前进入的安措组
+var currentRejectCard = null;
+
+// ===== 视角切换 =====
+function switchView(v) {
+  document.getElementById('viewExec').style.display = v==='exec'?'flex':'none';
+  document.getElementById('viewConfirm').style.display = v==='confirm'?'flex':'none';
+  document.getElementById('viewRejected').style.display = v==='rejected'?'flex':'none';
+  document.querySelectorAll('.view-btn').forEach(function(b){b.classList.remove('active')});
+  event.target.classList.add('active');
+}
+
+// ===== 退回后重拍视角 =====
+var rejPhotos = [0, 0]; // 2个退回项的照片数
+var REJ_ITEMS = [
+  {name:'高压进线电缆接地', reason:'接地线未接牢固，请重新操作'},
+  {name:'高压进线柜挂牌', reason:'挂牌位置不正确'}
+];
+var curRejIdx = -1; // 当前正在重拍的退回项索引
+
+function onRejItemClick(idx) {
+  if(rejPhotos[idx] >= 5) { showToast('toastRejected','该项已拍满5张'); return; }
+  // 进入取景窗重拍模式
+  curRejIdx = idx;
+  document.getElementById('rejListMode').classList.add('hid');
+  document.getElementById('rejCamMode').classList.add('on');
+  document.getElementById('rejCamTitle').textContent = '重拍 — ' + REJ_ITEMS[idx].name;
+  document.getElementById('rejVfText').textContent = REJ_ITEMS[idx].name;
+  document.getElementById('rejVfCount').textContent = rejPhotos[idx]+'/5';
+  document.getElementById('rejCamReason').textContent = REJ_ITEMS[idx].reason;
+  renderRejCamPhotos();
+  updateRejShutter();
+}
+function exitRejCam() {
+  document.getElementById('rejCamMode').classList.remove('on');
+  document.getElementById('rejListMode').classList.remove('hid');
+  curRejIdx = -1;
+  updateRejCards();
+  updateRejProgress();
+}
+function takeRejPhoto() {
+  if(curRejIdx<0 || rejPhotos[curRejIdx]>=5) return;
+  rejPhotos[curRejIdx]++;
+  // 闪光
+  var fl = document.getElementById('rejVfFlash');
+  fl.classList.add('fire');
+  setTimeout(function(){fl.classList.remove('fire')},120);
+  document.getElementById('rejVfCount').textContent = rejPhotos[curRejIdx]+'/5';
+  renderRejCamPhotos();
+  updateRejShutter();
+  if(rejPhotos[curRejIdx]>=1){
+    document.getElementById('rejCamHint').innerHTML = '已拍 <b>'+rejPhotos[curRejIdx]+'</b> 张 · 按 ← 返回列表';
+  }
+}
+function renderRejCamPhotos() {
+  var container = document.getElementById('rejCamPhotos');
+  var hint = document.getElementById('rejCamPhotoHint');
+  var n = rejPhotos[curRejIdx];
+  if(n===0){ container.innerHTML=''; hint.style.display='block'; return; }
+  hint.style.display='none';
+  var html='';
+  for(var i=0;i<n;i++){
+    html+='<div class="cam-ph filled"><div class="ph-idx">'+(i+1)+'</div><div class="ph-who">王强</div></div>';
+  }
+  container.innerHTML=html;
+}
+function updateRejShutter() {
+  var btn = document.getElementById('rejShutterBtn');
+  btn.className = rejPhotos[curRejIdx]>=5 ? 'shutter dis' : 'shutter';
+}
+function updateRejCards() {
+  for(var i=0;i<2;i++){
+    var card = document.getElementById('rej-item-'+i);
+    if(!card) continue;
+    var n = rejPhotos[i];
+    var icon = card.querySelector('.item-icon');
+    var meta = card.querySelector('.item-meta');
+    if(n>0){
+      icon.className='item-icon done'; icon.textContent='✅';
+      meta.style.color='var(--ok)';
+      meta.textContent='已重拍 '+n+'张';
+      card.classList.remove('rejected'); card.classList.add('done');
+    }
+  }
+}
+function updateRejProgress() {
+  var done = rejPhotos.filter(function(p){return p>0}).length;
+  var remaining = 2 - done;
+  document.getElementById('rejBotInfo').innerHTML = '合格 <b>5</b>/7 · 退回 <b>'+remaining+'</b>' + (done>0?' · 已重拍 <b>'+done+'</b>':'');
+  document.getElementById('rejSubmitBtn').className = done===2 ? 'bot-btn ready' : 'bot-btn wait';
+  if(remaining===0){
+    document.getElementById('rejBanner').textContent = '全部退回项已重拍，可重新提交';
+    document.getElementById('rejBanner').parentElement.style.background = '#ECFDF5';
+    document.getElementById('rejBanner').parentElement.style.borderColor = '#A7F3D0';
+    document.getElementById('rejBanner').style.color = '#065F46';
+    document.getElementById('rejBanner').parentElement.querySelector('span:first-child').textContent = '✓';
+  }
+}
+function submitRej() {
+  if(rejPhotos.filter(function(p){return p>0}).length < 2) return;
+  showToast('toastRejected','已重新提交，等待工作负责人确认');
+  document.getElementById('rejSubmitBtn').className = 'bot-btn wait';
+  document.getElementById('rejSubmitBtn').textContent = '已提交，待确认';
+}
+
+// ===== 分组折叠 =====
+function toggleGroup(el) {
+  var arrow = el.querySelector('.group-arrow');
+  var items = el.nextElementSibling;
+  if(arrow.classList.contains('collapsed')){
+    arrow.classList.remove('collapsed');
+    items.style.maxHeight=items.scrollHeight+'px';
+    setTimeout(function(){items.style.maxHeight='none'},260);
+  } else {
+    items.style.maxHeight=items.scrollHeight+'px';
+    requestAnimationFrame(function(){arrow.classList.add('collapsed');items.style.maxHeight='0'});
+  }
+}
+
+// ===== 进入拍照模式 =====
+function enterCam(itemIdx) {
+  var gi = ITEMS[itemIdx].group;
+  camGroupIdx = gi;
+  selCamItem = itemIdx;
+  document.getElementById('listMode').classList.add('hid');
+  document.getElementById('camMode').classList.add('on');
+  document.getElementById('camGroupTitle').textContent = GROUPS[gi].name;
+  renderCamList();
+  selectCamItem(itemIdx);
+}
+
+function exitCam() {
+  document.getElementById('camMode').classList.remove('on');
+  document.getElementById('listMode').classList.remove('hid');
+  camGroupIdx = -1;
+  selCamItem = -1;
+  updateAllExecItems();
+  updateExecProgress();
+}
+
+// ===== 渲染拍照模式列表 =====
+function renderCamList() {
+  var sc = document.getElementById('camScroll');
+  sc.innerHTML = '';
+  var group = GROUPS[camGroupIdx];
+  group.items.forEach(function(idx) {
+    var item = ITEMS[idx];
+    var n = photos[idx];
+    var dotCls = n>=1 ? 'done' : (idx===selCamItem ? 'doing' : '');
+    var row = document.createElement('div');
+    row.className = 'cam-item' + (idx===selCamItem?' sel':'');
+    row.setAttribute('data-idx', idx);
+    row.innerHTML = '<div class="cam-dot '+dotCls+'"></div><div class="cam-item-name">'+item.name+'</div><div class="cam-item-count">'+n+'/5</div>';
+    row.onclick = function(e){ onCamItemClick(idx, e); };
+    sc.appendChild(row);
+    // 如果选中且有照片，展开照片网格
+    if(idx === selCamItem && n > 0) {
+      var grid = document.createElement('div');
+      grid.className = 'cam-photos';
+      for(var i=0;i<n;i++){
+        var ph = document.createElement('div');
+        ph.className = 'cam-ph filled';
+        ph.innerHTML = '<div class="ph-idx">'+(i+1)+'</div><div class="ph-who">王强</div><div class="ph-del" data-idx="'+idx+'" data-pi="'+i+'">×</div>';
+        grid.appendChild(ph);
+      }
+      sc.appendChild(grid);
+      // 绑定删除
+      grid.querySelectorAll('.ph-del').forEach(function(d){
+        d.onclick = function(e){
+          e.stopPropagation();
+          var ii = parseInt(d.getAttribute('data-idx'));
+          if(photos[ii]>0) photos[ii]--;
+          renderCamList();
+          selectCamItem(selCamItem);
+        };
+      });
+    }
+  });
+  updateCamProgress();
+}
+
+function onCamItemClick(idx, e) {
+  if(e.target.closest('.ph-del')) return;
+  selectCamItem(idx);
+  renderCamList();
+}
+
+function selectCamItem(idx) {
+  selCamItem = idx;
+  var n = photos[idx];
+  var label = document.getElementById('vfLabel');
+  var placeholder = document.getElementById('vfPlaceholder');
+  var shutter = document.getElementById('shutterBtn');
+  label.classList.add('vis');
+  placeholder.style.display = 'none';
+  document.getElementById('vfText').textContent = ITEMS[idx].name;
+  document.getElementById('vfCount').textContent = n+'/5';
+  if(n>=5){
+    shutter.classList.add('dis');
+  } else {
+    shutter.classList.remove('dis');
+  }
+  updateCamProgress();
+  updateNavBtns();
+}
+
+function updateCamProgress() {
+  var group = GROUPS[camGroupIdx];
+  var bar = document.getElementById('camProgress');
+  bar.innerHTML = '';
+  group.items.forEach(function(idx){
+    var d = document.createElement('div');
+    d.className = 'pd ' + (photos[idx]>0?'full':'empty');
+    bar.appendChild(d);
+  });
+  var done = group.items.filter(function(i){return photos[i]>0}).length;
+  var sp = document.createElement('div');
+  sp.className = 'pn';
+  sp.textContent = done+'/'+group.items.length;
+  bar.appendChild(sp);
+}
+
+// ===== 组内导航（‹ › 按钮） =====
+function navCamItem(dir) {
+  var group = GROUPS[camGroupIdx];
+  var curPos = group.items.indexOf(selCamItem);
+  var nextPos = curPos + dir;
+  if(nextPos >= 0 && nextPos < group.items.length) {
+    selectCamItem(group.items[nextPos]);
+    renderCamList();
+  }
+}
+function updateNavBtns() {
+  var group = GROUPS[camGroupIdx];
+  if(!group) return;
+  var curPos = group.items.indexOf(selCamItem);
+  var prev = document.getElementById('prevBtn');
+  var next = document.getElementById('nextBtn');
+  var hint = document.getElementById('camHint');
+  // 左箭头
+  prev.className = curPos > 0 ? 'shutter-nav' : 'shutter-nav dis';
+  // 右箭头 + 提示文字
+  if(curPos < group.items.length - 1) {
+    var hasMin = photos[selCamItem] >= 1;
+    next.className = hasMin ? 'shutter-nav hint' : 'shutter-nav';
+    var nextName = ITEMS[group.items[curPos+1]].name;
+    hint.innerHTML = hasMin
+      ? '→ 下一项: <span class="hint-next">' + nextName + '</span>'
+      : '拍至少1张后可切换';
+  } else {
+    next.className = 'shutter-nav dis';
+    var allDone = group.items.every(function(i){return photos[i]>=1});
+    hint.textContent = allDone ? '本组全部已拍 ✓ 按 ← 返回列表' : '';
+  }
+}
+
+// ===== 拍照 =====
+function takePhoto() {
+  if(selCamItem<0) return;
+  if(photos[selCamItem]>=5) return;
+  photos[selCamItem]++;
+  // 闪光
+  var fl = document.getElementById('vfFlash');
+  fl.classList.add('fire');
+  setTimeout(function(){fl.classList.remove('fire')},120);
+  // 更新
+  var n = photos[selCamItem];
+  document.getElementById('vfCount').textContent = n+'/5';
+  // 拍满5张自动跳下一项
+  if(n>=5){
+    var group = GROUPS[camGroupIdx];
+    var curPos = group.items.indexOf(selCamItem);
+    var next = -1;
+    for(var i=curPos+1;i<group.items.length;i++){
+      if(photos[group.items[i]]<5){ next=group.items[i]; break; }
+    }
+    if(next>=0){
+      setTimeout(function(){ selectCamItem(next); renderCamList(); },300);
+    } else {
+      document.getElementById('shutterBtn').classList.add('dis');
+    }
+  }
+  renderCamList();
+  updateNavBtns();
+}
+
+// ===== 更新列表模式 =====
+var expandedExecItem = -1; // 当前展开的列表项
+
+function updateAllExecItems() {
+  for(var i=0;i<7;i++){
+    var card = document.getElementById('exec-item-'+i);
+    if(!card) continue;
+    var n = photos[i];
+    var icon = card.querySelector('.item-icon');
+    var meta = card.querySelector('.item-meta');
+    // 更新onclick行为
+    card.setAttribute('onclick', 'onExecItemClick('+i+')');
+    if(n>0){
+      card.classList.add('done');
+      icon.className='item-icon done'; icon.textContent='✅';
+      meta.innerHTML='已拍 <b>'+n+'</b>张 · 王强';
+    } else {
+      card.classList.remove('done');
+      icon.className='item-icon photo'; icon.textContent='📷';
+      meta.textContent='未拍照';
+    }
+    // 更新照片展开网格
+    var gridId = 'exec-grid-'+i;
+    var existingGrid = document.getElementById(gridId);
+    if(existingGrid) existingGrid.remove();
+    if(n>0){
+      var grid = document.createElement('div');
+      grid.className = 'exec-photos' + (expandedExecItem===i?' show':'');
+      grid.id = gridId;
+      var html = '';
+      for(var j=0;j<n;j++){
+        html += '<div class="exec-ph"><div class="ep-idx">'+(j+1)+'</div></div>';
+      }
+      if(n<5){
+        html += '<div class="exec-ph-more" onclick="event.stopPropagation();enterCam('+i+')">+再拍</div>';
+      }
+      grid.innerHTML = html;
+      card.appendChild(grid);
+    }
+  }
+}
+
+function onExecItemClick(idx) {
+  if(event.target.closest('.exec-ph-more')) return;
+  var n = photos[idx];
+  if(n>0){
+    // 已拍照：展开/折叠照片网格
+    if(expandedExecItem === idx){
+      expandedExecItem = -1;
+    } else {
+      expandedExecItem = idx;
+    }
+    // 刷新所有网格的展开状态
+    for(var i=0;i<7;i++){
+      var grid = document.getElementById('exec-grid-'+i);
+      if(grid){
+        if(i===expandedExecItem) grid.classList.add('show');
+        else grid.classList.remove('show');
+      }
+    }
+  } else {
+    // 未拍照：直接进拍照模式
+    enterCam(idx);
+  }
+}
+
+function updateExecProgress() {
+  var done = photos.filter(function(p){return p>0}).length;
+  document.getElementById('execBotInfo').innerHTML='已完成 <b>'+done+'</b>/7 · 未完成 <b>'+(7-done)+'</b>';
+  var btn = document.getElementById('execSubmitBtn');
+  btn.className = done===7?'bot-btn ready':'bot-btn wait';
+  var groups=[[0],[1,2,3],[4,5,6]];
+  groups.forEach(function(g,gi){
+    var gc=g.filter(function(i){return photos[i]>0}).length;
+    var el=document.getElementById('g'+(gi+1)+'count');
+    if(el) el.textContent=gc+'/'+g.length;
+  });
+}
+
+// ===== 执行提交 =====
+function submitExec(){
+  if(photos.filter(function(p){return p>0}).length<7) return;
+  document.getElementById('sheetExecSubmit').classList.add('show');
+}
+function doExecSubmit(){
+  closeSheet('sheetExecSubmit');
+  showToast('toastExec','已提交，等待工作负责人确认');
+  document.getElementById('execSubmitBtn').className='bot-btn wait';
+  document.getElementById('execSubmitBtn').textContent='已提交，待确认';
+}
+
+// ===== 确认视角 =====
+function toggleConfirmItem(card){
+  if(event.target.closest('.judge-opt')) return;
+  var grid=card.querySelector('.photo-grid'), panel=card.querySelector('.judge-panel');
+  var isOpen=grid.classList.contains('show');
+  document.querySelectorAll('#confirmScroll .photo-grid').forEach(function(g){g.classList.remove('show')});
+  document.querySelectorAll('#confirmScroll .judge-panel').forEach(function(p){p.classList.remove('show')});
+  if(!isOpen){ grid.classList.add('show'); panel.classList.add('show'); }
+}
+
+function judgeItem(optEl,type){
+  event.stopPropagation();
+  var card=optEl.closest('.item-card');
+  if(type==='fail'){ currentRejectCard=card; document.getElementById('sheetReject').classList.add('show'); return; }
+  applyJudge(card,'pass'); updateConfirmProgress();
+}
+
+function applyJudge(card,type){
+  var icon=card.querySelector('.item-icon'), opts=card.querySelectorAll('.judge-opt');
+  if(type==='pass'){
+    card.className='item-card done'; icon.className='item-icon done'; icon.textContent='✅';
+    opts[0].classList.add('on'); opts[1].classList.remove('on');
+  } else {
+    card.className='item-card rejected'; icon.className='item-icon rejected'; icon.textContent='✕';
+    opts[1].classList.add('on'); opts[0].classList.remove('on');
+  }
+  opts.forEach(function(o){o.style.pointerEvents='none'});
+  setTimeout(function(){ card.querySelector('.photo-grid').classList.remove('show'); card.querySelector('.judge-panel').classList.remove('show'); },400);
+}
+
+function doReject(){
+  closeSheet('sheetReject');
+  if(currentRejectCard){
+    applyJudge(currentRejectCard,'fail');
+    currentRejectCard.querySelector('.item-meta').innerHTML='<span style="color:var(--ng);font-weight:600">已退回</span> · 等待执行人重新拍照';
+    currentRejectCard=null;
+  }
+  updateConfirmProgress();
+  showToast('toastConfirm','已退回，执行人将收到通知');
+  document.getElementById('rejectReason').value='';
+}
+
+function updateConfirmProgress(){
+  var cards=document.querySelectorAll('#confirmScroll .item-card');
+  var judged=0, allPass=true;
+  cards.forEach(function(c){ if(c.classList.contains('done')) judged++; else if(c.classList.contains('rejected')){judged++;allPass=false;} else allPass=false; });
+  document.getElementById('confirmBotInfo').innerHTML='已判定 <b>'+judged+'</b>/7 · 未判定 <b>'+(7-judged)+'</b>';
+  document.getElementById('confirmSubmitBtn').className=(judged===7&&allPass)?'bot-btn ready':'bot-btn wait';
+}
+
+function submitConfirm(){ document.getElementById('sheetConfirmSubmit').classList.add('show'); }
+function doConfirmSubmit(){
+  closeSheet('sheetConfirmSubmit');
+  showToast('toastConfirm','安措确认完成，站房检测已解锁');
+  document.getElementById('confirmSubmitBtn').className='bot-btn wait';
+  document.getElementById('confirmSubmitBtn').textContent='已完成';
+}
+
+// ===== 通用 =====
+function closeSheet(id){ document.getElementById(id).classList.remove('show'); }
+function showToast(id,msg){
+  var t=document.getElementById(id);
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show')},2000);
+}
+document.querySelectorAll('.sh-bg').forEach(function(bg){
+  bg.addEventListener('click',function(e){ if(e.target===bg) bg.classList.remove('show'); });
+});
+</script>
+</body>
+</html>
