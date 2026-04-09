@@ -125,8 +125,35 @@
         .card:hover .card-footer svg {
             transform: translateX(4px);
         }
-        
-        
+
+        /* 锁定态卡片 */
+        .card-locked {
+            background: #F9FAFB;
+            border-radius: var(--border-radius);
+            padding: 32px 24px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: none;
+            border: 1px solid rgba(0,0,0,0.06);
+            opacity: 0.55;
+            cursor: not-allowed;
+            position: relative;
+            user-select: none;
+        }
+        .card-locked .card-title { color: #9CA3AF; }
+        .card-locked .card-desc  { color: #C4CBD4; }
+        .card-locked .card-icon  { background: rgba(0,0,0,0.04); color: #C4CBD4; }
+        .lock-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 11px; font-weight: 700; color: #9CA3AF;
+            letter-spacing: 1px; margin-bottom: 8px;
+        }
+        .lock-badge svg { width:11px; height:11px; }
+        .card-locked .card-footer {
+            margin-top: 24px; font-size: 13px; color: #C4CBD4;
+            font-weight: 500; display: flex; align-items: center; gap: 4px;
+        }
+
         .section-title {
             font-size: 20px;
             font-weight: 600;
@@ -197,77 +224,63 @@
             </a>
         </div>
 
-        <div class="section-title">历史版本参考</div>
+        <div class="section-title" style="color:#9CA3AF;border-color:rgba(0,0,0,0.04);">历史版本（已归档）</div>
         <div class="grid">
-            <a href="viewer_01_gongdan.html" class="card" target="_blank">
-                <div style="font-size:11px;font-weight:700;color:var(--primary-color);letter-spacing:1px;margin-bottom:8px;opacity:0.7">STEP 01</div>
-                <div class="card-icon">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                </div>
+            <div class="card-locked">
+                <div class="lock-badge"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> 已归档 · STEP 01</div>
+                <div class="card-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg></div>
                 <h3 class="card-title">轻量工单创建与派发</h3>
-                <p class="card-desc">工单新建、信息填写及自动化派发至相关处理环节的流程体验。</p>
-                <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
-            </a>
+                <p class="card-desc">该版本已归档，请查阅 V3.0 演示。</p>
+                <div class="card-footer"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> 已锁定</div>
+            </div>
 
-            <a href="viewer_02_zhunbei.html" class="card" target="_blank">
-                <div style="font-size:11px;font-weight:700;color:var(--primary-color);letter-spacing:1px;margin-bottom:8px;opacity:0.7">STEP 02</div>
-                <div class="card-icon">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                </div>
+            <div class="card-locked">
+                <div class="lock-badge"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> 已归档 · STEP 02</div>
+                <div class="card-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg></div>
                 <h3 class="card-title">作业前准备</h3>
-                <p class="card-desc">出发前材料、人员与配合事项的合规确认与留痕过门环节。</p>
-                <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
-            </a>
+                <p class="card-desc">该版本已归档，请查阅 V3.0 演示。</p>
+                <div class="card-footer"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> 已锁定</div>
+            </div>
 
-            <a href="viewer_03_xianchang.html" class="card" target="_blank">
-                <div style="font-size:11px;font-weight:700;color:var(--primary-color);letter-spacing:1px;margin-bottom:8px;opacity:0.7">STEP 03</div>
-                <div class="card-icon">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                </div>
+            <div class="card-locked">
+                <div class="lock-badge"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> 已归档 · STEP 03</div>
+                <div class="card-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg></div>
                 <h3 class="card-title">现场准备</h3>
-                <p class="card-desc">到达现场后定位打卡、人员到位及电压等级核查的到场确认。</p>
-                <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
-            </a>
+                <p class="card-desc">该版本已归档，请查阅 V3.0 演示。</p>
+                <div class="card-footer"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> 已锁定</div>
+            </div>
 
-            <a href="viewer_04_heshiqk.html" class="card" target="_blank">
-                <div style="font-size:11px;font-weight:700;color:var(--primary-color);letter-spacing:1px;margin-bottom:8px;opacity:0.7">STEP 04</div>
-                <div class="card-icon">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                </div>
+            <div class="card-locked">
+                <div class="lock-badge"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> 已归档 · STEP 04</div>
+                <div class="card-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg></div>
                 <h3 class="card-title">建设情况核实 (轻量建站)</h3>
-                <p class="card-desc">站址快速核实、建站情况确认，其结果决定后续核查任务项数量。</p>
-                <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
-            </a>
+                <p class="card-desc">该版本已归档，请查阅 V3.0 演示。</p>
+                <div class="card-footer"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> 已锁定</div>
+            </div>
 
-            <a href="viewer_05_fengong.html" class="card" target="_blank">
-                <div style="font-size:11px;font-weight:700;color:var(--primary-color);letter-spacing:1px;margin-bottom:8px;opacity:0.7">STEP 05</div>
-                <div class="card-icon">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                </div>
+            <div class="card-locked">
+                <div class="lock-badge"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> 已归档 · STEP 05</div>
+                <div class="card-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg></div>
                 <h3 class="card-title">核查分工</h3>
-                <p class="card-desc">建设情况确认后，按人分配 6~8 项核查任务的协作分工界面。</p>
-                <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
-            </a>
+                <p class="card-desc">该版本已归档，请查阅 V3.0 演示。</p>
+                <div class="card-footer"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> 已锁定</div>
+            </div>
 
-            <a href="viewer_06_hecha.html" class="card" target="_blank">
-                <div style="font-size:11px;font-weight:700;color:var(--primary-color);letter-spacing:1px;margin-bottom:8px;opacity:0.7">STEP 06</div>
-                <div class="card-icon">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-                <h3 class="card-title">现场核查 全流程 (全新交互版)</h3>
-                <p class="card-desc">分工完成后各人员实地拍照核查、多人协同与结果判定的完整演示。</p>
-                <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
-            </a>
+            <div class="card-locked">
+                <div class="lock-badge"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> 已归档 · STEP 06</div>
+                <div class="card-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+                <h3 class="card-title">现场核查 全流程</h3>
+                <p class="card-desc">该版本已归档，请查阅 V3.0 演示。</p>
+                <div class="card-footer"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> 已锁定</div>
+            </div>
 
-            <a href="v1/demo_抽检对象确认.html" class="card" target="_blank">
-                <div style="font-size:11px;font-weight:700;color:var(--primary-color);letter-spacing:1px;margin-bottom:8px;opacity:0.7">STEP 07</div>
-                <div class="card-icon">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
-                </div>
+            <div class="card-locked">
+                <div class="lock-badge"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> 已归档 · STEP 07</div>
+                <div class="card-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg></div>
                 <h3 class="card-title">抽检对象确认</h3>
-                <p class="card-desc">核查完毕后，针对抽检范围内具体站房对象与设备的最终确认。</p>
-                <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
-            </a>
+                <p class="card-desc">该版本已归档，请查阅 V3.0 演示。</p>
+                <div class="card-footer"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> 已锁定</div>
+            </div>
         </div>        <div class="section-title">规范与资源</div>
         <div class="grid">
             <a href="demo_prd.html" class="card" target="_blank" style="border-top: 3px solid #E6A23C;">
