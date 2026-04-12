@@ -278,6 +278,27 @@
 .issue-level{font-size:11px;padding:2px 8px;border-radius:10px}
 .issue-level.normal{background:var(--warn-l);color:#92400E}
 .issue-level.severe{background:var(--ng-l);color:var(--ng)}
+
+/* 增补标签 */
+.supp-tag{font-size:10px;padding:2px 7px;border-radius:var(--r-pill);font-weight:600;background:#FFF7ED;color:#EA580C;border:1px solid #FDBA74}
+.supp-banner{margin:6px 12px;padding:8px 14px;background:#FFF7ED;border-left:3px solid #EA580C;border-radius:var(--rs);font-size:12px;color:#EA580C;display:none;align-items:center;gap:6px}
+.supp-banner.show{display:flex}
+
+/* 增补设备组选项 */
+.supp-group-item{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid var(--g100);cursor:pointer;min-height:48px;gap:10px}
+.supp-group-item:active{background:var(--g50)}
+.supp-group-name{flex:1;font-size:14px;color:var(--g700);font-weight:500}
+.supp-group-chevron{color:var(--g300);font-size:14px}
+
+/* 协同模式 */
+.collab-tabs{display:flex;margin:0 12px 6px;border-radius:var(--r);overflow:hidden;border:1.5px solid var(--g200);background:var(--g50)}
+.collab-tab{flex:1;padding:8px 0;text-align:center;font-size:12px;font-weight:600;cursor:pointer;color:var(--g400);background:var(--g50);border:none;min-height:36px}
+.collab-tab+.collab-tab{border-left:1.5px solid var(--g200)}
+.collab-tab.sel{background:var(--pri);color:#fff}
+.helper-bar{margin:0 12px 6px;padding:8px 12px;background:rgba(60,200,180,0.08);border-left:3px solid var(--pri);border-radius:var(--rs);font-size:12px;color:var(--pri-d);display:none}
+.helper-bar.show{display:block}
+.presence-dot{display:inline-flex;align-items:center;gap:3px;font-size:10px;color:var(--pri-d);background:var(--pri-l);padding:1px 6px;border-radius:10px;margin-left:4px}
+.conflict-mark{color:#EA580C;font-size:11px;margin-left:4px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -290,14 +311,14 @@
 
       <!-- ========== Page1：我的任务（站房列表） ========== -->
       <div class="page active" id="page1">
-        <div class="nbar"><div class="title" style="margin-right:0">检测执行</div></div>
+        <div class="nbar"><div class="back" onclick="showToast('返回BIGA项目工作台')">&#8592;</div><div class="title">检测执行</div></div>
         <div class="scroll">
           <div class="proj-card">
             <div class="proj-row"><span class="proj-name">建湖复兴花园一期</span><span class="proj-date">2026-03-28</span></div>
             <div class="proj-row" style="margin-top:6px"><span class="proj-addr">江苏省盐城市建湖县</span><span class="proj-scale">规模 2-0-4-1</span></div>
           </div>
           <div style="margin:6px 12px 0">
-            <div class="alert alert-info">已解锁 1/2 个站房</div>
+            <div class="alert alert-info">解锁条件：开工会完成 + 检测分工完成 + 安措完成 · 已解锁 1/3 个站房</div>
           </div>
           <div style="margin-top:8px">
             <div class="room-card" id="room1Card" onclick="goPage(2)">
@@ -310,11 +331,20 @@
                 <span class="room-chevron">&#8250;</span>
               </div>
             </div>
-            <div class="room-card locked" onclick="showToast('安措未完成，暂不可进入')">
+            <div class="room-card locked" onclick="showToast('安措未完成，暂不可进入（解锁需：开工会✓ 分工✓ 安措✗）')">
               <div class="room-inner">
                 <div class="room-info">
                   <div class="room-name">3#配电室</div>
                   <div class="room-meta">等待安措完成</div>
+                </div>
+                <span class="room-tag wait">未解锁</span>
+              </div>
+            </div>
+            <div class="room-card locked" onclick="showToast('开工会未完成，暂不可进入（解锁需：开工会✗ 分工✓ 安措✓）')">
+              <div class="room-inner">
+                <div class="room-info">
+                  <div class="room-name">2#开关站</div>
+                  <div class="room-meta">等待开工会</div>
                 </div>
                 <span class="room-tag wait">未解锁</span>
               </div>
@@ -325,12 +355,42 @@
 
       <!-- ========== Page2：站房内 ========== -->
       <div class="page" id="page2">
-        <div class="nbar"><div class="back" onclick="goPage(1)">&#8592;</div><div class="title">1#开关站</div></div>
+        <div class="nbar"><div class="back" onclick="goPage(1)">&#8592;</div><div class="title">1#开关站</div><div style="position:absolute;right:12px;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;font-weight:600;color:#fff" onclick="openSuppSheet()">＋</div></div>
         <div class="scroll" id="page2scroll">
           <div class="proj-card">
             <div class="proj-row"><span class="proj-name">建湖复兴花园一期</span><span class="proj-date">2026-03-28</span></div>
             <div class="proj-row" style="margin-top:6px"><span class="proj-addr">江苏省盐城市建湖县</span><span class="proj-scale">规模 2-0-4-1</span></div>
           </div>
+          <!-- 协同：我的设备/全站房设备 切换 -->
+          <div class="collab-tabs">
+            <button class="collab-tab sel" id="ctMine" onclick="switchCollabView('mine')">我的设备</button>
+            <button class="collab-tab" id="ctAll" onclick="switchCollabView('all')">全站房设备</button>
+          </div>
+          <!-- 协同：协助提示条 -->
+          <div class="helper-bar" id="helperBar">ℹ️ 您正在协助队友，录入数据将标记实际录入人。组确认和设备提交由操作人完成。</div>
+          <!-- 协同：他人设备区域（默认隐藏） -->
+          <div id="othersDevices" style="display:none">
+            <div style="padding:6px 14px 2px;font-size:11px;color:var(--g400);font-weight:600">队友的设备</div>
+            <div class="dev-row" onclick="goHelperMode('李四','中置柜 #1')">
+              <div class="dev-row-inner">
+                <span class="dev-row-name">中置柜 #1</span>
+                <span style="font-size:10px;color:var(--g400);margin:0 4px">操作人：李四</span>
+                <span class="dev-row-prog">5/28</span>
+                <span class="dev-row-tag doing">检测中</span>
+                <span class="dev-row-chevron">&#8250;</span>
+              </div>
+            </div>
+            <div class="dev-row" onclick="goHelperMode('王强','低压电缆 #1')">
+              <div class="dev-row-inner">
+                <span class="dev-row-name">低压电缆 #1</span>
+                <span style="font-size:10px;color:var(--g400);margin:0 4px">操作人：王强</span>
+                <span class="dev-row-prog">0/15</span>
+                <span class="dev-row-tag wait">待检测</span>
+                <span class="dev-row-chevron">&#8250;</span>
+              </div>
+            </div>
+          </div>
+
           <div id="envBanner" style="margin:6px 12px;padding:10px 14px;background:rgba(255,149,0,0.08);border-left:3px solid var(--warn);border-radius:var(--rs);display:flex;align-items:center;gap:10px;cursor:pointer" onclick="goEnvPage()">
             <span style="font-size:16px">🌡</span>
             <div style="flex:1">
@@ -339,6 +399,7 @@
             </div>
             <span style="color:var(--g300);font-size:14px">›</span>
           </div>
+          <div class="supp-banner" id="suppBanner"><span>⚠</span><span id="suppBannerText"></span></div>
           <div class="seg-ctrl">
             <button class="seg-btn sel" id="segDev" onclick="switchView('dev')">按设备逐个做</button>
             <button class="seg-btn" id="segBatch" onclick="switchView('batch')">按试验项批量做</button>
@@ -401,11 +462,11 @@
               <span class="group-count">涉及断路器×2</span>
             </div>
             <div class="group-items">
-              <div class="batch-item" onclick="showToast('进入批量外观拍照')"><div class="batch-inner"><span class="batch-name">整体外观拍照</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
-              <div class="batch-item" onclick="showToast('进入批量判定')"><div class="batch-inner"><span class="batch-name">外观无破损</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
-              <div class="batch-item" onclick="showToast('进入批量判定')"><div class="batch-inner"><span class="batch-name">配件干净</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
-              <div class="batch-item" onclick="showToast('进入批量判定')"><div class="batch-inner"><span class="batch-name">紧固件连接牢固</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
-              <div class="batch-item" onclick="showToast('进入批量判定')"><div class="batch-inner"><span class="batch-name">检查结论</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
+              <div class="batch-item" onclick="goBatchPhoto()"><div class="batch-inner"><span class="batch-name">整体外观拍照</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
+              <div class="batch-item" onclick="goBatchToggle('外观无破损','设备外壳无明显破损、变形')"><div class="batch-inner"><span class="batch-name">外观无破损</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
+              <div class="batch-item" onclick="goBatchToggle('配件干净','设备表面及配件清洁无杂物')"><div class="batch-inner"><span class="batch-name">配件干净</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
+              <div class="batch-item" onclick="goBatchToggle('紧固件连接牢固','各紧固件连接可靠、无松动')"><div class="batch-inner"><span class="batch-name">紧固件连接牢固</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
+              <div class="batch-item" onclick="goBatchToggle('检查结论','外观检查总体判定')"><div class="batch-inner"><span class="batch-name">检查结论</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
             </div>
 
             <div class="group-header" onclick="toggleGroup(this)">
@@ -414,9 +475,9 @@
               <span class="group-count">涉及断路器×2</span>
             </div>
             <div class="group-items">
-              <div class="batch-item" onclick="showToast('进入批量录入')"><div class="batch-inner"><span class="batch-name">生产厂家</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
-              <div class="batch-item" onclick="showToast('进入批量录入')"><div class="batch-inner"><span class="batch-name">规格型号</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
-              <div class="batch-item" onclick="showToast('进入批量录入')"><div class="batch-inner"><span class="batch-name">生产日期</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
+              <div class="batch-item" onclick="goBatchText('生产厂家')"><div class="batch-inner"><span class="batch-name">生产厂家</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
+              <div class="batch-item" onclick="goBatchText('规格型号')"><div class="batch-inner"><span class="batch-name">规格型号</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
+              <div class="batch-item" onclick="goBatchText('生产日期')"><div class="batch-inner"><span class="batch-name">生产日期</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
             </div>
 
             <div class="group-header" onclick="toggleGroup(this)">
@@ -434,7 +495,7 @@
               <span class="group-count">涉及断路器×2</span>
             </div>
             <div class="group-items">
-              <div class="batch-item" onclick="showToast('进入批量录入')"><div class="batch-inner"><span class="batch-name">A/B/C相合闸时间</span><span class="batch-scope">2 台断路器 · 可蓝牙采集</span><span class="batch-chevron">&#8250;</span></div></div>
+              <div class="batch-item" onclick="showToast('进入批量合闸时间录入（交互同回路电阻P5）')"><div class="batch-inner"><span class="batch-name">A/B/C相合闸时间</span><span class="batch-scope">2 台断路器 · 可蓝牙采集</span><span class="batch-chevron">&#8250;</span></div></div>
             </div>
 
             <div class="group-header" onclick="toggleGroup(this)">
@@ -443,9 +504,9 @@
               <span class="group-count">涉及断路器×2</span>
             </div>
             <div class="group-items">
-              <div class="batch-item" onclick="showToast('进入批量判定')"><div class="batch-inner"><span class="batch-name">防跳功能</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
-              <div class="batch-item" onclick="showToast('进入批量判定')"><div class="batch-inner"><span class="batch-name">带电显示器联锁</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
-              <div class="batch-item" onclick="showToast('进入批量判定')"><div class="batch-inner"><span class="batch-name">接地开关联锁</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
+              <div class="batch-item" onclick="goBatchToggle('防跳功能','断路器应具备防跳功能')"><div class="batch-inner"><span class="batch-name">防跳功能</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
+              <div class="batch-item" onclick="goBatchToggle('带电显示器联锁','带电显示器指示正确时才能操作开关')"><div class="batch-inner"><span class="batch-name">带电显示器联锁</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
+              <div class="batch-item" onclick="goBatchToggle('接地开关联锁','接地开关与断路器之间联锁可靠')"><div class="batch-inner"><span class="batch-name">接地开关联锁</span><span class="batch-scope">2 台断路器</span><span class="batch-chevron">&#8250;</span></div></div>
             </div>
           </div>
         </div>
@@ -457,7 +518,9 @@
 
       <!-- ========== Page3：断路器 #1 检测详情 ========== -->
       <div class="page" id="page3">
-        <div class="nbar"><div class="back" onclick="goPage(2)">&#8592;</div><div class="title">断路器 #1</div><div class="nav-right" id="navRight">0/8 组</div></div>
+        <div class="nbar"><div class="back" onclick="exitDetail()">&#8592;</div><div class="title" id="p3Title">断路器 #1</div><div class="nav-right" id="navRight">0/8 组</div></div>
+        <!-- 协同：协助模式提示条 -->
+        <div class="helper-bar" id="p3HelperBar">ℹ️ 协助<span id="p3HelperOwner"></span>的设备 · 组确认和提交由操作人完成</div>
         <div class="seg-ctrl" style="margin:6px 12px">
           <button class="seg-btn sel" id="segNonElec" onclick="switchTab('non-elec')">非电气 <span id="nonElecCount">0/11</span></button>
           <button class="seg-btn" id="segElec" onclick="switchTab('elec')">电气 <span id="elecCount">0/12</span></button>
@@ -509,6 +572,48 @@
         <div class="bot">
           <div class="bot-info">已完成 <b id="p5Done">0</b>/2 · 未完成 <span id="p5Left">2</span></div>
           <div class="progress-bar-wrap"><div class="progress-bar-fill" id="p5Bar" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <!-- ========== Page7：批量toggle判定（外观无破损 × 断路器2台） ========== -->
+      <div class="page" id="page7">
+        <div class="nbar"><div class="back" onclick="goPage(2)">&#8592;</div><div class="title" id="p7Title">外观无破损</div></div>
+        <div class="scroll">
+          <div style="margin:6px 12px 0">
+            <div class="alert alert-info" id="p7Std">标准：设备外壳无明显破损、变形</div>
+          </div>
+          <div id="batchToggleList"></div>
+        </div>
+        <div class="bot">
+          <div class="bot-info">已完成 <b id="p7Done">0</b>/2 · 未完成 <span id="p7Left">2</span></div>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" id="p7Bar" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <!-- ========== Page8：批量文本录入（生产厂家 × 断路器2台） ========== -->
+      <div class="page" id="page8">
+        <div class="nbar"><div class="back" onclick="goPage(2)">&#8592;</div><div class="title" id="p8Title">生产厂家</div></div>
+        <div class="scroll">
+          <div id="batchTextList"></div>
+        </div>
+        <div class="bot">
+          <div class="bot-info">已完成 <b id="p8Done">0</b>/2 · 未完成 <span id="p8Left">2</span></div>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" id="p8Bar" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <!-- ========== Page9：批量拍照（整体外观 × 断路器2台） ========== -->
+      <div class="page" id="page9">
+        <div class="nbar"><div class="back" onclick="goPage(2)">&#8592;</div><div class="title">整体外观拍照</div></div>
+        <div class="scroll">
+          <div style="margin:6px 12px 0">
+            <div class="alert alert-info">每台设备拍摄整体外观照片（上限5张）</div>
+          </div>
+          <div id="batchPhotoList"></div>
+        </div>
+        <div class="bot">
+          <div class="bot-info">已完成 <b id="p9Done">0</b>/2 · 未完成 <span id="p9Left">2</span></div>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" id="p9Bar" style="width:0%"></div></div>
         </div>
       </div>
 
@@ -647,6 +752,25 @@
         </div>
       </div>
 
+      <!-- 增补设备 Bottom Sheet -->
+      <div class="sh-bg" id="suppSheet" onclick="if(event.target===this)this.classList.remove('show')">
+        <div class="sh-panel" onclick="event.stopPropagation()">
+          <div class="sh-title">增补检测设备</div>
+          <div style="padding:0 4px 8px;font-size:12px;color:var(--g500)">选择要增补的设备类型，增补后立即可开始检测</div>
+          <div>
+            <div class="supp-group-item" onclick="doSuppDevice('断路器')"><span class="supp-group-name">断路器</span><span class="supp-group-chevron">›</span></div>
+            <div class="supp-group-item" onclick="doSuppDevice('低压电缆')"><span class="supp-group-name">低压电缆</span><span class="supp-group-chevron">›</span></div>
+            <div class="supp-group-item" onclick="doSuppDevice('干式变压器')"><span class="supp-group-name">干式变压器</span><span class="supp-group-chevron">›</span></div>
+            <div class="supp-group-item" onclick="doSuppDevice('中置柜')"><span class="supp-group-name">中置柜</span><span class="supp-group-chevron">›</span></div>
+            <div class="supp-group-item" onclick="doSuppDevice('高压电缆')"><span class="supp-group-name">高压电缆</span><span class="supp-group-chevron">›</span></div>
+            <div class="supp-group-item" onclick="doSuppDevice('低压柜')"><span class="supp-group-name">低压柜</span><span class="supp-group-chevron">›</span></div>
+          </div>
+          <div style="padding:12px 4px 0;text-align:center">
+            <button style="padding:12px 40px;border:none;border-radius:var(--r);background:var(--g100);color:var(--g600);font-size:14px;font-weight:600;cursor:pointer" onclick="document.getElementById('suppSheet').classList.remove('show')">取消</button>
+          </div>
+        </div>
+      </div>
+
       <div id="toastEl"></div>
     </div>
   </div>
@@ -676,19 +800,40 @@
     <h3>业务规则摘要</h3>
     <table>
       <tr><th>规则</th><th>说明</th></tr>
-      <tr><td>站房解锁</td><td>检测分工完成 + 安措执行完成 → 该站房检测入口解锁</td></tr>
+      <tr><td>站房解锁</td><td>开工会完成(SR-70) + 检测分工完成(SR-20) + 安措执行完成(SR-40) → 三者同时满足后该站房检测入口解锁</td></tr>
       <tr><td>组级确认</td><td>一个试验组（如"设备外观检查"5项）全部完成后出现"确认"文字链，确认后锁定不可修改</td></tr>
       <tr><td>设备级提交</td><td>全部8组确认后导航栏右侧变为"提交"按钮，提交后数据锁定</td></tr>
       <tr><td>自动计算</td><td>前置项填完后自动计算（如合闸同期性 = max-min），不合格自动标记</td></tr>
       <tr><td>不合格处理</td><td>不合格时弹出问题面板：勾选问题类型（必选） + 补拍照片（选填） + 备注说明（选填）</td></tr>
       <tr><td>拍照上限</td><td>统一默认5张</td></tr>
-      <tr><td>环境数据</td><td>站房温度+湿度+天气必填；湿度>=80%时部分耐压/绝缘试验自动跳过</td></tr>
+      <tr><td>增补检测对象</td><td>试验人员在P2导航栏"＋"按钮自主增补设备，操作人=自己，选监护人，零审批立即可测。橙色"增补"标签，工作负责人在分工页面全局可见可调整</td></tr>
+      <tr><td>环境数据</td><td>站房温度+湿度+天气必填；湿度>=80%时部分耐压/绝缘试验自动跳过。采集后始终可修改（横幅→点击→重新编辑），修改后自动重同步+重判定跳过，已确认组不受影响</td></tr>
     </table>
+
+    <h3>多人协同设计</h3>
+    <p>检测队伍成员可互相帮忙录入数据。设计原则：<b>不锁不拦，谁都能录，时间戳晚的赢，被覆盖的人收到通知，操作人确认时全部复核。</b></p>
+    <table>
+      <tr><th>维度</th><th>设计</th></tr>
+      <tr><td>可见性</td><td>"全站房设备"视图看到所有设备（含队友的），点击可进入协助录入</td></tr>
+      <tr><td>录入权限</td><td>任何队伍成员可录入任何设备的试验项，不做阻拦。每条数据标记实际录入人</td></tr>
+      <tr><td>确认/提交权限</td><td>组确认和设备提交<b>只有操作人</b>（检测分工指定的人）能做</td></tr>
+      <tr><td>报告署名</td><td>按检测分工指定的操作人+监护人，不因实际录入人改变</td></tr>
+      <tr><td>环境数据</td><td>仅<b>工作负责人</b>可采集/修改，操作人只读</td></tr>
+      <tr><td>在线指示器</td><td>组标题旁显示"👤李四"表示队友正在这组（轮询同步，不是锁定）</td></tr>
+    </table>
+    <p><b>冲突处理（三种网络场景）：</b></p>
+    <table>
+      <tr><th>场景</th><th>处理</th></tr>
+      <tr><td>有网（80%）</td><td>实时同步，看到队友已录则自然避开，极少冲突</td></tr>
+      <tr><td>弱网（15%）</td><td>状态有延迟，万一两人录了同一项→时间戳晚的保留→通知被覆盖方</td></tr>
+      <tr><td>无网（5%）</td><td>各自存本地，联网后按时间戳合并→冲突项通知→操作人组确认时复核</td></tr>
+    </table>
+    <p>操作人在组确认时看到⚡标记的试验项表示有协同录入记录，可查看详情并修正。</p>
 
     <h3>版本边界</h3>
     <ul>
-      <li><b>V3.0做</b>：组级确认+设备级提交、选择即确认、按设备/按试验项双视图共享数据、不合格处理面板、环境数据联动跳过、蓝牙采集</li>
-      <li><b>V3.0不做</b>：跨站房复制数据、试验项自定义排序、不合格自动生成整改单、多人并行同一设备</li>
+      <li><b>V3.0做</b>：组级确认+设备级提交、选择即确认、按设备/按试验项双视图共享数据、不合格处理面板、环境数据联动跳过、蓝牙采集、<b>多人协同录入（不锁不拦+冲突自动处理）</b></li>
+      <li><b>V3.0不做</b>：跨站房复制数据、试验项自定义排序、不合格自动生成整改单</li>
     </ul>
 
     <h3>请试试以下操作</h3>
@@ -708,8 +853,19 @@
       <tr><td>看组进度</td><td>导航栏右侧显示"1/8 组"，每确认一组+1</td></tr>
       <tr><td>提交设备</td><td>全部8组确认 → 导航栏出现绿色"提交"按钮 → 确认弹窗</td></tr>
       <tr><td>数据同步</td><td>按设备做录入部分 → 切换按试验项做 → 看到已录入数据</td></tr>
-      <tr><td>批量录入</td><td>"按试验项批量做" → "回路电阻" → 2台断路器并排</td></tr>
+      <tr><td>批量数值录入</td><td>"按试验项批量做" → "回路电阻" → 2台断路器并排数值输入+蓝牙</td></tr>
+      <tr><td>批量toggle判定</td><td>"按试验项批量做" → "外观无破损" → 2台断路器逐台合格/不合格</td></tr>
+      <tr><td>批量文本录入</td><td>"按试验项批量做" → "生产厂家" → 2台断路器逐台输入文本</td></tr>
+      <tr><td>批量拍照</td><td>"按试验项批量做" → "整体外观拍照" → 2台断路器各自拍照+缩略图</td></tr>
       <tr><td>湿度警告</td><td>环境数据页输入湿度>=80 → 查看自动跳过提示</td></tr>
+      <tr><td><span class="highlight">增补设备</span></td><td>P2导航栏右侧"＋" → 选择设备类型 → 设备出现在列表顶部（橙色"增补"标签）</td></tr>
+      <tr><td>修改环境数据</td><td>采集完成后 → 点击绿色横幅 → 重新编辑温湿度/天气</td></tr>
+      <tr><td><span class="highlight">取消确认</span></td><td>已确认组标题"✓ 已确认（点击解锁）" → 弹窗确认 → 解锁可重新编辑（D27）</td></tr>
+      <tr><td><span class="highlight">撤回设备提交</span></td><td>设备提交后再次点击该设备 → 进入只读详情 → 底部"撤回提交"按钮（D31方案B）</td></tr>
+      <tr><td>照片缩略图</td><td>选中拍照项 → 该项下方展开52×52照片网格（与核查执行/安措执行统一范式D33）</td></tr>
+      <tr><td><span class="highlight">查看队友设备</span></td><td>P2顶部切换"全站房设备" → 看到队友的中置柜#1/低压电缆#1</td></tr>
+      <tr><td><span class="highlight">协助录入</span></td><td>点击队友设备 → 进入协助模式（顶部提示条+确认/提交按钮隐藏）→ 正常录入数据</td></tr>
+      <tr><td>模拟冲突通知</td><td>协助录入后 → 打开浏览器控制台 → 执行 simulateConflict() → 查看冲突弹窗</td></tr>
     </table>
 
     <!-- ====== 下半区：技术说明（默认折叠） ====== -->
@@ -918,6 +1074,14 @@ function goBreaker() {
   currentTab = 'non-elec';
   renderDetail();
   goPage(3);
+  /* D31：已提交设备进入只读模式，底部显示撤回按钮 */
+  var detailBot = document.getElementById('detailBot');
+  if(breakerSubmitted) {
+    detailBot.innerHTML = '<div style="padding:12px;text-align:center">'
+      + '<div style="font-size:13px;color:var(--ok);margin-bottom:10px">✓ 此设备已提交，数据已锁定</div>'
+      + '<button style="width:100%;padding:14px;border:1.5px solid var(--warn);border-radius:var(--r);font-size:14px;font-weight:600;background:#fff;color:var(--warn);cursor:pointer;min-height:48px" onclick="revokeDeviceSubmit()">撤回提交</button>'
+      + '</div>';
+  }
 }
 
 /* ===== 视图切换 ===== */
@@ -1066,6 +1230,10 @@ function updateNavProgress() {
     navRight.textContent = stats.confirmed + '/' + stats.total + ' 组';
     navRight.className = 'nav-right';
     navRight.onclick = null;
+  } else if(isHelperMode) {
+    navRight.textContent = '全部完成';
+    navRight.className = 'nav-right';
+    navRight.onclick = null;
   } else {
     navRight.textContent = '提交';
     navRight.className = 'nav-right ready';
@@ -1171,11 +1339,22 @@ function renderContent() {
     html += '<span class="test-group-arrow">&#9660;</span>';
     html += '<span class="test-group-title">'+grp.group+'</span>';
 
+    /* 协同：模拟在线指示器（第2组和第5组显示队友在线） */
+    if(!isHelperMode && (g===1 || g===4)) {
+      html += '<span class="presence-dot">👤李四</span>';
+    }
+
     if(confirmed) {
-      html += '<span class="group-confirmed-tag">\u2713 已确认</span>';
+      if(!isHelperMode) {
+        html += '<button class="group-confirm-btn" onclick="event.stopPropagation();cancelGroupConfirm(\''+currentTab+'\','+g+')" style="color:var(--ok)">\u2713 已确认（点击解锁）</button>';
+      } else {
+        html += '<span class="group-confirmed-tag">\u2713 已确认</span>';
+      }
     } else if(allDone) {
       html += '<span class="test-group-count">'+gDone+'/'+gTotal+'</span>';
-      html += '<button class="group-confirm-btn" onclick="event.stopPropagation();confirmGroup(\''+currentTab+'\','+g+')">确认</button>';
+      if(!isHelperMode) {
+        html += '<button class="group-confirm-btn" onclick="event.stopPropagation();confirmGroup(\''+currentTab+'\','+g+')">确认</button>';
+      }
     } else {
       html += '<span class="test-group-count">'+gDone+'/'+gTotal+'</span>';
     }
@@ -1216,6 +1395,17 @@ function renderContent() {
         html += '<span class="'+valCls+'">'+displayVal+'</span>';
       }
       html += '</div>';
+      /* D33：photo类型选中时展开照片缩略图网格（沿用核查/安措的ci-photos范式） */
+      if(it.type === 'photo' && sel && it.photoCount > 0) {
+        html += '<div class="ci-photos">';
+        for(var p=0; p<it.photoCount; p++) {
+          html += '<div class="ci-ph filled"><div class="ph-idx">\ud83d\udcf7'+(p+1)+'</div><div class="ph-del" onclick="event.stopPropagation();deleteInlinePhoto(\''+it.id+'\','+p+')">\u2715</div></div>';
+        }
+        if(it.photoCount < (it.maxPhoto||5)) {
+          html += '<div class="ci-ph" style="border:1.5px dashed var(--g300);color:var(--g300);cursor:pointer" onclick="event.stopPropagation();enterCameraMode('+getCurrentGroupIdxForItem(it.id)+')"><div style="font-size:16px">+</div><div style="font-size:8px">继续拍</div></div>';
+        }
+        html += '</div>';
+      }
     }
     html += '</div>';
   }
@@ -1825,6 +2015,213 @@ function goBatchDC() {
   goPage(5);
 }
 
+/* ===== 批量toggle/text/photo —— 直接读写breakerTests实现双向同步(D21) ===== */
+
+/*
+ * 批量页面的数据映射表：
+ * 每个批量项由 itemName 映射到 breakerTests 中两台断路器的对应试验项ID。
+ * 断路器#1的ID来自breakerTests，断路器#2的ID前缀加"b2_"模拟第二台。
+ * 由于Demo只有断路器#1的完整数据模型，断路器#2用独立变量模拟。
+ */
+var breaker2Data = {}; /* 断路器#2的模拟数据 {itemName: {val:'', photoCount:0}} */
+
+/* 根据试验项名称找到断路器#1中的item对象 */
+function findBreaker1ItemByName(name) {
+  var tabs = ['non-elec','elec','wufang'];
+  for(var t=0; t<tabs.length; t++) {
+    var groups = breakerTests[tabs[t]];
+    for(var g=0; g<groups.length; g++) {
+      for(var i=0; i<groups[g].items.length; i++) {
+        if(groups[g].items[i].name === name) return groups[g].items[i];
+      }
+    }
+  }
+  return null;
+}
+
+/* 获取两台断路器某试验项的当前值 */
+function getBatchItemValues(itemName) {
+  var b1Item = findBreaker1ItemByName(itemName);
+  var b1Val = b1Item ? (b1Item.type==='photo' ? b1Item.photoCount : b1Item.val) : '';
+  var b2 = breaker2Data[itemName] || {val:'', photoCount:0};
+  var b2Val = b1Item && b1Item.type==='photo' ? b2.photoCount : b2.val;
+  return [{name:'断路器 #1', val:b1Val, item:b1Item}, {name:'断路器 #2', val:b2Val, item:null}];
+}
+
+/* ===== 批量toggle ===== */
+var currentBatchToggleName = '';
+
+function goBatchToggle(title, std) {
+  currentBatchToggleName = title;
+  document.getElementById('p7Title').textContent = title;
+  document.getElementById('p7Std').textContent = '标准：' + std;
+  renderBatchToggle();
+  goPage(7);
+}
+
+function renderBatchToggle() {
+  var devs = getBatchItemValues(currentBatchToggleName);
+  var container = document.getElementById('batchToggleList');
+  var html = '';
+  for(var i=0; i<devs.length; i++) {
+    var d = devs[i];
+    var done = d.val !== '' && d.val !== 0;
+    var statusClass = done ? (d.val==='合格' ? ' ok' : ' ng') : '';
+    html += '<div class="batch-card'+statusClass+'" style="margin:8px 12px">';
+    html += '<div class="batch-card-hd"><span class="batch-card-name">'+d.name+'</span>';
+    if(done) html += '<span class="batch-card-prog done">'+d.val+'</span>';
+    html += '</div>';
+    if(!done) {
+      html += '<div class="batch-card-body"><div class="toggle-row">';
+      html += '<div class="toggle-btn" onclick="batchToggleSelect('+i+',\'合格\')">合格 \u2713</div>';
+      html += '<div class="toggle-btn" onclick="batchToggleSelect('+i+',\'不合格\')">不合格 \u2717</div>';
+      html += '</div></div>';
+    }
+    html += '</div>';
+  }
+  container.innerHTML = html;
+  var doneCount = devs.filter(function(d){ return d.val!=='' && d.val!==0; }).length;
+  document.getElementById('p7Done').textContent = doneCount;
+  document.getElementById('p7Left').textContent = (devs.length - doneCount);
+  document.getElementById('p7Bar').style.width = (doneCount/devs.length*100)+'%';
+}
+
+function batchToggleSelect(idx, val) {
+  if(idx === 0) {
+    var item = findBreaker1ItemByName(currentBatchToggleName);
+    if(item) { item.val = val; item.issueFlag = (val==='不合格'); }
+  } else {
+    if(!breaker2Data[currentBatchToggleName]) breaker2Data[currentBatchToggleName] = {val:'',photoCount:0};
+    breaker2Data[currentBatchToggleName].val = val;
+  }
+  showToast((idx===0?'断路器 #1':'断路器 #2') + ' → ' + val);
+  updateP2Progress();
+  renderBatchToggle();
+}
+
+/* ===== 批量文本 ===== */
+var currentBatchTextName = '';
+
+function goBatchText(title) {
+  currentBatchTextName = title;
+  document.getElementById('p8Title').textContent = title;
+  renderBatchText();
+  goPage(8);
+}
+
+function renderBatchText() {
+  var devs = getBatchItemValues(currentBatchTextName);
+  var container = document.getElementById('batchTextList');
+  var html = '';
+  for(var i=0; i<devs.length; i++) {
+    var d = devs[i];
+    var done = d.val !== '' && d.val !== 0;
+    html += '<div class="batch-card'+(done?' ok':'')+'" style="margin:8px 12px">';
+    html += '<div class="batch-card-hd"><span class="batch-card-name">'+d.name+'</span>';
+    if(done) html += '<span class="batch-card-prog done">'+d.val+'</span>';
+    html += '</div>';
+    if(!done) {
+      html += '<div class="batch-card-body"><div class="bot-input-row">';
+      html += '<input type="text" class="bot-input" id="btxt'+i+'" placeholder="请输入" value="">';
+      html += '<button class="bot-submit" onclick="batchTextConfirm('+i+')">确认</button>';
+      html += '</div></div>';
+    }
+    html += '</div>';
+  }
+  container.innerHTML = html;
+  var doneCount = devs.filter(function(d){ return d.val!=='' && d.val!==0; }).length;
+  document.getElementById('p8Done').textContent = doneCount;
+  document.getElementById('p8Left').textContent = (devs.length - doneCount);
+  document.getElementById('p8Bar').style.width = (doneCount/devs.length*100)+'%';
+}
+
+function batchTextConfirm(idx) {
+  var inp = document.getElementById('btxt'+idx);
+  if(!inp || inp.value.trim()==='') { showToast('请输入内容'); return; }
+  var val = inp.value.trim();
+  if(idx === 0) {
+    var item = findBreaker1ItemByName(currentBatchTextName);
+    if(item) item.val = val;
+  } else {
+    if(!breaker2Data[currentBatchTextName]) breaker2Data[currentBatchTextName] = {val:'',photoCount:0};
+    breaker2Data[currentBatchTextName].val = val;
+  }
+  showToast('已保存');
+  updateP2Progress();
+  renderBatchText();
+}
+
+/* ===== 批量拍照 ===== */
+function goBatchPhoto() {
+  renderBatchPhoto();
+  goPage(9);
+}
+
+function renderBatchPhoto() {
+  /* 直接读breakerTests中ne1(整体外观)的photoCount，实现双向同步 */
+  var b1Item = findBreaker1ItemByName('整体外观');
+  var b1Count = b1Item ? b1Item.photoCount : 0;
+  var b1Max = b1Item ? (b1Item.maxPhoto||5) : 5;
+  if(!breaker2Data['整体外观']) breaker2Data['整体外观'] = {val:'',photoCount:0};
+  var b2Count = breaker2Data['整体外观'].photoCount;
+  var devs = [
+    {name:'断路器 #1', count:b1Count, max:b1Max},
+    {name:'断路器 #2', count:b2Count, max:5}
+  ];
+
+  var container = document.getElementById('batchPhotoList');
+  var html = '';
+  for(var i=0; i<devs.length; i++) {
+    var d = devs[i];
+    var done = d.count > 0;
+    html += '<div class="batch-card'+(done?' ok':'')+'" style="margin:8px 12px">';
+    html += '<div class="batch-card-hd"><span class="batch-card-name">'+d.name+'</span>';
+    html += '<span class="batch-card-prog'+(done?' done':'')+'">'+d.count+'/'+d.max+'</span>';
+    html += '</div>';
+    html += '<div class="batch-card-body">';
+    html += '<div style="display:flex;gap:6px;flex-wrap:wrap;padding:4px 0">';
+    for(var p=0; p<d.count; p++) {
+      html += '<div class="ci-ph filled"><div class="ph-idx">\ud83d\udcf7'+(p+1)+'</div><div class="ph-del" onclick="batchPhotoDelete('+i+','+p+')">\u2715</div></div>';
+    }
+    if(d.count < d.max) {
+      html += '<div class="ci-ph" style="border:1.5px dashed var(--g300);color:var(--g300);cursor:pointer;width:52px;height:52px;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center" onclick="batchPhotoTake('+i+')"><div style="font-size:16px">+</div><div style="font-size:8px">拍照</div></div>';
+    }
+    html += '</div>';
+    html += '</div></div>';
+  }
+  container.innerHTML = html;
+  var doneCount = devs.filter(function(d){return d.count>0}).length;
+  document.getElementById('p9Done').textContent = doneCount;
+  document.getElementById('p9Left').textContent = (devs.length - doneCount);
+  document.getElementById('p9Bar').style.width = (doneCount/devs.length*100)+'%';
+}
+
+function batchPhotoTake(idx) {
+  if(idx === 0) {
+    var item = findBreaker1ItemByName('整体外观');
+    if(item && item.photoCount < (item.maxPhoto||5)) { item.photoCount++; }
+  } else {
+    if(!breaker2Data['整体外观']) breaker2Data['整体外观'] = {val:'',photoCount:0};
+    if(breaker2Data['整体外观'].photoCount < 5) breaker2Data['整体外观'].photoCount++;
+  }
+  showToast((idx===0?'断路器 #1':'断路器 #2') + ' 拍照成功');
+  updateP2Progress();
+  renderBatchPhoto();
+}
+
+function batchPhotoDelete(idx, photoIdx) {
+  if(idx === 0) {
+    var item = findBreaker1ItemByName('整体外观');
+    if(item && item.photoCount > 0) item.photoCount--;
+  } else {
+    if(breaker2Data['整体外观'] && breaker2Data['整体外观'].photoCount > 0) breaker2Data['整体外观'].photoCount--;
+  }
+  showToast('已删除第'+(photoIdx+1)+'张');
+  updateP2Progress();
+  renderBatchPhoto();
+}
+
+/* ===== 批量回路电阻（原P5逻辑） ===== */
 function renderBatchDC() {
   var container = document.getElementById('batchDCList');
   var html = '';
@@ -2056,11 +2453,147 @@ function findNextUnfinished() {
   return -1;
 }
 
+/* ===== 增补检测对象 ===== */
+var suppCount = 0;
+
+/* ===== D33：照片内联删除 ===== */
+function deleteInlinePhoto(itemId, photoIdx) {
+  var it = findItemById(itemId);
+  if(!it || it.photoCount <= 0) return;
+  it.photoCount--;
+  showToast('已删除第'+(photoIdx+1)+'张');
+  renderDetail();
+  updateP2Progress();
+}
+
+function getCurrentGroupIdxForItem(itemId) {
+  var groups = breakerTests[currentTab];
+  for(var g=0; g<groups.length; g++) {
+    for(var i=0; i<groups[g].items.length; i++) {
+      if(groups[g].items[i].id === itemId) return g;
+    }
+  }
+  return 0;
+}
+
+/* ===== D31：设备撤回提交 ===== */
+function revokeDeviceSubmit() {
+  showConfirmDialog(
+    '撤回提交',
+    '撤回后设备数据将解锁，组确认状态保留。确定撤回？',
+    '确认撤回',
+    function() {
+      breakerSubmitted = false;
+      showToast('已撤回，可重新编辑');
+      updateP2Progress();
+      updateDetailCounts();
+      goPage(2);
+    }
+  );
+}
+
+/* ===== D27：取消组确认 ===== */
+function cancelGroupConfirm(tab, groupIdx) {
+  var grp = breakerTests[tab][groupIdx];
+  showConfirmDialog(
+    '取消确认',
+    '取消确认后"' + grp.group + '"将解锁可修改，确定？',
+    '确认取消',
+    function() {
+      grp.confirmed = false;
+      showToast(grp.group + ' 已解锁');
+      renderDetail();
+    }
+  );
+}
+
+/* ===== 多人协同 ===== */
+var isHelperMode = false;
+var helperOwnerName = '';
+
+function switchCollabView(mode) {
+  document.getElementById('ctMine').classList.toggle('sel', mode==='mine');
+  document.getElementById('ctAll').classList.toggle('sel', mode==='all');
+  document.getElementById('othersDevices').style.display = mode==='all' ? 'block' : 'none';
+  if(mode==='all') document.getElementById('helperBar').classList.add('show');
+  else document.getElementById('helperBar').classList.remove('show');
+}
+
+function goHelperMode(ownerName, devName) {
+  isHelperMode = true;
+  helperOwnerName = ownerName;
+  document.getElementById('p3Title').textContent = devName;
+  document.getElementById('p3HelperBar').classList.add('show');
+  document.getElementById('p3HelperOwner').textContent = ownerName;
+  selectedTestIdx = -1;
+  selectedTestId = '';
+  currentTab = 'non-elec';
+  renderDetail();
+  goPage(3);
+  /* 协助模式下隐藏组确认按钮和提交按钮 */
+  updateNavProgress();
+}
+
+function exitDetail() {
+  isHelperMode = false;
+  helperOwnerName = '';
+  document.getElementById('p3HelperBar').classList.remove('show');
+  document.getElementById('p3Title').textContent = '断路器 #1';
+  goPage(2);
+}
+
+/* 模拟冲突通知 */
+function simulateConflict() {
+  showConfirmDialog(
+    '数据已更新',
+    '你录入的"A相回路电阻"(158μΩ)已被张三的录入(162μΩ)更新（张三录入时间更晚）。',
+    '知道了',
+    function(){}
+  );
+}
+
+function openSuppSheet() {
+  document.getElementById('suppSheet').classList.add('show');
+}
+
+function doSuppDevice(typeName) {
+  document.getElementById('suppSheet').classList.remove('show');
+  suppCount++;
+
+  /* 在"按设备做"视图对应的分组中插入增补设备 */
+  var groupItems = null;
+  if(typeName === '断路器') groupItems = document.getElementById('giBreaker');
+  else if(typeName === '低压电缆') groupItems = document.getElementById('giCable');
+
+  if(groupItems) {
+    var newRow = document.createElement('div');
+    newRow.className = 'dev-row';
+    newRow.style.borderLeftColor = '#EA580C';
+    newRow.onclick = function(){ showToast('进入增补设备 '+typeName+' #增补'+suppCount+' 详情'); };
+    newRow.innerHTML = '<div class="dev-row-inner">'
+      + '<span class="dev-row-name">'+typeName+' #增补'+suppCount+'</span>'
+      + '<span class="supp-tag">增补</span>'
+      + '<span class="dev-row-prog">0/32</span>'
+      + '<span class="dev-row-tag wait">待检测</span>'
+      + '<span class="dev-row-chevron">&#8250;</span>'
+      + '</div>';
+    groupItems.insertBefore(newRow, groupItems.firstChild);
+  }
+
+  /* 更新增补横幅 */
+  var banner = document.getElementById('suppBanner');
+  document.getElementById('suppBannerText').textContent = '您增补了 ' + suppCount + ' 台设备（操作人=自己，零审批）';
+  banner.classList.add('show');
+
+  showToast('已增补 ' + typeName + '，可直接开始检测');
+}
+
 /* ===== 环境数据 ===== */
 var envData = { temp1:'', temp2:'', temp3:'', humidity:'', weather:'' };
 var envCompleted = false;
 
 function goEnvPage() {
+  /* 环境数据仅工作负责人可采集/修改，操作人只读（Demo中默认允许操作以便演示） */
   // 回显已有数据
   if(envData.temp1) document.getElementById('envTemp1').value = envData.temp1;
   if(envData.temp2) document.getElementById('envTemp2').value = envData.temp2;
@@ -2116,7 +2649,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   // 温度输入也触发表单检查
-  ['envTemp1','envTemp2','envTemp3'].forEach(function(id) {
+  ['envTemp1','envTemp2','envTemp3','envHumidity'].forEach(function(id) {
     var el = document.getElementById(id);
     if(el) el.addEventListener('input', function() { checkEnvForm(); });
   });
@@ -2178,9 +2711,11 @@ function updateEnvBanner() {
     banner.style.borderLeft = '3px solid var(--ok)';
     banner.style.cursor = 'pointer';
     banner.innerHTML = '<span style="font-size:14px;color:var(--ok)">✓</span>'
-      + '<div style="flex:1;font-size:12px;color:#1B7A34">'
-      + '环境数据已采集 · 站房' + envData.temp1 + '℃ · 湿度' + envData.humidity + '%'
+      + '<div style="flex:1">'
+      + '<div style="font-size:12px;color:#1B7A34">环境数据已采集 · 站房' + envData.temp1 + '℃ · 湿度' + envData.humidity + '%'
       + (parseFloat(envData.humidity)>=80 ? ' <span style="color:var(--ng)">(≥80%，部分试验项已跳过)</span>' : '')
+      + '</div>'
+      + '<div style="font-size:11px;color:var(--g400);margin-top:2px">点击可修改（修改后自动重新同步）</div>'
       + '</div>'
       + '<span style="color:var(--g300);font-size:14px">›</span>';
     banner.onclick = function(){ goEnvPage(); };  // 点击可重新编辑

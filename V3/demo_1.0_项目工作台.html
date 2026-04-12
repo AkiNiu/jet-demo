@@ -363,7 +363,7 @@ var STAGES = [
     {id:'safety',name:'安措执行',role:'工作负责人+试验人员',st:'todo',who:'',time:''},
     {id:'kickoff',name:'开工会',role:'工作负责人',st:'todo',who:'',time:''},
     {id:'testassign',name:'检测分工',role:'工作负责人(及全员防盲查阅)',st:'todo',who:'',time:''},
-    {id:'testexec',name:'检测执行',role:'试验负责人+试验人员',st:'todo',who:'',time:''}
+    {id:'testexec',name:'检测执行',role:'试验负责人+试验人员',st:'doing',who:'',time:''}
   ]},
   {group:'包裹阶段', items:[
     {id:'package',name:'包裹生成与导出',role:'工作负责人',st:'todo',who:'',time:''}
@@ -418,6 +418,12 @@ function tapStage(id, st, name, role) {
     return;
   }
   if(st==='doing') {
+    /* 检测执行卡片：跳转到检测执行Demo */
+    if(id==='testexec') {
+      window.open('demo_1.2.1_检测执行.html', '_blank');
+      return;
+    }
+    /* 其他已有独立Demo的卡片也可在此添加跳转 */
     if(isOp) showToast('进入"'+name+'"操作页面');
     else showToast('查看"'+name+'"（只读）');
     return;
