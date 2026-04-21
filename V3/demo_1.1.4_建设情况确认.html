@@ -47,12 +47,9 @@
 .add-bar{margin:4px var(--sp) 8px}
 .add-btn{width:100%;padding:12px;border:1.5px dashed var(--g300);border-radius:var(--rs);background:#fff;font-size:13px;color:var(--g500);cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent}
 .add-btn:active{background:var(--pri-l);border-color:var(--pri);color:var(--pri-d)}
-/* 左滑删除 */
-.rm-wrap{position:relative;overflow:hidden;border-bottom:1px solid var(--g100)}
-.rm-wrap:last-child{border-bottom:none}
-.rm-wrap .rm{border-bottom:none;transition:transform .2s ease-out}
-.rm-del-bg{position:absolute;right:0;top:0;bottom:0;width:72px;background:var(--ng);display:none;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:600}
-.rm-del-bg.visible{display:flex}
+/* 行内删除按钮 */
+.rm-del-x{min-width:48px;min-height:48px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:var(--g400);font-size:16px}
+.rm-del-x:active{color:var(--ng)}
 
 /* 室外配套区域 */
 .outdoor-section{margin:12px var(--sp) 4px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm);overflow:hidden}
@@ -65,14 +62,12 @@
 .outdoor-check.checked::after{content:'✓';color:#fff;font-size:14px;font-weight:700}
 .outdoor-label{font-size:14px;color:var(--g700);flex:1}
 .outdoor-hint{font-size:11px;color:var(--g400)}
-/* 有/无 双按钮 */
-.yn-row{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--g100);min-height:48px;gap:10px}
+/* 有/无 双按钮（复用共享CSS .btn-judge 体系，与合格/不合格视觉统一） */
+.yn-row{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--g100);min-height:56px;gap:10px}
 .yn-label{font-size:14px;color:var(--g700);flex:1}
-.yn-toggle{display:flex;gap:6px}
-.yn-btn{padding:6px 16px;border:1.5px solid var(--g200);border-radius:6px;background:#fff;font-size:13px;font-weight:500;color:var(--g400);cursor:pointer;transition:all .15s;min-width:44px;min-height:36px}
-.yn-btn:active{background:var(--g50)}
-.yn-btn.yes{background:rgba(52,199,89,.1);border-color:rgba(52,199,89,.4);color:var(--ok)}
-.yn-btn.no{background:var(--g100);border-color:var(--g300);color:var(--g600)}
+.yn-toggle{display:flex;gap:8px}
+/* 本Demo内 .btn-judge 尺寸适配配套设施行（略窄于核查页的92px） */
+.yn-toggle .btn-judge{width:64px;height:40px;font-size:14px}
 /* Radio circle */
 .radio-circle{width:20px;height:20px;border-radius:50%;border:2px solid var(--g300);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;margin-right:8px}
 .radio-circle.on{border-color:var(--pri);background:var(--pri)}
@@ -147,17 +142,17 @@
         <div class="outdoor-section" id="outdoorSection">
           <div class="outdoor-title">室外配套设施</div>
           <div class="yn-row">
-            <span class="yn-label">充电桩设施</span>
+            <span class="yn-label">充电设施</span>
             <div class="yn-toggle">
-              <button class="yn-btn" id="chgYes" onclick="setOutdoor('charging',true)">有</button>
-              <button class="yn-btn" id="chgNo" onclick="setOutdoor('charging',false)">无</button>
+              <button class="btn-judge" id="chgYes" onclick="setOutdoor('charging',true)">有</button>
+              <button class="btn-judge" id="chgNo" onclick="setOutdoor('charging',false)">无</button>
             </div>
           </div>
           <div class="yn-row" style="border-bottom:none">
-            <span class="yn-label">居民配套设施</span>
+            <span class="yn-label">居民设施</span>
             <div class="yn-toggle">
-              <button class="yn-btn" id="resYes" onclick="setOutdoor('residential',true)">有</button>
-              <button class="yn-btn" id="resNo" onclick="setOutdoor('residential',false)">无</button>
+              <button class="btn-judge" id="resYes" onclick="setOutdoor('residential',true)">有</button>
+              <button class="btn-judge" id="resNo" onclick="setOutdoor('residential',false)">无</button>
             </div>
           </div>
           <div style="padding:0 14px 8px;font-size:11px;color:var(--g400)">选"有"后，核查分工中将出现对应核查任务</div>
@@ -193,52 +188,73 @@
   <!-- ===== 右侧：设计说明 ===== -->
   <div class="demo-right">
     <h2>建设情况确认</h2>
-    <p>工作负责人到场后，核实站房数量/编号/类型，确认配套设施和进线电缆段数——为下游全部环节建立站房数据基础。</p>
+    <p>工作负责人到场后，核实站房数量/编号/类型，确认配套设施和进线电缆段数——为下游全部环节建立站房数据基础。页面做三件事：①站房编号/类型核实 ②配套设施有/无 ③进线电缆段数。</p>
 
-    <h3>设计决策</h3>
+    <h3>设计决策说明</h3>
     <ul>
-      <li><b>从2.4系统38+次点击减少80%+</b>——2.4系统要求16字段×N站房全量录入。3.0只保留核查必须的2个字段（编号+类型），其余延后到抽检对象确认时补填</li>
-      <li><b>核实+修正，不是从零录入</b>——工单创建时系统已按项目规模自动生成站房记录和默认编号，工作负责人到场后只需对照现场核实，编号对就直接确认，不对才改</li>
-      <li><b>确认和改编号是同一个动作</b>——点击站房行→看到当前编号→没问题直接点确定（确认），要改就改完点确定（修改）。不存在单独的确认按钮</li>
+      <li><b>从2.4系统38+次点击减少80%+</b>——2.4系统要求16字段×N站房全量录入。3.0只保留下游核查必须的2个字段（编号+类型），其余延后到抽检对象确认时补录</li>
+      <li><b>核实+修正，不是从零录入</b>——工单创建时系统已按项目规模自动生成站房记录和默认编号，工作负责人到场后只需对照现场核实。编号对就直接确认，不对才改</li>
+      <li><b>确认和改编号是同一个动作</b>——点击站房行→弹出输入框显示当前编号→没问题直接点"确定"（=确认），要改就改完再点"确定"（=修改+确认）。不存在单独的确认按钮</li>
+      <li><b>现场只改编号（含数字+符号两部分），类型后缀规范化延后到包裹阶段</b>——"编号"范围包括数字部分（1/P1/A1）和连接符（#/号/空格/-），可一起修改，如"1#"→"P1号"→"A1-"。但"开关站/配电室/合建站/箱变"这类<b>类型后缀</b>本模块不改，因为叫"开关站"还是"开闭所"不影响现场干活；后缀规范化放在 <b>1.3 包裹生成</b>环节做最终交付前一次性全项目统一调整，现场不浪费时间</li>
+      <li><b>数据层：类型 code + 编号 独立存储，不预拼接</b>——系统存储层是两个字段：站房类型（4种code，决定下游分组/模板）+ 编号（自由文本，含数字+符号）。显示层按"{编号}{类型后缀}"即时拼接。包裹阶段改"类型后缀"模板时一次配置全局生效，不用逐个站房改</li>
       <li><b>配套设施用"有/无"双按钮，不用勾选框</b>——勾选框的"未勾选"无法区分"用户选了无"还是"用户没看到"。双按钮保证用户一定看过并做了选择</li>
-      <li><b>提交时规模校验不阻断</b>——当前数量与工单规模不一致时弹出提醒，但允许继续提交（现场实际规模确实可能与工单不同）</li>
-      <li><b>提交后不可修改，兜底在包裹阶段</b>——站房编号是全流程数据源，中间环节修改影响面过大。在包裹导出前提供"站房编号校正"功能统一调整</li>
+      <li><b>进线段数是项目级的，不是站房维度</b>——"进线电缆段数"指<b>项目外界电源点</b>向本项目送电的进线路数（外界有几路进线就是几段），不是"每个站房自己的进线数"。N段进线实际进入哪些站房由现场人目视判断，无规则可配。因此设计为全局 Radio 一次选择</li>
+      <li><b>提交时规模校验不阻断</b>——当前站房数量与工单规模不一致时弹出提醒但允许继续提交（现场实际规模确实可能与工单不同），用户的"继续提交"决策会留痕</li>
+      <li><b>提交后全部锁定，兜底在包裹阶段</b>——站房编号是全流程数据源（影响核查/抽检/安措/检测/报告/包裹目录），中间环节修改影响面过大。在包裹导出前由 1.3 包裹模块提供"站房编号校正"功能统一调整</li>
+      <li><b>作业期间三方协同，例外通道仅作业后开放</b>——现场执行期间由工作负责人+试验人员+系统三方配合解决异常；提交后的修改通道仅限人员离场后申请（V3.1 做）</li>
     </ul>
 
-    <h3>业务规则</h3>
+    <h3>管理者视角（廉政/安全/效率）</h3>
+    <ul>
+      <li><b>廉政防漏报</b>——核心风险是工作负责人与施工方串通少录站房/漏选配套/少选进线段数，规避本应做的核查。V3.0 管控基础：规模一致性必提醒+决策留痕、所有变更带时间戳和操作人、提交即锁定。V3.1 基于这些埋点做管理者看板（规模差异率 Top、配套异常项目预警等）</li>
+      <li><b>安全间接风险</b>——站房编号错会导致拍照/检测张冠李戴；进线段数漏选会导致电源核查少拍危险状态位。通过同类型编号唯一性校验、三段必填校验、下游数据结构强绑定字段来防范</li>
+      <li><b>效率基础</b>——较 2.4 操作量减 80%+；系统自动预生成站房记录；规模差异前置发现（不用等下游才暴露）</li>
+    </ul>
+
+    <h3>业务规则摘要</h3>
     <table>
       <tr><th>规则</th><th>说明</th></tr>
-      <tr><td>站房列表来源</td><td>工单创建时按项目规模自动生成，预设默认编号（1、2、3...）</td></tr>
-      <tr><td>站房CRUD</td><td>可新增（选类型→输编号）、可删除（左滑→二次确认，至少保留1个）、可改编号（点击行→输入框）</td></tr>
-      <tr><td>编号唯一</td><td>同类型内编号不可重复，重复则Toast提示</td></tr>
-      <tr><td>配套设施</td><td>充电桩和居民设施各选"有/无"，选"有"→下游核查分工出现对应任务</td></tr>
-      <tr><td>进线段数</td><td>Radio（1/2/3段），全局设置，影响电源核查拍照数量</td></tr>
-      <tr><td>提交条件</td><td>全部站房编号已确认 + 配套设施已选 + 进线段数已选</td></tr>
-      <tr><td>规模校验</td><td>与工单规模逐类型对比，不一致弹提醒（不阻断）</td></tr>
-      <tr><td>中断不保留</td><td>退出重进需重新操作</td></tr>
-      <tr><td>引导文案</td><td>顶部提示"请确认全部站房，包括不抽检的"</td></tr>
+      <tr><td>操作角色</td><td>工作负责人可编辑；其他人员（试验人员/PM）只读</td></tr>
+      <tr><td>站房列表来源</td><td>工单创建时按项目规模自动生成，预设默认编号"1#、2#、3#..."，类型后缀由系统按类型默认（开关站/配电室/合建站/箱变）</td></tr>
+      <tr><td>站房CRUD</td><td>可新增（选类型→弹编号输入框）、可删除（左滑→二次确认，至少保留1个）、可改编号（点击行→输入框，改整段编号含数字和符号）</td></tr>
+      <tr><td>编号范围</td><td>编号 = <b>数字部分 + 连接符</b>两段（如"1#"、"P1号"、"A1-"、"西1 "），可一起改；类型后缀（开关站/配电室等）不暴露编辑入口</td></tr>
+      <tr><td>编号唯一性</td><td><b>同类型内</b>编号不可重复（含符号一起比较，如"1#"和"1号"视为不同），重复则Toast阻止确认</td></tr>
+      <tr><td>类型后缀不在本模块改</td><td>"开关站/开闭所/环网室"后缀由 <b>1.3 包裹生成</b>环节做最终交付前统一调整（全项目一次配置即可生效，不用逐个站房改）</td></tr>
+      <tr><td>配套设施</td><td>充电桩+居民设施各必选"有/无"，选"有"→下游核查分工出现对应任务</td></tr>
+      <tr><td>进线段数</td><td>项目级Radio（1/2/3段），无默认值必选；对应电源核查N段拍照</td></tr>
+      <tr><td>提交校验（三段必填）</td><td>① 全部站房编号已确认 ② 配套设施全部已选 ③ 进线段数已选；未通过滚动高亮+Toast</td></tr>
+      <tr><td>规模一致性校验</td><td>与工单规模逐类型对比，不一致弹面板列差异明细，<b>不阻断</b>，用户可"继续提交"（决策留痕）</td></tr>
+      <tr><td>中断不保留</td><td>退出重进需重新操作（V3.0 优先简洁，以操作专注度保证准确度）</td></tr>
+      <tr><td>提交后锁定</td><td>全部字段不可改；作业中发现错误必须现场重做；兜底走 1.3 包裹阶段"站房编号校正"</td></tr>
+      <tr><td>引导文案</td><td>顶部提示"请确认项目<b>全部</b>站房，包括不抽检的"</td></tr>
     </table>
 
     <h3>与上下游的关系</h3>
     <table>
       <tr><th>方向</th><th>数据</th><th>用途</th></tr>
-      <tr><td>上游（工单创建）</td><td>站房列表+默认编号</td><td>预生成，到场核实</td></tr>
-      <tr><td>下游（核查分工）</td><td>配套设施勾选</td><td>控制充电/居民核查任务是否出现</td></tr>
-      <tr><td>下游（电源核查）</td><td>进线段数</td><td>确定每站房有几路进线。试验负责人在电源核查执行时再逐路确认电缆状态（未敷设/未搭接/已搭接），系统据此条件显隐对应拍照项</td></tr>
-      <tr><td>下游（抽检对象确认）</td><td>全部站房列表</td><td>标记抽中+补填详细属性</td></tr>
-      <tr><td>兜底（包裹阶段）</td><td>站房编号</td><td>导出前可校正编号</td></tr>
+      <tr><td>上游（1.1.1 工单创建）</td><td>项目规模计划值+默认站房列表</td><td>PM在PC端录入规模→系统批量预生成默认站房记录</td></tr>
+      <tr><td>下游（1.1.5 核查分工）</td><td>站房列表+配套设施勾选</td><td>按站房分配试验人员；配套选"有"则出现"充电设施"/"居民设施"核查任务</td></tr>
+      <tr><td>下游（1.1.6 建设情况核查）</td><td>站房名称+类型</td><td>按站房类型选拍照模板，逐站房分组展示</td></tr>
+      <tr><td>下游（1.1.6 电源核查）</td><td>进线电缆段数（项目级）</td><td>电源核查是项目级核查，按N段独立拍照（上级侧N段+站房侧N段+判定）。试验人员在执行时逐路确认电缆状态（未敷设/未搭接/已搭接），系统据此条件显隐拍照项</td></tr>
+      <tr><td>下游（1.1.8 抽检对象确认）</td><td>全部站房列表</td><td>Step 1承接抽中标记；Step 2补录详细属性（高压柜类型、PT类型等）</td></tr>
+      <tr><td>兜底（1.3 包裹导出）</td><td>站房编号</td><td>最终交付前可校正编号</td></tr>
+      <tr><td>PC端（4.0 数据配置模块）</td><td>站房类型/字段/映射配置</td><td>站房类型可扩展、表单字段可配置显隐、类型→核查分组映射可配</td></tr>
     </table>
 
     <h3>版本边界</h3>
     <table>
-      <tr><th>能力</th><th>V3.0</th><th>后续</th></tr>
-      <tr><td>站房字段</td><td>编号+类型（2个）</td><td>按需扩展</td></tr>
-      <tr><td>配套设施</td><td>充电桩+居民（固定2项）</td><td>可配置</td></tr>
-      <tr><td>进线段数</td><td>全局1/2/3段</td><td>—</td></tr>
-      <tr><td>提交后修改</td><td>不做（兜底在包裹导出前）</td><td>—</td></tr>
-      <tr><td>逐站房解锁下游</td><td>不做（整体提交，逐站房解锁在抽检对象确认环节）</td><td>—</td></tr>
-      <tr><td>进线段数粒度</td><td>全局设置（待调研：是否需改为站房级）</td><td>调研确认后决定</td></tr>
+      <tr><th>能力</th><th>V3.0</th><th>V3.1</th><th>V3.2+</th></tr>
+      <tr><td>站房 CRUD + 三段必填</td><td>✅ 完整闭环</td><td>—</td><td>—</td></tr>
+      <tr><td>配套设施有/无（固定2项）</td><td>✅</td><td>—</td><td>可配置扩展</td></tr>
+      <tr><td>进线段数 Radio（项目级）</td><td>✅</td><td>—</td><td>—</td></tr>
+      <tr><td>规模一致性提醒</td><td>✅ 不阻断+决策留痕</td><td>—</td><td>—</td></tr>
+      <tr><td>提交后锁定 + 包裹阶段校正</td><td>✅</td><td>—</td><td>—</td></tr>
+      <tr><td>PC端数据配置模块</td><td>✅（对应 4.0 模块）</td><td>—</td><td>字段级动态配置</td></tr>
+      <tr><td>规模差异审计查询（PC）</td><td>数据埋点预留</td><td>✅ 管理者可查历史差异</td><td>—</td></tr>
+      <tr><td>管理者看板（完成率/差异率等）</td><td>数据埋点预留</td><td>✅</td><td>智能预警</td></tr>
+      <tr><td>紧急修正通道（离场后申请）</td><td>不做</td><td>✅ 申请+审批</td><td>—</td></tr>
     </table>
+    <p style="font-size:12px;color:var(--g500)"><b>V3.0 必做的数据埋点</b>（为 V3.1 铺路）：提交时间+操作人、规模差异明细、站房变更流水（新增/删除/改编号）、配套/进线段数的选择时间戳、规模差异时的继续/返回决策、页面操作耗时。</p>
 
     <details>
     <summary>📋 开发参考（点击展开）</summary>
@@ -265,7 +281,7 @@
     </ul>
 
     <h3>提交数据</h3>
-    <p>站房列表（编号+类型）+ 充电桩设施flag + 居民设施flag + 进线段数 + 时间 + 操作人</p>
+    <p>站房列表（编号+类型）+ 充电设施flag + 居民设施flag + 进线段数 + 时间 + 操作人</p>
 
     <h3>关键数据存储</h3>
     <p>站房数据: <code>PrjStationRoomInfo</code>表（23字段，本环节填2个，其余在抽检对象确认时补填）</p>
@@ -286,25 +302,29 @@
   </div>
 </div>
 
-<!-- 编号输入 -->
-<div class="sh-bg" id="pickerSh"><div class="sh-panel">
-  <div class="sh-title" id="pkTitle">输入站房编号</div>
-  <div class="pk-sub" id="pkSub"></div>
-  <div class="pk-inp-row">
-    <input class="pk-inp" id="pkInp" placeholder="输入编号（数字/字母/汉字）" inputmode="numeric">
-    <button class="pk-ok-btn" onclick="applyInput()">确定</button>
+<!-- 编号输入（居中弹窗） -->
+<div class="sh-bg" id="pickerSh" style="align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:24px 20px 16px;width:300px;">
+    <div style="font-size:15px;font-weight:600;color:var(--g800);text-align:center;margin-bottom:4px;" id="pkTitle">修改站房编号</div>
+    <div style="font-size:12px;color:var(--g500);text-align:center;margin-bottom:12px;line-height:1.6;" id="pkSub"></div>
+    <div class="pk-inp-row">
+      <input class="pk-inp" id="pkInp" placeholder="例：1#、P1号、A1-">
+      <button class="pk-ok-btn" onclick="applyInput()">确定</button>
+    </div>
+    <div style="text-align:center;padding:8px 0 0;font-size:14px;color:var(--g500);cursor:pointer;" onclick="closeSh('pickerSh')">取消</div>
   </div>
-  <div class="sh-cancel" onclick="closeSh('pickerSh')">取消</div>
-</div></div>
+</div>
 
-<!-- 删除确认 -->
-<div class="sh-bg" id="delSh"><div class="sh-panel">
-  <div class="sh-title" id="delTitle">确认删除？</div>
-  <div class="d-btns">
-    <button class="d-sec" onclick="closeSh('delSh')">取消</button>
-    <button class="d-pri" style="background:var(--ng)" onclick="doDelConfirm()">确认删除</button>
+<!-- 删除确认（居中弹窗） -->
+<div class="sh-bg" id="delSh" style="align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:24px 20px 16px;width:280px;text-align:center;">
+    <div style="font-size:15px;font-weight:600;color:var(--g800);margin-bottom:16px;" id="delTitle">确认删除？</div>
+    <div class="d-btns">
+      <button class="d-sec" onclick="closeSh('delSh')">取消</button>
+      <button class="d-pri" style="background:var(--ng)" onclick="doDelConfirm()">确认删除</button>
+    </div>
   </div>
-</div></div>
+</div>
 
 <!-- 新增 -->
 <div class="sh-bg" id="addSh"><div class="sh-panel">
@@ -339,16 +359,23 @@
 </div></div>
 
 <script>
+/* 站房类型元数据：
+   l = 类型标签（行右侧的tag，描述系统类型code）
+   s = 类型后缀（本模块不可改；由 1.3 包裹生成环节做最终交付前的规范化调整，如"开关站"→"开闭所"）
+   本模块存储层：编号（n，含数字+连接符）+ 类型code（tp），不预拼接完整字符串 */
 var T={
-  station:{l:'开关站',s:'#开关站',c:'var(--g600)',bg:'var(--g100)'},
-  room:{l:'配电室',s:'#配电室',c:'var(--g600)',bg:'var(--g100)'},
-  join:{l:'合建开关站',s:'#合建站',c:'var(--g600)',bg:'var(--g100)'},
-  box:{l:'箱式变电站',s:'#箱变',c:'var(--g600)',bg:'var(--g100)'}
+  station:{l:'开关站',s:'开关站',c:'var(--g600)',bg:'var(--g100)'},
+  room:{l:'配电室',s:'配电室',c:'var(--g600)',bg:'var(--g100)'},
+  join:{l:'合建开关站',s:'合建站',c:'var(--g600)',bg:'var(--g100)'},
+  box:{l:'箱式变电站',s:'箱变',c:'var(--g600)',bg:'var(--g100)'}
 };
+/* n = 站房编号（自由文本，包含数字+连接符两部分：如"1#"、"P1号"、"A1-"、"西1 "）
+   现场工作负责人可改整段编号（数字部分和连接符一起改），但类型后缀（开关站/配电室等）保持固定
+   后缀规范化由 1.3 包裹阶段做最终交付前统一调整 */
 var rooms=[
-  {id:1,tp:'station',n:'1',ok:false},{id:2,tp:'station',n:'2',ok:false},
-  {id:3,tp:'room',n:'1',ok:false},{id:4,tp:'room',n:'2',ok:false},
-  {id:5,tp:'room',n:'3',ok:false},{id:6,tp:'room',n:'4',ok:false}
+  {id:1,tp:'station',n:'1#',ok:false},{id:2,tp:'station',n:'2#',ok:false},
+  {id:3,tp:'room',n:'1#',ok:false},{id:4,tp:'room',n:'2#',ok:false},
+  {id:5,tp:'room',n:'3#',ok:false},{id:6,tp:'room',n:'4#',ok:false}
 ];
 var nid=7,pickId=null,actionId=null;
 /* 项目规模（从工单数据获取） */
@@ -366,71 +393,23 @@ function render(){
     h+='</div>';
   });
   document.getElementById('list').innerHTML=h;
-  bindSwipeAndTap();
+
   updBot();
 }
 
 function rowHtml(r){
   var t=T[r.tp],cls=r.ok?'ok':'pending';
-  return '<div class="rm-wrap" id="wrap'+r.id+'" data-id="'+r.id+'">'
-    +'<div class="rm-del-bg" onclick="confirmDel('+r.id+')">删除</div>'
-    +'<div class="rm '+cls+'" id="rm'+r.id+'" data-id="'+r.id+'">'
+  return '<div class="rm '+cls+'" id="rm'+r.id+'" data-id="'+r.id+'" onclick="openPk('+r.id+')">'
     +'<div class="rm-bar"></div>'
     +'<div class="rm-num">'
     +'<span class="rm-val">'+esc(r.n)+'</span>'
     +'</div>'
     +'<span class="rm-suf">'+t.s+'</span>'
     +'<span class="rm-space"></span>'
-    +'<div class="rm-type">'
-    +'<span class="rm-tag" style="background:'+t.bg+';color:'+t.c+'">'+t.l+'</span>'
-    +'</div>'
-    +'</div>'
+    +'<div class="rm-del-x" onclick="event.stopPropagation();confirmDel('+r.id+')" title="删除">✕</div>'
     +'</div>';
 }
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
-
-function bindSwipeAndTap(){
-  document.querySelectorAll('.rm-wrap').forEach(function(wrap){
-    var startX=0,swiping=false,opened=false;
-    var rm=wrap.querySelector('.rm');
-    var delBg=wrap.querySelector('.rm-del-bg');
-    var id=parseInt(wrap.dataset.id);
-
-    function showDel(){delBg.classList.add('visible')}
-    function hideDel(){delBg.classList.remove('visible')}
-    function setPos(tx){rm.style.transform=tx?'translateX('+tx+'px)':'';rm.style.transition='none'}
-    function animateTo(tx){rm.style.transition='transform .2s ease-out';rm.style.transform=tx?'translateX('+tx+'px)':'';if(!tx)setTimeout(hideDel,200)}
-
-    // Touch
-    wrap.addEventListener('touchstart',function(e){startX=e.touches[0].clientX;swiping=false},{passive:true});
-    wrap.addEventListener('touchmove',function(e){
-      var dx=e.touches[0].clientX-startX;
-      if(dx<-10){swiping=true;showDel()}
-      if(swiping){setPos(Math.max(-72,Math.min(0,dx+(opened?-72:0))))}
-    },{passive:true});
-    wrap.addEventListener('touchend',function(e){
-      if(swiping){var dx=e.changedTouches[0].clientX-startX+(opened?-72:0);if(dx<-36){animateTo(-72);opened=true}else{animateTo(0);opened=false}}
-      else if(!e.target.closest('.rm-del-bg')){openPk(id)}
-    });
-
-    // Mouse (for demo in browser)
-    wrap.addEventListener('mousedown',function(e){
-      if(e.target.closest('.rm-del-bg'))return;
-      startX=e.clientX;swiping=false;
-      var onMove=function(ev){
-        var dx=ev.clientX-startX;
-        if(dx<-10){swiping=true;showDel()}
-        if(swiping){setPos(Math.max(-72,Math.min(0,dx+(opened?-72:0))))}
-      };
-      var onUp=function(ev){
-        document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);
-        if(swiping){var dx=ev.clientX-startX+(opened?-72:0);if(dx<-36){animateTo(-72);opened=true}else{animateTo(0);opened=false}}
-        else if(!ev.target.closest('.rm-del-bg')){openPk(id)}
-      };
-      document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);
-    });
-  });
-}
 
 /* 删除二次确认 */
 var delId=null;
@@ -447,25 +426,28 @@ function doDelConfirm(){
 
 function openPk(id){
   pickId=id;var r=find(id);
-  document.getElementById('pkTitle').textContent='输入站房编号';
-  document.getElementById('pkSub').textContent='当前：'+r.n+T[r.tp].s;
+  document.getElementById('pkTitle').textContent='修改站房编号';
+  document.getElementById('pkSub').textContent='当前：'+r.n+T[r.tp].s+'　编号=数字+符号（如"1#"→"P1号"），类型后缀"'+T[r.tp].s+'"由包裹阶段统一规范化';
   var inp=document.getElementById('pkInp');
   inp.value=r.n;
+  inp.placeholder='例：1#、P1号、A1-';
   openSh('pickerSh');
-  setTimeout(function(){inp.focus();inp.select()},200);
+  setTimeout(function(){inp.focus();inp.select();},200);
 }
 function applyInput(){
-  var v=document.getElementById('pkInp').value.trim();
+  var v=document.getElementById('pkInp').value;
+  // 保留用户输入的空格等符号（符号本身是编号的一部分），但去除首尾空白
+  v=v.replace(/^\s+|\s+$/g,'');
   if(!v){toast('请输入编号');return}
   if(pickId===null)return;
   var r=find(pickId);
   var dup=rooms.find(function(x){return x.id!==pickId&&x.tp===r.tp&&x.n===v});
-  if(dup){toast('编号 '+v+' 在'+T[r.tp].l+'中已存在');return}
-  r.n=v;r.ok=true;closeSh('pickerSh');render();toast('编号已更新为 '+v+T[r.tp].s);
+  if(dup){toast('编号「'+v+'」在'+T[r.tp].l+'中已存在');return}
+  r.n=v;r.ok=true;closeSh('pickerSh');render();toast('编号已确认为 '+v+T[r.tp].s);
 }
 
 
-function doAdd(tp){closeSh('addSh');var c=rooms.filter(function(r){return r.tp===tp}).length;var newId=nid++;rooms.push({id:newId,tp:tp,n:String(c+1),ok:false});render();setTimeout(function(){var el=document.getElementById('rm'+newId);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(function(){openPk(newId)},300)},150)}
+function doAdd(tp){closeSh('addSh');var c=rooms.filter(function(r){return r.tp===tp}).length;var newId=nid++;rooms.push({id:newId,tp:tp,n:(c+1)+'#',ok:false});render();setTimeout(function(){var el=document.getElementById('rm'+newId);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(function(){openPk(newId)},300)},150)}
 
 function openSh(id){document.getElementById(id).classList.add('show')}
 function closeSh(id){document.getElementById(id).classList.remove('show')}
@@ -519,8 +501,8 @@ function showSubmitPanel(){
   var byT={};rooms.forEach(function(r){if(!byT[r.tp])byT[r.tp]=[];byT[r.tp].push(r.n+T[r.tp].s)});
   var lines=[];for(var t in byT)lines.push('<b>'+T[t].l+'</b>：'+byT[t].join('、'));
   var outdoorLines=[];
-  outdoorLines.push('充电桩设施：'+(outdoor.charging?'有':'无'));
-  outdoorLines.push('居民配套设施：'+(outdoor.residential?'有':'无'));
+  outdoorLines.push('充电设施：'+(outdoor.charging?'有':'无'));
+  outdoorLines.push('居民设施：'+(outdoor.residential?'有':'无'));
   lines.push('<b>室外配套</b>：'+outdoorLines.join('、'));
   lines.push('<b>进线电缆</b>：'+inlineNum+'段');
   document.getElementById('dBody').innerHTML='共 <b>'+total+'</b> 个站房<br>'+lines.join('<br>');
@@ -541,12 +523,13 @@ function confirmRoom(id){
 var outdoor={charging:null,residential:null}; // null=未选，true=有，false=无
 function setOutdoor(key,val){
   outdoor[key]=val;
+  // 复用共享CSS .btn-judge 的 ok-on（绿）/ ng-on（红）两态，与合格/不合格按钮视觉统一
   if(key==='charging'){
-    document.getElementById('chgYes').className='yn-btn'+(val?' yes':'');
-    document.getElementById('chgNo').className='yn-btn'+(val?'':' no');
+    document.getElementById('chgYes').className='btn-judge'+(val?' ok-on':'');
+    document.getElementById('chgNo').className='btn-judge'+(val?'':' ng-on');
   } else {
-    document.getElementById('resYes').className='yn-btn'+(val?' yes':'');
-    document.getElementById('resNo').className='yn-btn'+(val?'':' no');
+    document.getElementById('resYes').className='btn-judge'+(val?' ok-on':'');
+    document.getElementById('resNo').className='btn-judge'+(val?'':' ng-on');
   }
   var taskName=key==='charging'?'充电设施':'居民设施';
   toast(val?'选择"有"：核查分工将包含"'+taskName+'"':'选择"无"');

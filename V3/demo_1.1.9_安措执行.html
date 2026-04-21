@@ -170,6 +170,40 @@
 .toast{display:none;position:absolute;left:50%;bottom:80px;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;z-index:999;white-space:nowrap}
 .toast.show{display:block;animation:fadeInUp .3s}
 @keyframes fadeInUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}}
+
+/* ===== V0.3 新机制样式：跳过 / 增项 / 三态审核 ===== */
+.item-card.skipped{border-left-color:var(--g400);opacity:.72}
+.item-card.skipped .item-icon{background:var(--g100);color:var(--g500)}
+.item-card.skip-rejected{border-left-color:#F59E0B}
+.item-card.skip-rejected .item-icon{background:#FEF3C7;color:#B45309}
+.item-card.added{border-left-color:#8B5CF6}
+.item-card.added .item-name::after{content:'增项';display:inline-block;margin-left:6px;font-size:10px;font-weight:600;background:#EDE9FE;color:#6D28D9;padding:1px 6px;border-radius:8px}
+.skip-reason{padding:8px 14px 12px;font-size:12px;color:var(--g500);background:#F9FAFB;border-top:1px dashed var(--g200)}
+.skip-reason b{color:var(--g700)}
+/* 顶部增项按钮条 */
+.add-bar{display:flex;align-items:center;padding:10px 14px;background:#fff;border-bottom:1px solid var(--g100);gap:8px}
+.add-bar-hint{flex:1;font-size:12px;color:var(--g500)}
+.add-btn{padding:6px 12px;border-radius:16px;background:var(--pri-l);color:var(--pri-d);font-size:12px;font-weight:600;border:1px solid var(--pri);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.add-btn:active{background:var(--pri);color:#fff}
+/* 提醒横幅（全跳过/驳回跳过） */
+.warn-banner{margin:8px 12px;padding:10px 14px;border-radius:8px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;position:sticky;top:0;z-index:10}
+.warn-banner.skip{background:#FEF3C7;border:1px solid #FCD34D;color:#92400E}
+/* 三态审核按钮 */
+.judge-opt.skip-accept{color:var(--g600)}
+.judge-opt.skip-accept.on{border-color:var(--g400);background:var(--g100)}
+.judge-opt.skip-reject{color:#B45309}
+.judge-opt.skip-reject.on{border-color:#F59E0B;background:#FEF3C7}
+/* Bottom Sheet 内：拍照/跳过 二选一 */
+.action-opt{display:flex;align-items:center;padding:14px;border:2px solid var(--g200);border-radius:var(--r);margin-bottom:10px;gap:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.action-opt:active{background:var(--g50)}
+.action-opt-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.action-opt.photo .action-opt-icon{background:var(--pri-l);color:var(--pri)}
+.action-opt.skip .action-opt-icon{background:var(--g100);color:var(--g500)}
+.action-opt-info{flex:1}
+.action-opt-title{font-size:14px;font-weight:600;color:var(--g800)}
+.action-opt-desc{font-size:12px;color:var(--g500);margin-top:2px}
+/* 字典 Select 样式 */
+.dict-select{width:100%;padding:10px;border:1px solid var(--g200);border-radius:8px;font-size:13px;background:#fff;margin-bottom:10px;box-sizing:border-box}
 </style>
 </head>
 <body>
@@ -190,6 +224,11 @@
       <!-- 列表模式 -->
       <div class="list-mode" id="listMode">
         <div class="nbar"><div class="back" onclick="showToast('toastExec','返回我的任务列表')">←</div><div class="title">1#开关站 安措执行</div></div>
+        <!-- V0.3 新增：顶部提示条 + 增项按钮 -->
+        <div class="add-bar">
+          <div class="add-bar-hint">共 7 项，实际不需要可<b style="color:var(--g700)">跳过</b>并填原因</div>
+          <div class="add-btn" onclick="showAddItemSheet()">+ 增项</div>
+        </div>
         <div class="scroll" id="execScroll">
 
           <!-- 通道安措 -->
@@ -282,6 +321,9 @@
       <li><strong>应用内取景窗连续拍照，不调用原生相机</strong> — 进线安措（验电→接地→挂牌）是同一高压柜前的连续物理操作，如果每项都调用系统原生相机（弹出→拍照→返回APP→再弹出），"弹出-返回"的节奏严重打断现场操作流。3.0系统统一使用应用内取景窗（复用核查模块CameraView），进入安措组后取景窗常驻不关闭，快门两侧设‹ ›导航按钮，拍完1张后"下一项"按钮高亮脉冲引导切换，实现验电→接地→挂牌的无中断连拍。地下配电室无网络时照片存本地，恢复后批量上传。</li>
       <li><strong>与检测分工并行</strong> — 2.4系统安措必须等检测分工完成后才能开始。3.0系统改为并行：安措和检测分工只依赖”站房已提交”这一共同前置条件，两者同时开始互不阻塞，减少现场等待时间。</li>
       <li><strong>禁止工作负责人自选</strong> — 安措执行人只能从试验人员中选择，工作负责人不可指定自己，确保执行-确认异体分离。</li>
+      <li><strong>⭐V0.5 默认项不可删，可跳过+填原因</strong> — 默认清单按站房类型 M1 模板给最大公约数（开关站10项/配电室17项/合建站23项/箱变23项），执行人只能选"拍照"或"跳过"，不能删除默认项。跳过必填原因（分类+补充说明两栏），系统尽提醒义务，跳过的责任归跳过人和接受跳过的审核人。</li>
+      <li><strong>⭐V0.5 增项机制（极端站房用）</strong> — 默认模板未覆盖的现场实际情况（如超过 III 段进线），执行人可从 PC 端项目级字典挑项增补，填原因后纳入本站清单。同站房不可重复增同名项。</li>
+      <li><strong>⭐V0.5 应用内取景窗导航遇跳过项自动跳过</strong> — ‹ › 导航在取景窗内遇已跳过项不停留，直接切到下一未处理项。取消跳过需退出取景窗到列表页操作。</li>
     </ul>
 
     <h3>业务规则摘要</h3>
@@ -376,15 +418,15 @@
             <div class="photo-grid"><div class="photo-thumb">🖼<div class="ph-label">王强</div></div><div class="photo-thumb">🖼<div class="ph-label">王强</div></div></div>
             <div class="judge-panel"><div class="judge-row"><div class="judge-opt pass" onclick="judgeItem(this,'pass')">✓ 合格</div><div class="judge-opt fail" onclick="judgeItem(this,'fail')">✕ 不合格</div></div></div>
           </div>
-          <div class="item-card pending-review" onclick="toggleConfirmItem(this)">
-            <div class="item-inner"><div class="item-icon pending">⏳</div><div class="item-info"><div class="item-name">高压进线柜挂牌</div><div class="item-meta">已拍 <b>1</b>张 · 拍摄人: <span class="who">王强</span></div></div><div class="item-chevron">›</div></div>
-            <div class="photo-grid"><div class="photo-thumb">🖼<div class="ph-label">王强</div></div></div>
-            <div class="judge-panel"><div class="judge-row"><div class="judge-opt pass" onclick="judgeItem(this,'pass')">✓ 合格</div><div class="judge-opt fail" onclick="judgeItem(this,'fail')">✕ 不合格</div></div></div>
+          <div class="item-card pending-review skipped" onclick="toggleConfirmItem(this)">
+            <div class="item-inner"><div class="item-icon skipped">⊘</div><div class="item-info"><div class="item-name">高压进线柜挂牌</div><div class="item-meta" style="color:var(--g500)">已跳过 · 执行人: <span class="who">王强</span></div></div><div class="item-chevron">›</div></div>
+            <div class="skip-reason" style="display:none"><b>跳过原因：</b>[物理不存在] 本站房实际只有 I 段进线，II 段不存在</div>
+            <div class="judge-panel"><div class="judge-row"><div class="judge-opt skip-accept" onclick="judgeSkipItem(this,'accept')">✓ 接受跳过</div><div class="judge-opt skip-reject" onclick="judgeSkipItem(this,'reject')">✕ 驳回跳过</div></div></div>
           </div>
         </div>
       </div>
       <div class="bot">
-        <div class="bot-info" id="confirmBotInfo">已判定 <b>0</b>/7 · 未判定 <b>7</b></div>
+        <div class="bot-info" id="confirmBotInfo">已判定 <b>0</b>/7 · 未判定 <b>7</b>（含 <b>1</b> 跳过项待审）</div>
         <button class="bot-btn wait" id="confirmSubmitBtn" onclick="submitConfirm()">确认完成</button>
       </div>
       <div class="toast" id="toastConfirm"></div>
@@ -397,6 +439,8 @@
     <h3>设计决策说明</h3>
     <ul>
       <li><strong>执行-确认异体分离</strong> — 试验人员执行拍照，工作负责人审核判定，两步操作不可合并。工作负责人从源头就不可选自己做安措（候选人仅限试验人员），从制度上杜绝合规风险。</li>
+      <li><strong>⭐V0.5 三态审核</strong> — 拍照项判"合格/不合格"；跳过项判"接受跳过/驳回跳过"；增项项按拍照/跳过走对应判定。合格/接受跳过即锁定不可撤回；不合格/驳回跳过触发对应重做流程。</li>
+      <li><strong>⭐V0.5 驳回跳过 vs 退回不合格的区别</strong> — 退回不合格（红色）：照片清空，执行人重拍；驳回跳过（橙色）：跳过原因进内部管理日志不可改，执行人须补拍（不能再用同一原因跳过，可用新原因但反复留痕）。</li>
       <li><strong>逐项退回不株连</strong> — 发现某项不合格时只退回该项，不整站退回。已合格项保持锁定状态，最大限度减少重拍工作量。与核查确认(1.1.4)保持一致的退回模式。</li>
       <li><strong>BIGA工作台统一入口</strong> — 确认操作通过项目工作台的安措确认卡片进入，按角色权限自动显示，不增加独立入口。</li>
     </ul>
@@ -447,10 +491,10 @@
         <div class="nbar"><div class="back" onclick="showToast('toastRejected','返回项目工作台')">←</div><div class="title">1#开关站 安措执行</div></div>
         <div class="scroll">
 
-          <!-- 退回提示横幅 -->
+          <!-- V0.5：退回/驳回跳过提示横幅 -->
           <div style="margin:8px 12px;padding:10px 14px;background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:10">
             <span style="font-size:16px">⚠</span>
-            <span style="font-size:13px;color:#991B1B;font-weight:600" id="rejBanner">2项安措被退回，请重新拍照</span>
+            <span style="font-size:13px;color:#991B1B;font-weight:600" id="rejBanner">1 项不合格退回 + 1 项被驳回跳过，请按提示处理</span>
           </div>
 
           <!-- 通道安措 -->
@@ -484,14 +528,14 @@
             <div class="item-card done" style="opacity:.7;pointer-events:none">
               <div class="item-inner"><div class="item-icon done">✅</div><div class="item-info"><div class="item-name">高压进线电缆接地</div><div class="item-meta" style="color:var(--ok)">已合格</div></div></div>
             </div>
-            <div class="item-card rejected" id="rej-item-1" onclick="onRejItemClick(1)">
-              <div class="item-inner"><div class="item-icon rejected">✕</div><div class="item-info"><div class="item-name">高压进线柜挂牌</div><div class="item-meta" style="color:var(--ng)">退回：挂牌位置不正确</div></div><div class="item-chevron">›</div></div>
+            <div class="item-card skip-rejected" id="rej-item-1" onclick="onRejItemClick(1)">
+              <div class="item-inner"><div class="item-icon skip-rejected">✕</div><div class="item-info"><div class="item-name">高压进线柜挂牌</div><div class="item-meta" style="color:#B45309">驳回跳过：本站实际有 II 段进线，必须拍</div></div><div class="item-chevron">›</div></div>
             </div>
           </div>
 
         </div>
         <div class="bot">
-          <div class="bot-info" id="rejBotInfo">合格 <b>5</b>/7 · 退回 <b>2</b></div>
+          <div class="bot-info" id="rejBotInfo">合格 <b>5</b>/7 · 退回 <b>1</b> · 驳回跳过 <b>1</b></div>
           <button class="bot-btn wait" id="rejSubmitBtn" onclick="submitRej()">重新提交(2项)</button>
         </div>
       </div>
@@ -536,7 +580,8 @@
       <li><strong>退回提示横幅</strong> — 顶部红色横幅，显示退回项数量。使用 <code>position:sticky</code> 固定在滚动区域顶部</li>
       <li><strong>已合格项（绿色锁定）</strong> — 工作负责人已判定合格的安措项，显示"已合格"绿色文字，半透明+不可点击，不可修改</li>
       <li><strong>退回项（红色高亮）</strong> — 被退回的安措项，红色左边框+✕图标，显示退回原因。点击可进入重拍模式（照片已清空）</li>
-      <li><strong>底部按钮</strong> — "重新提交(N项)"仅在退回项全部重拍后激活，只提交退回项的新照片</li>
+      <li><strong>⭐V0.5 驳回跳过项（橙色高亮）</strong> — 工作负责人不接受跳过的项，橙色左边框+✕图标，显示驳回原因。执行人须补拍（不能再跳过同一原因）</li>
+      <li><strong>底部按钮</strong> — "重新提交(N项)"仅在退回+驳回跳过项全部重拍后激活，只提交相关项的新数据</li>
     </ul>
 
     <h3>退回-重拍流转</h3>
@@ -568,6 +613,77 @@
 <div class="sh-bg" id="sheetExecSubmit"><div class="sh-panel"><div class="sh-title">提交安措</div><div class="confirm-content">全部 <b>7</b> 项安措已拍照存证，提交给工作负责人确认？</div><div class="confirm-btns"><div class="cbtn cancel" onclick="closeSheet('sheetExecSubmit')">取消</div><div class="cbtn ok" onclick="doExecSubmit()">确认提交</div></div></div></div>
 <div class="sh-bg" id="sheetReject"><div class="sh-panel"><div class="sh-title">退回重做</div><div class="confirm-content">判定该项安措<b style="color:var(--ng)">不合格</b>，退回给执行人重新布置并拍照。<br><br><div style="font-size:12px;color:var(--g500);margin-bottom:4px">退回原因（选填）</div><textarea id="rejectReason" style="width:100%;height:60px;border:1px solid var(--g200);border-radius:8px;padding:8px;font-size:13px;resize:none;box-sizing:border-box" placeholder="如：接地线未接牢固，请重新操作"></textarea></div><div class="confirm-btns"><div class="cbtn cancel" onclick="closeSheet('sheetReject')">取消</div><div class="cbtn ok" style="background:var(--ng)" onclick="doReject()">确认退回</div></div></div></div>
 
+<!-- V0.3 新增：拍照/跳过 Bottom Sheet -->
+<div class="sh-bg" id="sheetAction">
+  <div class="sh-panel">
+    <div class="sh-title" id="sheetActionTitle">本项操作</div>
+    <div class="action-opt photo" onclick="doAction('photo')"><div class="action-opt-icon">📷</div><div class="action-opt-info"><div class="action-opt-title">拍照</div><div class="action-opt-desc">进入取景窗拍照存证</div></div></div>
+    <div class="action-opt skip" onclick="doAction('skip')"><div class="action-opt-icon">⊘</div><div class="action-opt-info"><div class="action-opt-title">跳过</div><div class="action-opt-desc">本项不做，填写原因后工作负责人审核</div></div></div>
+    <div style="display:flex;margin-top:4px"><div class="cbtn cancel" style="flex:1;padding:12px;border-radius:8px;font-size:14px;font-weight:600;text-align:center;cursor:pointer" onclick="closeSheet('sheetAction')">取消</div></div>
+  </div>
+</div>
+
+<!-- V0.3 新增：跳过+填原因 Bottom Sheet -->
+<div class="sh-bg" id="sheetSkip">
+  <div class="sh-panel">
+    <div class="sh-title">跳过本项</div>
+    <div class="confirm-content" style="padding-bottom:10px">
+      选择该项<b>不做</b>的原因（必填）。系统已提醒需执行本项，跳过的责任归跳过人和接受跳过的审核人。
+      <div style="margin-top:10px;font-size:12px;color:var(--g500);margin-bottom:4px">原因分类</div>
+      <select class="dict-select" id="skipReasonType">
+        <option value="">请选择</option>
+        <option value="物理不存在">物理不存在（现场无此段/此柜）</option>
+        <option value="设备未投运">设备未投运（已停运/未并网）</option>
+        <option value="其他">其他（请在下方补充说明）</option>
+      </select>
+      <div style="font-size:12px;color:var(--g500);margin-bottom:4px">补充说明（必填）</div>
+      <textarea id="skipReasonText" style="width:100%;height:60px;border:1px solid var(--g200);border-radius:8px;padding:8px;font-size:13px;resize:none;box-sizing:border-box" placeholder="如：本站房实际只有 I 段进线，II/III 段不存在"></textarea>
+    </div>
+    <div class="confirm-btns"><div class="cbtn cancel" onclick="closeSheet('sheetSkip')">取消</div><div class="cbtn ok" onclick="doSkipConfirm()">确认跳过</div></div>
+  </div>
+</div>
+
+<!-- V0.3 新增：增项 Bottom Sheet -->
+<div class="sh-bg" id="sheetAdd">
+  <div class="sh-panel">
+    <div class="sh-title">增加安措项</div>
+    <div class="confirm-content" style="padding-bottom:10px">
+      默认模板未覆盖现场实际情况时，可从字典挑项补充。
+      <div style="margin-top:10px;font-size:12px;color:var(--g500);margin-bottom:4px">选择安措项</div>
+      <select class="dict-select" id="addItemName">
+        <option value="">请选择</option>
+        <option value="IV段高压柜进线电缆验电">IV段高压柜进线电缆验电</option>
+        <option value="IV段高压柜进线电缆接地">IV段高压柜进线电缆接地</option>
+        <option value="IV段高压柜进线柜挂牌">IV段高压柜进线柜挂牌</option>
+        <option value="备用电源隔离验电">备用电源隔离验电</option>
+        <option value="备用电源接地">备用电源接地</option>
+      </select>
+      <div style="font-size:12px;color:var(--g500);margin-bottom:4px">所属安措组</div>
+      <select class="dict-select" id="addItemGroup">
+        <option value="IV段高压柜进线安措">IV段高压柜进线安措（新建组）</option>
+        <option value="备用电源安措">备用电源安措（新建组）</option>
+      </select>
+      <div style="font-size:12px;color:var(--g500);margin-bottom:4px">增项原因（必填）</div>
+      <textarea id="addItemReason" style="width:100%;height:60px;border:1px solid var(--g200);border-radius:8px;padding:8px;font-size:13px;resize:none;box-sizing:border-box" placeholder="如：现场实际有 IV 段进线，原模板未覆盖"></textarea>
+    </div>
+    <div class="confirm-btns"><div class="cbtn cancel" onclick="closeSheet('sheetAdd')">取消</div><div class="cbtn ok" onclick="doAddItemConfirm()">确认增项</div></div>
+  </div>
+</div>
+
+<!-- V0.3 新增：驳回跳过 Bottom Sheet -->
+<div class="sh-bg" id="sheetSkipReject">
+  <div class="sh-panel">
+    <div class="sh-title">驳回跳过</div>
+    <div class="confirm-content">
+      驳回执行人的跳过决定，要求其<b style="color:#B45309">补拍</b>本项。
+      <br><br>
+      <div style="font-size:12px;color:var(--g500);margin-bottom:4px">驳回原因（选填，建议填）</div>
+      <textarea id="skipRejectReason" style="width:100%;height:60px;border:1px solid var(--g200);border-radius:8px;padding:8px;font-size:13px;resize:none;box-sizing:border-box" placeholder="如：本站实际有 II 段进线，必须拍"></textarea>
+    </div>
+    <div class="confirm-btns"><div class="cbtn cancel" onclick="closeSheet('sheetSkipReject')">取消</div><div class="cbtn ok" style="background:#F59E0B" onclick="doSkipReject()">确认驳回</div></div>
+  </div>
+</div>
+
 <script>
 // ===== 数据 =====
 var GROUPS = [
@@ -588,6 +704,10 @@ var photos = [0,0,0,0,0,0,0];
 var selCamItem = -1; // 拍照模式中选中的项
 var camGroupIdx = -1; // 当前进入的安措组
 var currentRejectCard = null;
+// V0.3 新增：跳过 / 增项
+var skipped = [false,false,false,false,false,false,false];
+var skipReasons = ['','','','','','',''];
+var currentItemIdx = -1;
 
 // ===== 视角切换 =====
 function switchView(v) {
@@ -916,36 +1036,48 @@ function updateAllExecItems() {
 
 function onExecItemClick(idx) {
   if(event.target.closest('.exec-ph-more')) return;
+  if(event.target.closest('.skip-reason')) { event.stopPropagation(); return; }
+  // V0.3：已跳过项 → 弹"取消跳过"菜单
+  if(skipped[idx]) {
+    currentItemIdx = idx;
+    document.getElementById('sheetActionTitle').textContent = '已跳过：' + ITEMS[idx].name;
+    var photoOpt = document.querySelector('#sheetAction .action-opt.photo');
+    photoOpt.querySelector('.action-opt-title').textContent = '取消跳过';
+    photoOpt.querySelector('.action-opt-desc').textContent = '回到未处理态，可重新拍照或再跳过';
+    document.querySelector('#sheetAction .action-opt.skip').style.display = 'none';
+    document.getElementById('sheetAction').classList.add('show');
+    return;
+  }
   var n = photos[idx];
   if(n>0){
-    // 已拍照：展开/折叠照片网格
-    if(expandedExecItem === idx){
-      expandedExecItem = -1;
-    } else {
-      expandedExecItem = idx;
-    }
-    // 刷新所有网格的展开状态
+    if(expandedExecItem === idx){expandedExecItem = -1;} else {expandedExecItem = idx;}
     for(var i=0;i<7;i++){
       var grid = document.getElementById('exec-grid-'+i);
-      if(grid){
-        if(i===expandedExecItem) grid.classList.add('show');
-        else grid.classList.remove('show');
-      }
+      if(grid){ if(i===expandedExecItem) grid.classList.add('show'); else grid.classList.remove('show'); }
     }
   } else {
-    // 未拍照：直接进拍照模式
-    enterCam(idx);
+    // V0.3：未处理 → 弹 Bottom Sheet "拍照/跳过"
+    currentItemIdx = idx;
+    document.getElementById('sheetActionTitle').textContent = ITEMS[idx].name;
+    var photoOpt2 = document.querySelector('#sheetAction .action-opt.photo');
+    photoOpt2.querySelector('.action-opt-title').textContent = '拍照';
+    photoOpt2.querySelector('.action-opt-desc').textContent = '进入取景窗拍照存证';
+    document.querySelector('#sheetAction .action-opt.skip').style.display = 'flex';
+    document.getElementById('sheetAction').classList.add('show');
   }
 }
 
 function updateExecProgress() {
-  var done = photos.filter(function(p){return p>0}).length;
-  document.getElementById('execBotInfo').innerHTML='已完成 <b>'+done+'</b>/7 · 未完成 <b>'+(7-done)+'</b>';
+  var done = 0;
+  for(var i=0;i<7;i++){ if(photos[i]>0 || skipped[i]) done++; }
+  var skipCnt = skipped.filter(function(s){return s}).length;
+  var skipHtml = skipCnt>0 ? ' · 跳过 <b>'+skipCnt+'</b>' : '';
+  document.getElementById('execBotInfo').innerHTML='已完成 <b>'+done+'</b>/7 · 未完成 <b>'+(7-done)+'</b>'+skipHtml;
   var btn = document.getElementById('execSubmitBtn');
   btn.className = done===7?'bot-btn ready':'bot-btn wait';
   var groups=[[0],[1,2,3],[4,5,6]];
   groups.forEach(function(g,gi){
-    var gc=g.filter(function(i){return photos[i]>0}).length;
+    var gc=g.filter(function(i){return photos[i]>0 || skipped[i]}).length;
     var el=document.getElementById('g'+(gi+1)+'count');
     if(el) el.textContent=gc+'/'+g.length;
   });
@@ -953,7 +1085,13 @@ function updateExecProgress() {
 
 // ===== 执行提交 =====
 function submitExec(){
-  if(photos.filter(function(p){return p>0}).length<7) return;
+  var done = 0;
+  for(var i=0;i<7;i++){ if(photos[i]>0 || skipped[i]) done++; }
+  if(done < 7) return;
+  var skipAll = skipped.every(function(s){return s});
+  if(skipAll) {
+    if(!confirm('您正在跳过本站所有安措项（7 项），工作负责人会重点审核。请确认')) return;
+  }
   document.getElementById('sheetExecSubmit').classList.add('show');
 }
 function doExecSubmit(){
@@ -963,21 +1101,34 @@ function doExecSubmit(){
   document.getElementById('execSubmitBtn').textContent='已提交，待确认';
 }
 
-// ===== 确认视角 =====
+// ===== 确认视角（V0.5：三态审核）=====
 function toggleConfirmItem(card){
   if(event.target.closest('.judge-opt')) return;
-  var grid=card.querySelector('.photo-grid'), panel=card.querySelector('.judge-panel');
-  var isOpen=grid.classList.contains('show');
+  var grid=card.querySelector('.photo-grid'), panel=card.querySelector('.judge-panel'), skipR=card.querySelector('.skip-reason');
+  var isOpen = (grid && grid.classList.contains('show')) || (skipR && skipR.style.display==='block');
   document.querySelectorAll('#confirmScroll .photo-grid').forEach(function(g){g.classList.remove('show')});
   document.querySelectorAll('#confirmScroll .judge-panel').forEach(function(p){p.classList.remove('show')});
-  if(!isOpen){ grid.classList.add('show'); panel.classList.add('show'); }
+  document.querySelectorAll('#confirmScroll .skip-reason').forEach(function(s){s.style.display='none'});
+  if(!isOpen){
+    if(grid) grid.classList.add('show');
+    if(skipR) skipR.style.display='block';
+    panel.classList.add('show');
+  }
 }
 
+// 拍照项判定：合格/不合格
 function judgeItem(optEl,type){
   event.stopPropagation();
   var card=optEl.closest('.item-card');
   if(type==='fail'){ currentRejectCard=card; document.getElementById('sheetReject').classList.add('show'); return; }
   applyJudge(card,'pass'); updateConfirmProgress();
+}
+// V0.5：跳过项判定：接受跳过/驳回跳过
+function judgeSkipItem(optEl,type){
+  event.stopPropagation();
+  var card=optEl.closest('.item-card');
+  if(type==='reject'){ currentRejectCard=card; document.getElementById('sheetSkipReject').classList.add('show'); return; }
+  applySkipJudge(card,'accept'); updateConfirmProgress();
 }
 
 function applyJudge(card,type){
@@ -990,7 +1141,22 @@ function applyJudge(card,type){
     opts[1].classList.add('on'); opts[0].classList.remove('on');
   }
   opts.forEach(function(o){o.style.pointerEvents='none'});
-  setTimeout(function(){ card.querySelector('.photo-grid').classList.remove('show'); card.querySelector('.judge-panel').classList.remove('show'); },400);
+  setTimeout(function(){ var g=card.querySelector('.photo-grid'); if(g) g.classList.remove('show'); card.querySelector('.judge-panel').classList.remove('show'); },400);
+}
+
+function applySkipJudge(card,type){
+  var icon=card.querySelector('.item-icon'), opts=card.querySelectorAll('.judge-opt'), meta=card.querySelector('.item-meta');
+  if(type==='accept'){
+    card.className='item-card done skipped'; icon.className='item-icon done'; icon.textContent='✅';
+    meta.innerHTML='<span style="color:var(--ok);font-weight:600">已接受跳过</span>';
+    opts[0].classList.add('on'); opts[1].classList.remove('on');
+  } else {
+    card.className='item-card skip-rejected'; icon.className='item-icon skip-rejected'; icon.textContent='✕';
+    meta.innerHTML='<span style="color:#B45309;font-weight:600">已驳回跳过</span> · 等待执行人补拍';
+    opts[1].classList.add('on'); opts[0].classList.remove('on');
+  }
+  opts.forEach(function(o){o.style.pointerEvents='none'});
+  setTimeout(function(){ var s=card.querySelector('.skip-reason'); if(s) s.style.display='none'; card.querySelector('.judge-panel').classList.remove('show'); },400);
 }
 
 function doReject(){
@@ -1005,12 +1171,27 @@ function doReject(){
   document.getElementById('rejectReason').value='';
 }
 
+function doSkipReject(){
+  closeSheet('sheetSkipReject');
+  if(currentRejectCard){
+    applySkipJudge(currentRejectCard,'reject');
+    currentRejectCard=null;
+  }
+  updateConfirmProgress();
+  showToast('toastConfirm','已驳回跳过，执行人需补拍');
+  document.getElementById('skipRejectReason').value='';
+}
+
 function updateConfirmProgress(){
   var cards=document.querySelectorAll('#confirmScroll .item-card');
-  var judged=0, allPass=true;
-  cards.forEach(function(c){ if(c.classList.contains('done')) judged++; else if(c.classList.contains('rejected')){judged++;allPass=false;} else allPass=false; });
+  var judged=0, allOK=true;
+  cards.forEach(function(c){
+    if(c.classList.contains('done')) judged++;
+    else if(c.classList.contains('rejected') || c.classList.contains('skip-rejected')){judged++;allOK=false;}
+    else allOK=false;
+  });
   document.getElementById('confirmBotInfo').innerHTML='已判定 <b>'+judged+'</b>/7 · 未判定 <b>'+(7-judged)+'</b>';
-  document.getElementById('confirmSubmitBtn').className=(judged===7&&allPass)?'bot-btn ready':'bot-btn wait';
+  document.getElementById('confirmSubmitBtn').className=(judged===7&&allOK)?'bot-btn ready':'bot-btn wait';
 }
 
 function submitConfirm(){ document.getElementById('sheetConfirmSubmit').classList.add('show'); }
@@ -1019,6 +1200,85 @@ function doConfirmSubmit(){
   showToast('toastConfirm','安措确认完成，站房检测已解锁');
   document.getElementById('confirmSubmitBtn').className='bot-btn wait';
   document.getElementById('confirmSubmitBtn').textContent='已完成';
+}
+
+// ===== V0.3 新机制：拍照/跳过 Bottom Sheet 动作 =====
+function doAction(type) {
+  closeSheet('sheetAction');
+  if(type==='photo'){
+    if(skipped[currentItemIdx]){
+      // "拍照"菜单项在已跳过态下是"取消跳过"
+      skipped[currentItemIdx] = false;
+      skipReasons[currentItemIdx] = '';
+      updateSkipItem(currentItemIdx);
+      updateExecProgress();
+      showToast('toastExec','已取消跳过：'+ITEMS[currentItemIdx].name);
+    } else {
+      enterCam(currentItemIdx);
+    }
+  } else if(type==='skip'){
+    document.getElementById('sheetSkip').classList.add('show');
+  }
+}
+
+function doSkipConfirm() {
+  var type = document.getElementById('skipReasonType').value;
+  var text = document.getElementById('skipReasonText').value.trim();
+  if(!type){ showToast('toastExec','请选择原因分类'); return; }
+  if(!text){ showToast('toastExec','请填写补充说明'); return; }
+  skipped[currentItemIdx] = true;
+  skipReasons[currentItemIdx] = '['+type+'] '+text;
+  closeSheet('sheetSkip');
+  updateSkipItem(currentItemIdx);
+  updateExecProgress();
+  showToast('toastExec','已跳过：'+ITEMS[currentItemIdx].name);
+  document.getElementById('skipReasonType').value='';
+  document.getElementById('skipReasonText').value='';
+}
+
+function updateSkipItem(idx) {
+  var card = document.getElementById('exec-item-'+idx);
+  if(!card) return;
+  var icon = card.querySelector('.item-icon');
+  var meta = card.querySelector('.item-meta');
+  var exist = card.querySelector('.skip-reason');
+  if(exist) exist.remove();
+  if(skipped[idx]){
+    card.classList.remove('done');
+    card.classList.add('skipped');
+    icon.className = 'item-icon skipped'; icon.textContent='⊘';
+    meta.innerHTML = '<span style="color:var(--g500)">已跳过</span>';
+    var sr = document.createElement('div');
+    sr.className = 'skip-reason';
+    sr.innerHTML = '<b>原因：</b>'+skipReasons[idx];
+    card.appendChild(sr);
+  } else {
+    card.classList.remove('skipped');
+    if(photos[idx]>0){
+      card.classList.add('done');
+      icon.className = 'item-icon done'; icon.textContent = '✅';
+      meta.innerHTML = '已拍 <b>'+photos[idx]+'</b>张 · 王强';
+    } else {
+      icon.className = 'item-icon photo'; icon.textContent = '📷';
+      meta.textContent = '未拍照';
+    }
+  }
+}
+
+function showAddItemSheet() {
+  document.getElementById('sheetAdd').classList.add('show');
+}
+function doAddItemConfirm() {
+  var name = document.getElementById('addItemName').value;
+  var group = document.getElementById('addItemGroup').value;
+  var reason = document.getElementById('addItemReason').value.trim();
+  if(!name){ showToast('toastExec','请选择安措项'); return; }
+  if(!reason){ showToast('toastExec','请填写增项原因'); return; }
+  closeSheet('sheetAdd');
+  showToast('toastExec','已增项：'+name+'（需拍照或跳过）');
+  // 演示级：仅 Toast 反馈，不真正插入列表
+  document.getElementById('addItemName').value='';
+  document.getElementById('addItemReason').value='';
 }
 
 // ===== 通用 =====

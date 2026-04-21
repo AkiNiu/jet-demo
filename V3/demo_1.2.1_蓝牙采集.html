@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>蓝牙采集 — 检e通V3.0 Demo V2（专家评审修订版）</title>
+<link rel="stylesheet" href="demo_shared_base.css">
+<style>
+  .demo-layout{display:flex;gap:40px;max-width:1100px;margin:0 auto;padding:32px 24px;align-items:flex-start}
+  .demo-left{flex-shrink:0;position:sticky;top:24px}
+  .demo-right{flex:1;min-width:0}
+  .demo-right h2{font-size:18px;font-weight:700;color:#374151;margin-bottom:16px}
+  .demo-right h3{font-size:14px;font-weight:600;color:#4B5563;margin:20px 0 8px}
+  .demo-right p,.demo-right li{font-size:13px;color:#6B7280;line-height:1.8}
+  .demo-right ul{padding-left:20px}
+  .demo-right table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0 16px}
+  .demo-right th{background:#F3F4F6;padding:8px 10px;text-align:left;font-weight:600;color:#4B5563;border-bottom:1px solid #E5E7EB}
+  .demo-right td{padding:8px 10px;border-bottom:1px solid #F3F4F6;color:#6B7280}
+  .demo-right td:first-child{color:#374151;font-weight:500}
+  .demo-right .highlight{background:#FEF3C7;padding:2px 6px;border-radius:3px;font-size:11px;font-weight:600;color:#92400E}
+  .demo-right .danger{background:#FEE2E2;padding:2px 6px;border-radius:3px;font-size:11px;font-weight:600;color:#991B1B}
+
+  .page{display:none;flex-direction:column;flex:1;min-height:0;overflow:hidden}
+  .page.active{display:flex}
+  .scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--g50);padding-bottom:12px;min-height:0}
+
+  /* 作业状态横幅 */
+  .work-banner{margin:8px 12px;padding:14px 16px;border-radius:var(--rs);box-shadow:var(--shadow-sm);position:relative}
+  .work-banner.idle{background:var(--g100);border-left:4px solid var(--g400)}
+  .work-banner.active{background:#D1FAE5;border-left:4px solid var(--ok)}
+  .work-title{font-size:14px;font-weight:700;color:var(--g800);margin-bottom:6px}
+  .work-desc{font-size:11px;color:var(--g500);line-height:1.5}
+  .work-btn{width:100%;margin-top:10px;padding:12px;border:none;border-radius:var(--rs);font-size:15px;font-weight:700;cursor:pointer;min-height:48px}
+  .work-btn.start{background:var(--pri);color:#fff}
+  .work-btn.start:active{background:var(--pri-d)}
+  .work-btn.stop{background:#EF4444;color:#fff}
+  .work-btn.stop:active{background:#DC2626}
+
+  /* 常驻通知模拟 */
+  .notif-bar{display:none;margin:0;padding:6px 14px;background:#111827;color:#fff;font-size:11px;align-items:center;gap:8px}
+  .notif-bar.show{display:flex}
+  .notif-dot{width:8px;height:8px;border-radius:50%;background:var(--pri);animation:blink 1.5s infinite}
+  @keyframes blink{0%,50%{opacity:1}51%,100%{opacity:0.4}}
+
+  /* 仪器卡片 */
+  .ins-card{margin:8px 12px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm);overflow:hidden;border-left:3px solid var(--g300);transition:all .3s}
+  .ins-card.online{border-left-color:var(--ok)}
+  .ins-card.waiting{border-left-color:var(--g300)}
+  .ins-card.connecting{border-left-color:var(--warn)}
+  .ins-card.occupied{border-left-color:#EF4444;background:#FEF2F2}
+  .ins-card.highlight{animation:flashConnect 1.2s}
+  @keyframes flashConnect{0%{background:#FEF3C7}50%{background:#D1FAE5}100%{background:#fff}}
+  .ins-inner{padding:12px 14px}
+  .ins-row1{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .ins-icon{font-size:18px}
+  .ins-name{flex:1;font-size:14px;font-weight:600;color:var(--g800)}
+  .ins-status{font-size:10px;padding:2px 8px;border-radius:var(--r-pill);font-weight:600;white-space:nowrap}
+  .ins-status.online{background:var(--ok-l);color:#16a34a}
+  .ins-status.waiting{background:var(--g100);color:var(--g500)}
+  .ins-status.connecting{background:var(--warn-l);color:var(--warn)}
+  .ins-status.occupied{background:#FEE2E2;color:#DC2626}
+  .ins-model{font-size:11px;color:var(--g500);margin-bottom:4px}
+  .ins-meta{font-size:10px;color:var(--g400)}
+  .ins-meta.occupied-text{color:#DC2626;font-weight:600}
+  .ins-actions{margin-top:8px;display:flex;gap:6px;justify-content:flex-end}
+  .ins-btn{padding:6px 12px;font-size:11px;border-radius:var(--rs);border:1px solid var(--pri);background:#fff;color:var(--pri);cursor:pointer;min-height:32px;font-weight:600}
+  .ins-btn.danger{border-color:#EF4444;color:#EF4444}
+  .ins-btn.secondary{border-color:var(--g300);color:var(--g500)}
+  .ins-btn.primary{background:var(--pri);color:#fff}
+
+  /* 模拟操作栏 */
+  .sim-bar{margin:8px 12px;padding:10px 12px;background:#FEF3C7;border-radius:var(--rs);border:1px dashed #F59E0B}
+  .sim-title{font-size:11px;font-weight:600;color:#92400E;margin-bottom:6px}
+  .sim-btns{display:flex;gap:6px;flex-wrap:wrap}
+  .sim-btn{padding:4px 10px;font-size:11px;border:1px solid #F59E0B;background:#fff;color:#92400E;border-radius:var(--rs);cursor:pointer;min-height:28px}
+
+  /* 试验项页 */
+  .test-header{padding:12px 14px;background:#fff;border-bottom:1px solid var(--g100)}
+  .test-name{font-size:15px;font-weight:600;color:var(--g800)}
+  .test-std{font-size:12px;color:var(--g500);margin-top:4px}
+  .test-items{padding:8px 12px}
+  .test-row{display:flex;align-items:center;padding:14px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm);margin-bottom:8px;gap:10px;transition:all .3s;cursor:pointer;border:2px solid transparent;min-height:56px}
+  .test-row.filled{border-left:3px solid var(--ok)}
+  .test-row.pending{border-left:3px solid var(--warn)}
+  .test-row.focused{border:2px solid var(--pri);background:var(--pri-l);box-shadow:0 0 0 4px rgba(60,200,180,0.2)}
+  .test-row.highlight{animation:flash 0.8s}
+  @keyframes flash{0%,50%{background:#FEF3C7}100%{background:#fff}}
+  .test-row-name{flex:1;font-size:13px;color:var(--g700);font-weight:500}
+  .test-row.focused .test-row-name{color:var(--pri-d);font-weight:700}
+  .test-row-val{font-size:14px;font-weight:600;color:var(--g800);min-width:70px;text-align:right}
+  .test-row-val.empty{color:var(--g300);font-size:12px;font-weight:400}
+  .test-row-val.pending-val{color:var(--warn)}
+  .test-row-unit{font-size:11px;color:var(--g500);margin-left:2px;font-weight:400}
+  .test-row-src{font-size:9px;padding:2px 6px;border-radius:var(--r-pill);margin-left:4px;font-weight:600}
+  .test-row-src.bt{color:var(--pri-d);background:var(--pri-l)}
+  .test-row-src.manual{color:var(--g600);background:var(--g100)}
+  .test-row-src.qr{color:#7C3AED;background:#EDE9FE}
+  .test-row-focus-mark{font-size:11px;color:var(--pri-d);padding:2px 8px;border-radius:var(--r-pill);border:1.5px solid var(--pri);display:none;font-weight:700;background:#fff}
+  .test-row.focused .test-row-focus-mark{display:inline-block}
+  .test-row-pending-mark{font-size:10px;color:var(--warn);background:#FEF3C7;padding:2px 8px;border-radius:var(--r-pill);margin-left:4px;font-weight:600;display:none}
+  .test-row.pending .test-row-pending-mark{display:inline-block}
+  .test-row-confirm-btn{padding:4px 10px;font-size:11px;background:var(--warn);color:#fff;border:none;border-radius:var(--rs);font-weight:600;cursor:pointer;display:none;margin-left:4px;min-height:28px}
+  .test-row.pending .test-row-confirm-btn{display:inline-block}
+
+  /* 底部蓝牙操作区 */
+  .bt-bar{background:#fff;border-top:1px solid var(--g200);padding:12px 14px;flex-shrink:0}
+  .bt-focus-hint{font-size:12px;color:var(--pri-d);margin-bottom:8px;padding:8px 12px;background:var(--pri-l);border-radius:var(--rs);display:flex;align-items:center;gap:6px;font-weight:600;border:1.5px solid var(--pri)}
+  .bt-status{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 12px;background:var(--g50);border-radius:var(--rs);transition:all .3s}
+  .bt-status.ready{background:var(--ok-l)}
+  .bt-status.failed{background:var(--ng-l)}
+  .bt-status.waiting{background:var(--warn-l)}
+  .bt-dot{width:8px;height:8px;border-radius:50%;background:var(--g300)}
+  .bt-status.ready .bt-dot{background:var(--ok);box-shadow:0 0 0 3px rgba(52,199,89,0.2)}
+  .bt-status.failed .bt-dot{background:var(--ng)}
+  .bt-status.waiting .bt-dot{background:var(--warn);animation:blink 1.5s infinite}
+  .bt-text{flex:1;font-size:12px;color:var(--g700);font-weight:500}
+  .bt-status.ready .bt-text{color:#16a34a}
+  .bt-status.failed .bt-text{color:var(--ng)}
+  .bt-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .bt-input-row{display:flex;gap:6px;align-items:center;grid-column:1/3}
+  .bt-input{flex:1;padding:10px 12px;border:1.5px solid var(--g200);border-radius:var(--rs);font-size:14px;color:var(--g800)}
+  .bt-input:focus{border-color:var(--pri);outline:none}
+  .bt-unit{padding:10px 4px;font-size:12px;color:var(--g500)}
+  .bt-btn{padding:12px;border:none;border-radius:var(--rs);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;min-height:48px}
+  .bt-btn.collect{background:var(--pri);color:#fff}
+  .bt-btn.collect:active{background:var(--pri-d)}
+  .bt-btn.collect.disabled{background:var(--g200);color:var(--g400);pointer-events:none}
+  .bt-btn.collect.collecting{background:var(--warn)}
+  .bt-btn.qr{background:#7C3AED;color:#fff}
+  .bt-btn.qr:active{background:#6D28D9}
+  .bt-btn.manual{background:#fff;color:var(--g600);border:1.5px solid var(--g300);grid-column:1/3}
+
+  .collecting-ring{display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 0.6s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* 未分配缓存区 */
+  .cache-banner{margin:0 12px 8px;padding:10px 14px;background:var(--warn-l);border-left:3px solid var(--warn);border-radius:var(--rs);display:none;align-items:center;gap:10px;cursor:pointer}
+  .cache-banner.show{display:flex}
+  .cache-icon{font-size:16px}
+  .cache-text{flex:1;font-size:12px;color:#92400E;font-weight:600}
+  .cache-chevron{color:#92400E;font-size:14px}
+
+  /* 扫码模拟 */
+  .qr-scan-vf{height:180px;background:#1F2937;margin:12px;border-radius:var(--rs);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+  .qr-frame{width:140px;height:140px;border:3px solid var(--pri);border-radius:8px;position:relative}
+  .qr-laser{position:absolute;left:0;right:0;height:2px;background:var(--pri);animation:laser 2s linear infinite;box-shadow:0 0 8px var(--pri)}
+  @keyframes laser{0%{top:0}100%{top:100%}}
+  .qr-hint{text-align:center;font-size:12px;color:var(--g500);margin:8px 12px}
+
+  /* 抢连确认弹窗 */
+  .grab-dialog{display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:900;align-items:center;justify-content:center}
+  .grab-dialog.show{display:flex}
+  .grab-box{width:290px;background:#fff;border-radius:16px;padding:20px;text-align:center}
+  .grab-title{font-size:15px;font-weight:700;color:var(--g800);margin-bottom:8px}
+  .grab-desc{font-size:13px;color:var(--g600);line-height:1.6;margin-bottom:16px}
+  .grab-btns{display:flex;gap:10px}
+  .grab-btn{flex:1;padding:10px;border-radius:var(--rs);font-size:13px;font-weight:600;cursor:pointer;border:none;min-height:40px}
+  .grab-btn.cancel{background:var(--g100);color:var(--g600)}
+  .grab-btn.confirm{background:#EF4444;color:#fff}
+
+  #toastEl{display:none;position:absolute;left:50%;bottom:120px;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:999;max-width:300px;text-align:center}
+  #toastEl.show{display:block;animation:fadeInUp .3s}
+  @keyframes fadeInUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}}
+</style>
+</head>
+<body>
+
+<!-- 场景切换器 -->
+<div style="max-width:1100px;margin:0 auto;padding:12px 24px 0;display:flex;gap:8px;flex-wrap:wrap">
+  <button onclick="showScene(1)" class="sc-btn active" id="sc1">场景1：作业激活+仪器中心</button>
+  <button onclick="showScene(2)" class="sc-btn" id="sc2">场景2：首次扫描配对</button>
+  <button onclick="showScene(3)" class="sc-btn" id="sc3">场景3：单项采集+焦点</button>
+  <button onclick="showScene(4)" class="sc-btn" id="sc4">场景4：多字段回填+逐项确认</button>
+  <button onclick="showScene(5)" class="sc-btn" id="sc5">场景5：仪器被占用+抢连</button>
+  <button onclick="showScene(6)" class="sc-btn" id="sc6">场景6：扫码录入</button>
+  <button onclick="showScene(7)" class="sc-btn" id="sc7">场景7：异常处理</button>
+</div>
+<style>
+  .sc-btn{padding:6px 14px;border:1.5px solid #D1D5DB;border-radius:20px;background:#fff;color:#6B7280;font-size:12px;font-weight:600;cursor:pointer}
+  .sc-btn.active{background:#3CC8B4;border-color:#3CC8B4;color:#fff}
+</style>
+
+<div class="demo-layout">
+  <div class="demo-left">
+    <div class="phone">
+      <div class="sbar">9:41</div>
+      <!-- 常驻通知栏 -->
+      <div class="notif-bar" id="notifBar">
+        <span class="notif-dot"></span>
+        <span>检e通 · 作业中，蓝牙扫描中</span>
+      </div>
+
+      <!-- Page1：仪器中心 -->
+      <div class="page active" id="page1">
+        <div class="nbar"><div class="back" onclick="showToast('返回项目工作台')">&#8592;</div><div class="title">仪器中心</div></div>
+        <div class="scroll">
+          <!-- 作业状态横幅 -->
+          <div class="work-banner idle" id="workBanner">
+            <div class="work-title" id="workTitle">⚪ 未开始作业</div>
+            <div class="work-desc" id="workDesc">点击"开始作业"后APP激活后台扫描，白名单仪器开机自动连接。收工时记得点"收工"节省电量。</div>
+            <button class="work-btn start" id="workBtn" onclick="toggleWork()">▶ 开始作业</button>
+          </div>
+
+          <!-- 模拟操作栏 -->
+          <div class="sim-bar">
+            <div class="sim-title">🎮 模拟现场操作（Demo演示）</div>
+            <div class="sim-btns">
+              <button class="sim-btn" onclick="simToggle(1)">开/关 回路电阻仪</button>
+              <button class="sim-btn" onclick="simToggle(2)">开/关 绝缘电阻仪</button>
+              <button class="sim-btn" onclick="simToggle(3)">开/关 开关特性仪</button>
+              <button class="sim-btn" onclick="simToggle(4)">开/关 温湿度仪</button>
+              <button class="sim-btn" onclick="simToggle(5)">开/关 直流电阻仪</button>
+            </div>
+          </div>
+
+          <div style="padding:4px 14px;font-size:11px;color:var(--g500);font-weight:600">白名单仪器（<span id="insSummary">未开始作业</span>）</div>
+          <div id="insList"></div>
+
+          <div style="margin:12px;text-align:center">
+            <button class="ins-btn" onclick="goPage(2)" style="width:100%;border-style:dashed;min-height:40px">+ 扫描添加新仪器（首次配对）</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page2：扫描配对 -->
+      <div class="page" id="page2">
+        <div class="nbar"><div class="back" onclick="goPage(1)">&#8592;</div><div class="title">扫描新仪器</div></div>
+        <div class="scroll">
+          <div style="margin:8px 12px;padding:10px 14px;background:var(--warn-l);border-left:3px solid var(--warn);border-radius:var(--rs);font-size:12px;color:#92400E">
+            💡 只有<b>首次</b>使用新仪器时需要扫描配对，加入白名单后以后开机自动连接。
+          </div>
+          <div style="margin:20px auto;width:120px;height:120px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--pri-l);position:relative">
+            <span style="font-size:48px">🔵</span>
+          </div>
+          <div style="text-align:center;font-size:14px;color:var(--g700);margin-top:4px" id="scanStatus">正在扫描附近蓝牙仪器...</div>
+          <div style="text-align:center;font-size:11px;color:var(--g400);margin-top:8px">请确保仪器已开机并开启蓝牙</div>
+          <div id="foundList" style="margin-top:16px"></div>
+        </div>
+      </div>
+
+      <!-- Page3：试验项采集 -->
+      <div class="page" id="page3">
+        <div class="nbar"><div class="back" onclick="goPage(1)">&#8592;</div><div class="title" id="p3Title">断路器 #1 · 回路电阻</div></div>
+        <div class="scroll">
+          <div class="cache-banner" id="cacheBanner" onclick="showCacheList()">
+            <span class="cache-icon">📦</span>
+            <span class="cache-text" id="cacheText">有 1 条未分配数据可领取</span>
+            <span class="cache-chevron">›</span>
+          </div>
+
+          <div class="test-header">
+            <div class="test-name">回路电阻测量</div>
+            <div class="test-std">标准值：≤200μΩ · <b>点击试验项切换焦点</b></div>
+          </div>
+
+          <div class="test-items" id="testItemsList"></div>
+        </div>
+
+        <div class="bt-bar">
+          <div class="bt-focus-hint" id="focusHint">📍 当前焦点：<b id="focusName">A相回路电阻</b>（采集数据将填入此项）</div>
+          <div class="bt-status" id="btStatus">
+            <span class="bt-dot"></span>
+            <span class="bt-text" id="btStatusText">⚪ 未开始作业，请先激活扫描</span>
+          </div>
+          <div class="bt-actions">
+            <div class="bt-input-row">
+              <input type="number" step="any" class="bt-input" id="btInput" placeholder="手动输入数值" onkeypress="if(event.key==='Enter')manualSubmit()">
+              <span class="bt-unit">μΩ</span>
+            </div>
+            <button class="bt-btn qr" onclick="goPage(6)">📷 扫码录入</button>
+            <button class="bt-btn collect" id="btCollectBtn" onclick="doCollect()">🔵 采集</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page6：扫码录入 -->
+      <div class="page" id="page6">
+        <div class="nbar"><div class="back" onclick="goPage(3)">&#8592;</div><div class="title">扫码录入</div></div>
+        <div class="scroll" style="background:#fff">
+          <div style="padding:12px 16px">
+            <div style="font-size:13px;color:var(--g700);font-weight:600;margin-bottom:4px">📍 当前焦点：<span id="qrFocusName">A相回路电阻</span></div>
+            <div style="font-size:11px;color:var(--g500)">对准仪器屏幕上的二维码（或仪器显示的数字读数）</div>
+          </div>
+          <div class="qr-scan-vf">
+            <div class="qr-frame"><div class="qr-laser"></div></div>
+          </div>
+          <div class="qr-hint">识别到数值后自动填入焦点字段</div>
+          <div style="padding:12px;text-align:center">
+            <button class="bt-btn qr" onclick="simulateQR()" style="width:100%">🎮 模拟识别 158μΩ</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 抢连确认弹窗 -->
+      <div class="grab-dialog" id="grabDialog">
+        <div class="grab-box">
+          <div class="grab-title">申请抢占仪器</div>
+          <div class="grab-desc" id="grabDesc">"<b id="grabInsName">绝缘电阻仪</b>"正在被 <b id="grabUser">李四</b> 使用（5分钟前采集过）。<br><br>抢占后对方将自动断开并收到通知。</div>
+          <div class="grab-btns">
+            <button class="grab-btn cancel" onclick="closeGrab()">取消</button>
+            <button class="grab-btn confirm" onclick="confirmGrab()">确认抢占</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="toastEl"></div>
+    </div>
+  </div>
+
+  <!-- 右侧设计说明 -->
+  <div class="demo-right">
+    <h2>蓝牙采集 — 检e通V3.0 交互原型 V2</h2>
+    <p style="background:#FEF3C7;padding:10px 14px;border-radius:6px;border-left:3px solid #F59E0B">
+      <b>V2说明</b>：经蓝牙技术专家评审后的修订版。核心调整：①"全程自动连"→"作业期间自动连" ②采集后强制逐项确认 ③新增扫码录入第三通道 ④新增抢连防护机制 ⑤焦点手动切换不自动下移 ⑥补全异常处理。
+    </p>
+
+    <h3>现场关键前提</h3>
+    <table>
+      <tr><th>现场事实</th><th>设计影响</th></tr>
+      <tr><td>每站房只搬需要的仪器（20带5~8上）</td><td>不做"一键连全部"</td></tr>
+      <tr><td>仪器按需开关机</td><td>连接时机=仪器开机那一刻</td></tr>
+      <tr><td>仪器不知道数据填APP哪个字段</td><td>必须有焦点+映射配置</td></tr>
+      <tr><td><span class="danger">仪器蓝牙模块99%单连接</span></td><td>多手机抢连必须防护</td></tr>
+      <tr><td><span class="danger">Android 12+后台扫描30分钟失效</span></td><td>必须用"作业激活边界"控制扫描</td></tr>
+      <tr><td>20类仪器含SPP+BLE混合协议</td><td>plugin_jet必须复用</td></tr>
+    </table>
+
+    <h3>V1→V2的重大调整</h3>
+    <table>
+      <tr><th>项</th><th>V1（错误）</th><th>V2（修正）</th></tr>
+      <tr><td>连接时机</td><td>全程自动扫描</td><td><span class="highlight">作业期间才扫描</span>（开始/收工按钮）</td></tr>
+      <tr><td>焦点切换</td><td>自动下移</td><td><span class="highlight">手动切换</span>（防跳测错位）</td></tr>
+      <tr><td>多字段回填</td><td>直接入库</td><td><span class="highlight">逐项确认</span>才入库</td></tr>
+      <tr><td>录入通道</td><td>仅蓝牙</td><td><span class="highlight">蓝牙+手动+扫码三通道平权</span></td></tr>
+      <tr><td>多手机</td><td>未考虑</td><td><span class="highlight">抢连防护+占用可见</span></td></tr>
+      <tr><td>连接时间</td><td>2~3秒</td><td>4~8秒（真实BLE链路）</td></tr>
+      <tr><td>反馈通道</td><td>仅视觉</td><td>视觉+震动+声音</td></tr>
+    </table>
+
+    <h3>作业激活模式（V2核心）</h3>
+    <p>不再追求"全程自动"——APP在<b>未开始作业</b>时不扫描（省电）。操作人点"开始作业"→激活后台扫描+前台服务+常驻通知→白名单仪器开机自动连。收工时停止扫描。</p>
+    <p>这个模式避开了Android 12+后台扫描30分钟强制降级的物理限制，同时保留"仪器开机即连"的无感体验。</p>
+
+    <h3>7个场景</h3>
+    <table>
+      <tr><th>场景</th><th>演示要点</th></tr>
+      <tr><td><span class="highlight">场景1 作业激活+仪器中心</span></td><td>点"开始作业"→顶部常驻通知→模拟开仪器→APP自动连接</td></tr>
+      <tr><td><span class="highlight">场景2 首次扫描</span></td><td>新仪器首次加入白名单</td></tr>
+      <tr><td><span class="highlight">场景3 单项采集+焦点</span></td><td>焦点高亮+采集后不自动下移</td></tr>
+      <tr><td><span class="highlight">场景4 多字段回填+逐项确认</span></td><td>三相一次填→都显示"待确认"→逐项确认才入库</td></tr>
+      <tr><td><span class="highlight">场景5 仪器被占用</span></td><td>红色"被占用"状态+申请抢占二次确认</td></tr>
+      <tr><td><span class="highlight">场景6 扫码录入</span></td><td>扫码模式+数据来源标记QR</td></tr>
+      <tr><td><span class="highlight">场景7 异常处理</span></td><td>仪器离线/断连/配置缺失等</td></tr>
+    </table>
+
+    <h3>业务规则</h3>
+    <table>
+      <tr><th>规则</th><th>说明</th></tr>
+      <tr><td>作业激活</td><td>必须点"开始作业"才扫描，收工后停止</td></tr>
+      <tr><td>连接时间</td><td>4~8秒（真实BLE链路）</td></tr>
+      <tr><td>多仪器并发</td><td>建议≤4~5台（中低端机型限制）</td></tr>
+      <tr><td>抢连防护</td><td>仪器被占用时不自动抢，需二次确认</td></tr>
+      <tr><td>三通道平权</td><td>蓝牙/手动/扫码随时切换，数据标记来源</td></tr>
+      <tr><td>多字段回填</td><td>强制逐项确认才入库</td></tr>
+      <tr><td>无焦点保护</td><td>仪器推送数据进入缓存区，用户手动领取</td></tr>
+      <tr><td>强反馈</td><td>关键事件震动+声音（户外强光+工装手套场景）</td></tr>
+      <tr><td>作业超时</td><td>2小时无操作→通知栏提醒是否继续作业</td></tr>
+    </table>
+
+    <h3>请试试以下操作</h3>
+    <table>
+      <tr><th style="width:35%">操作</th><th>做法</th></tr>
+      <tr><td><span class="highlight">开始作业</span></td><td>场景1 → 点"▶ 开始作业" → 看顶部常驻通知 → 模拟开仪器→自动连</td></tr>
+      <tr><td>收工</td><td>作业中 → 点"■ 收工" → 通知消失 → 仪器全部断开</td></tr>
+      <tr><td>模拟仪器开机</td><td>黄色栏按钮 → 需要先"开始作业"才会自动连</td></tr>
+      <tr><td><span class="highlight">焦点手动切换</span></td><td>场景3 → 点任意试验项 → 蓝色高亮+📍标签</td></tr>
+      <tr><td>单项采集</td><td>场景3 → 选焦点 → 点"🔵采集" → 填入焦点但焦点不下移</td></tr>
+      <tr><td><span class="highlight">多字段+逐项确认</span></td><td>场景4 → 选A相→采集 → A/B/C都填"待确认"→逐项点确认</td></tr>
+      <tr><td>手动输入</td><td>场景3 → 输入框输入数值→回车 → 标记"手动"来源</td></tr>
+      <tr><td><span class="highlight">扫码录入</span></td><td>场景3 → 点紫色"📷扫码"→场景6 → 点"模拟识别" → 标记"QR"来源</td></tr>
+      <tr><td><span class="highlight">仪器被占用</span></td><td>场景5 → 看红色"被占用"卡片 → 点"申请抢占"→二次确认</td></tr>
+      <tr><td>异常重试</td><td>场景7 → 看红色异常条 → 点"重试"</td></tr>
+    </table>
+
+    <details>
+      <summary style="font-size:14px;font-weight:600;color:#4B5563;margin:20px 0 8px;cursor:pointer">开发参考</summary>
+      <h3>Android 12+权限</h3>
+      <ul>
+        <li>BLUETOOTH_SCAN（必须声明neverForLocation）</li>
+        <li>BLUETOOTH_CONNECT</li>
+        <li>FOREGROUND_SERVICE_CONNECTED_DEVICE</li>
+        <li>POST_NOTIFICATIONS（Android 13+）</li>
+      </ul>
+
+      <h3>数据结构（V2）</h3>
+      <table>
+        <tr><th>表/字段</th><th>说明</th></tr>
+        <tr><td>conf_instrument_protocol（协议主表）</td><td>protocol_key/instrument_type/protocol_version/command_template/response_format/crc_rule</td></tr>
+        <tr><td>conf_item_collect_mapping（映射表）</td><td>test_item_id/protocol_key/source_field/target_rule(SELF/NEXT_IN_GROUP:N)/unit_convert</td></tr>
+        <tr><td>prj_test_item_info.data_source</td><td>BLE/MANUAL/QR</td></tr>
+        <tr><td>prj_test_item_info.actual_recorder_id</td><td>实际录入人</td></tr>
+        <tr><td>prj_test_item_info.instrument_mac</td><td>采集仪器MAC（蓝牙时）</td></tr>
+        <tr><td>prj_test_item_info.pending_confirm</td><td>待确认标记（多字段回填后）</td></tr>
+      </table>
+
+      <p>详见 <code>1.2.1_检测执行_蓝牙采集产品设计_V3.0.md</code> V2版本</p>
+    </details>
+  </div>
+</div>
+
+<script>
+/* ========== 数据模型 ========== */
+var instruments = [
+  {id:1, name:'回路电阻测试仪', model:'HLDZ-100A', type:102, mac:'AA:BB:CC:DD:02', power:false, status:'waiting', battery:null, occupied_by:null},
+  {id:2, name:'绝缘电阻测试仪', model:'PC7-5000', type:100, mac:'AA:BB:CC:DD:01', power:false, status:'waiting', battery:null, occupied_by:null},
+  {id:3, name:'开关特性测试仪', model:'KJTC-III', type:112, mac:'AA:BB:CC:DD:03', power:false, status:'waiting', battery:null, occupied_by:null},
+  {id:4, name:'温湿度测试仪', model:'TH-20', type:106, mac:'AA:BB:CC:DD:04', power:false, status:'waiting', battery:null, occupied_by:null},
+  {id:5, name:'直流电阻测试仪', model:'ZZD-10A', type:103, mac:'AA:BB:CC:DD:05', power:false, status:'waiting', battery:null, occupied_by:null}
+];
+
+var testItems = [
+  {id:'e1', name:'A相回路电阻', type:102, val:'', unit:'μΩ', source:'', pending:false},
+  {id:'e2', name:'B相回路电阻', type:102, val:'', unit:'μΩ', source:'', pending:false},
+  {id:'e3', name:'C相回路电阻', type:102, val:'', unit:'μΩ', source:'', pending:false}
+];
+
+var isWorking = false;
+var currentScene = 1;
+var focusIdx = 0;
+var cachedData = 0;
+
+/* ========== 作业激活 ========== */
+function toggleWork() {
+  isWorking = !isWorking;
+  var banner = document.getElementById('workBanner');
+  var title = document.getElementById('workTitle');
+  var desc = document.getElementById('workDesc');
+  var btn = document.getElementById('workBtn');
+  var notif = document.getElementById('notifBar');
+
+  if(isWorking) {
+    banner.className = 'work-banner active';
+    title.textContent = '🟢 作业中，蓝牙扫描中';
+    desc.textContent = '后台持续扫描白名单仪器。仪器开机APP自动连接。收工时点"收工"停止扫描节省电量。';
+    btn.className = 'work-btn stop';
+    btn.textContent = '■ 收工';
+    notif.classList.add('show');
+    showToast('✓ 已开始作业，后台扫描已激活');
+    /* 已开机仪器立即连接 */
+    instruments.forEach(function(ins){
+      if(ins.power && !ins.occupied_by) tryAutoConnect(ins);
+    });
+  } else {
+    banner.className = 'work-banner idle';
+    title.textContent = '⚪ 未开始作业';
+    desc.textContent = '点击"开始作业"后APP激活后台扫描，白名单仪器开机自动连接。收工时记得点"收工"节省电量。';
+    btn.className = 'work-btn start';
+    btn.textContent = '▶ 开始作业';
+    notif.classList.remove('show');
+    /* 断开全部仪器 */
+    instruments.forEach(function(ins){
+      if(ins.status === 'online') { ins.status = 'waiting'; ins.battery = null; }
+    });
+    showToast('已收工，后台扫描已停止');
+  }
+  renderInstruments();
+  updateBtStatus();
+}
+
+/* ========== 仪器中心 ========== */
+function renderInstruments() {
+  var container = document.getElementById('insList');
+  var html = '';
+  for(var i=0; i<instruments.length; i++) {
+    var ins = instruments[i];
+    var cardCls = 'ins-card ' + ins.status;
+    html += '<div class="'+cardCls+'" id="insCard-'+ins.id+'"><div class="ins-inner">';
+    html += '<div class="ins-row1">';
+    html += '<span class="ins-icon">🔵</span>';
+    html += '<span class="ins-name">'+ins.name+'</span>';
+    var statusLabel = {online:'🟢 已连接', waiting:'⚪ 待开机', connecting:'🔵 连接中', occupied:'🔴 被占用'}[ins.status];
+    html += '<span class="ins-status '+ins.status+'">'+statusLabel+'</span>';
+    html += '</div>';
+    html += '<div class="ins-model">型号：'+ins.model+' · MAC：'+ins.mac+'</div>';
+
+    var meta = '';
+    if(ins.status === 'online') meta = '🟢 APP自动连接 · 电量'+ins.battery+'%';
+    else if(ins.status === 'waiting') meta = isWorking ? '⚪ 仪器未开机 · 开机后自动连' : '⚪ 未开始作业';
+    else if(ins.status === 'connecting') meta = '🔵 连接中...（预计4~8秒）';
+    else if(ins.status === 'occupied') meta = '<span class="occupied-text">📱 当前使用者：'+ins.occupied_by+' · 5分钟前采集过</span>';
+    html += '<div class="ins-meta">'+meta+'</div>';
+
+    if(ins.status === 'occupied') {
+      html += '<div class="ins-actions">';
+      html += '<button class="ins-btn secondary" onclick="showToast(\'查看'+ins.occupied_by+'的采集数据\')">查看数据</button>';
+      html += '<button class="ins-btn danger" onclick="reqGrab('+i+')">申请抢占</button>';
+      html += '</div>';
+    }
+    html += '</div></div>';
+  }
+  container.innerHTML = html;
+
+  var online = instruments.filter(function(i){return i.status==='online'}).length;
+  var occupied = instruments.filter(function(i){return i.status==='occupied'}).length;
+  document.getElementById('insSummary').textContent = isWorking ? ('🟢 '+online+'台已连接 · 🔴 '+occupied+'台被占用') : '未开始作业';
+}
+
+function simToggle(id) {
+  var ins = instruments.find(function(i){return i.id===id});
+  if(!ins) return;
+  if(!ins.power) {
+    /* 开机 */
+    ins.power = true;
+    ins.battery = Math.floor(Math.random()*30+70);
+    if(isWorking && ins.status === 'waiting') {
+      tryAutoConnect(ins);
+    } else if(!isWorking) {
+      showToast(ins.name+' 已开机（但未开始作业，APP不连接）');
+      ins.status = 'waiting';
+    }
+    renderInstruments();
+  } else {
+    /* 关机 */
+    ins.power = false;
+    ins.battery = null;
+    ins.status = 'waiting';
+    ins.occupied_by = null;
+    renderInstruments();
+    updateBtStatus();
+    showToast(ins.name+' 已关机，APP静默断开');
+  }
+}
+
+function tryAutoConnect(ins) {
+  ins.status = 'connecting';
+  renderInstruments();
+  showToast('📡 发现 '+ins.name+'，正在连接...');
+  setTimeout(function(){
+    ins.status = 'online';
+    renderInstruments();
+    updateBtStatus();
+    var card = document.getElementById('insCard-'+ins.id);
+    if(card) card.classList.add('highlight');
+    showToast('✓ '+ins.name+' 已连接 · 震动📳');
+  }, 2500); /* 模拟4~8秒的平均值 */
+}
+
+/* 模拟绝缘电阻仪被占用 */
+function simulateOccupied() {
+  var ins = instruments.find(function(i){return i.id===2});
+  if(ins) {
+    ins.power = true;
+    ins.status = 'occupied';
+    ins.occupied_by = '李四';
+    renderInstruments();
+  }
+}
+
+/* 抢连对话框 */
+function reqGrab(idx) {
+  var ins = instruments[idx];
+  document.getElementById('grabInsName').textContent = ins.name;
+  document.getElementById('grabUser').textContent = ins.occupied_by || '队友';
+  document.getElementById('grabDialog').classList.add('show');
+  window._grabIdx = idx;
+}
+
+function closeGrab() { document.getElementById('grabDialog').classList.remove('show'); }
+
+function confirmGrab() {
+  closeGrab();
+  var idx = window._grabIdx;
+  var ins = instruments[idx];
+  showToast('已发送抢占通知给 '+ins.occupied_by);
+  setTimeout(function(){
+    ins.status = 'connecting';
+    ins.occupied_by = null;
+    renderInstruments();
+    setTimeout(function(){
+      ins.status = 'online';
+      renderInstruments();
+      showToast('✓ 抢占成功，'+ins.name+' 已连接');
+    }, 1500);
+  }, 1000);
+}
+
+/* ========== 扫描配对 ========== */
+var foundDevices = [
+  {name:'电缆测长仪 CLC-2000', mac:'AA:BB:CC:DD:06', rssi:'-45dBm'},
+  {name:'变比测试仪 BBC-III', mac:'AA:BB:CC:DD:07', rssi:'-58dBm'}
+];
+
+function startScan() {
+  document.getElementById('scanStatus').textContent = '正在扫描附近蓝牙仪器...';
+  document.getElementById('foundList').innerHTML = '';
+  setTimeout(function(){
+    document.getElementById('scanStatus').textContent = '找到 '+foundDevices.length+' 台新设备';
+    var html = '';
+    for(var i=0; i<foundDevices.length; i++) {
+      var d = foundDevices[i];
+      html += '<div style="display:flex;align-items:center;padding:12px 14px;margin:0 12px 6px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm);gap:10px;cursor:pointer" onclick="pairFound('+i+')">';
+      html += '<span style="font-size:16px">🔵</span>';
+      html += '<div style="flex:1"><div style="font-size:13px;color:var(--g700)">'+d.name+'</div>';
+      html += '<div style="font-size:10px;color:var(--g400)">'+d.mac+'</div></div>';
+      html += '<span style="font-size:10px;color:var(--g400)">'+d.rssi+'</span>';
+      html += '</div>';
+    }
+    document.getElementById('foundList').innerHTML = html;
+  }, 2000);
+}
+
+function pairFound(idx) {
+  showToast('正在配对 '+foundDevices[idx].name+'...');
+  setTimeout(function(){
+    showToast('✓ 配对成功，已加入白名单');
+    setTimeout(function(){ showScene(1); }, 800);
+  }, 1200);
+}
+
+/* ========== 试验项采集 ========== */
+function resetTestItems() {
+  testItems.forEach(function(t){ t.val=''; t.source=''; t.pending=false; });
+  focusIdx = 0;
+  document.getElementById('btInput').value = '';
+}
+
+function renderTestItems() {
+  var container = document.getElementById('testItemsList');
+  var html = '';
+  for(var i=0; i<testItems.length; i++) {
+    var t = testItems[i];
+    var filled = t.val !== '';
+    var pending = t.pending;
+    var isFocus = (i === focusIdx);
+    var cls = 'test-row';
+    if(filled && !pending) cls += ' filled';
+    if(pending) cls += ' pending';
+    if(isFocus) cls += ' focused';
+    html += '<div class="'+cls+'" id="tr-'+t.id+'" onclick="setFocus('+i+')">';
+    html += '<span class="test-row-name">'+t.name+'</span>';
+    html += '<span class="test-row-focus-mark">📍 焦点</span>';
+    if(filled) {
+      var valCls = 'test-row-val' + (pending ? ' pending-val' : '');
+      html += '<span class="'+valCls+'">'+t.val+'<span class="test-row-unit">'+t.unit+'</span></span>';
+      if(t.source) {
+        var srcCls = 'test-row-src ' + (t.source==='BLE'?'bt':t.source==='QR'?'qr':'manual');
+        var srcText = t.source==='BLE'?'🔵蓝牙':t.source==='QR'?'📷扫码':'✍手动';
+        html += '<span class="'+srcCls+'">'+srcText+'</span>';
+      }
+      if(pending) {
+        html += '<span class="test-row-pending-mark">待确认</span>';
+        html += '<button class="test-row-confirm-btn" onclick="event.stopPropagation();confirmPending(\''+t.id+'\')">确认</button>';
+      }
+    } else {
+      html += '<span class="test-row-val empty">未录入</span>';
+    }
+    html += '</div>';
+  }
+  container.innerHTML = html;
+}
+
+function setFocus(idx) {
+  focusIdx = idx;
+  var t = testItems[idx];
+  document.getElementById('focusName').textContent = t.name;
+  document.getElementById('p3Title').textContent = '断路器 #1 · '+t.name;
+  document.getElementById('qrFocusName').textContent = t.name;
+  renderTestItems();
+  updateBtStatus();
+}
+
+function updateBtStatus() {
+  var status = document.getElementById('btStatus');
+  var text = document.getElementById('btStatusText');
+  var btn = document.getElementById('btCollectBtn');
+  if(!status || !text || !btn) return;
+
+  var hasConnected = instruments.some(function(i){ return i.type===102 && i.status==='online' });
+  if(!isWorking) {
+    status.className = 'bt-status waiting';
+    text.textContent = '⚪ 未开始作业，请先在仪器中心激活';
+    btn.classList.add('disabled');
+  } else if(currentScene === 7) {
+    status.className = 'bt-status failed';
+    text.textContent = '⚠ 回路电阻仪连接异常';
+    btn.classList.add('disabled');
+  } else if(hasConnected) {
+    status.className = 'bt-status ready';
+    text.textContent = '📱 回路电阻仪 HLDZ-100A 已就绪';
+    btn.classList.remove('disabled');
+  } else {
+    status.className = 'bt-status waiting';
+    text.textContent = '⚪ 请开启回路电阻测试仪';
+    btn.classList.add('disabled');
+  }
+}
+
+function doCollect() {
+  var btn = document.getElementById('btCollectBtn');
+  if(btn.classList.contains('disabled')) { showToast('仪器未就绪'); return; }
+  btn.classList.add('collecting');
+  btn.innerHTML = '<span class="collecting-ring"></span> 采集中';
+
+  setTimeout(function(){
+    if(currentScene === 4) {
+      /* 多字段回填：三个值都进"待确认"状态 */
+      var r1 = (Math.random()*40+140).toFixed(1);
+      var r2 = (Math.random()*40+140).toFixed(1);
+      var r3 = (Math.random()*40+140).toFixed(1);
+      testItems[focusIdx].val = r1; testItems[focusIdx].source = 'BLE'; testItems[focusIdx].pending = true;
+      if(focusIdx+1 < testItems.length) { testItems[focusIdx+1].val = r2; testItems[focusIdx+1].source = 'BLE'; testItems[focusIdx+1].pending = true; }
+      if(focusIdx+2 < testItems.length) { testItems[focusIdx+2].val = r3; testItems[focusIdx+2].source = 'BLE'; testItems[focusIdx+2].pending = true; }
+      showToast('仪器返回{R1,R2,R3} → 填入A/B/C相（待确认）📳');
+    } else {
+      /* 单项：填入焦点，不自动下移（V2修正） */
+      var mock = (Math.random()*40+140).toFixed(1);
+      testItems[focusIdx].val = mock;
+      testItems[focusIdx].source = 'BLE';
+      testItems[focusIdx].pending = false;
+      showToast(testItems[focusIdx].name+' ← '+mock+'μΩ · 已采集 📳');
+    }
+    renderTestItems();
+    btn.classList.remove('collecting');
+    btn.innerHTML = '🔵 采集';
+  }, 1500);
+}
+
+function confirmPending(id) {
+  var t = testItems.find(function(x){return x.id===id});
+  if(!t) return;
+  t.pending = false;
+  renderTestItems();
+  showToast('✓ '+t.name+' 已确认入库');
+}
+
+function manualSubmit() {
+  var input = document.getElementById('btInput');
+  var val = input.value.trim();
+  if(!val) return;
+  testItems[focusIdx].val = val;
+  testItems[focusIdx].source = 'MANUAL';
+  testItems[focusIdx].pending = false;
+  input.value = '';
+  renderTestItems();
+  showToast('✓ '+testItems[focusIdx].name+' 已手动录入');
+}
+
+function simulateQR() {
+  testItems[focusIdx].val = '158.0';
+  testItems[focusIdx].source = 'QR';
+  testItems[focusIdx].pending = false;
+  showToast('✓ 扫码识别：158μΩ（焦点='+testItems[focusIdx].name+'）');
+  setTimeout(function(){ goPage(3); renderTestItems(); }, 800);
+}
+
+function showCacheList() {
+  showToast('缓存区：1条数据（来自回路电阻仪 14:25）→ 已填入焦点');
+  testItems[focusIdx].val = '165.2';
+  testItems[focusIdx].source = 'BLE';
+  testItems[focusIdx].pending = true;
+  cachedData = 0;
+  document.getElementById('cacheBanner').classList.remove('show');
+  renderTestItems();
+}
+
+/* ========== 场景切换 ========== */
+function showScene(n) {
+  currentScene = n;
+  for(var i=1; i<=7; i++) {
+    var btn = document.getElementById('sc'+i);
+    if(btn) btn.classList.toggle('active', i===n);
+  }
+  if(n===1) { goPage(1); renderInstruments(); }
+  else if(n===2) { goPage(2); startScan(); }
+  else if(n===3) { resetTestItems(); goPage(3); document.getElementById('cacheBanner').classList.remove('show'); renderTestItems(); setFocus(0); updateBtStatus(); }
+  else if(n===4) {
+    resetTestItems(); goPage(3);
+    document.getElementById('cacheBanner').classList.remove('show');
+    renderTestItems(); setFocus(0); updateBtStatus();
+    showToast('焦点=A相，点🔵采集将一次回填A/B/C三相（待确认）');
+  }
+  else if(n===5) {
+    simulateOccupied(); goPage(1);
+    showToast('场景5：绝缘电阻仪被李四占用');
+  }
+  else if(n===6) {
+    resetTestItems(); goPage(3); setFocus(0);
+    setTimeout(function(){ goPage(6); }, 200);
+  }
+  else if(n===7) {
+    resetTestItems(); goPage(3);
+    document.getElementById('cacheBanner').classList.remove('show');
+    renderTestItems(); setFocus(0); updateBtStatus();
+    showToast('场景7：仪器连接异常，请处理');
+  }
+}
+
+function goPage(n) {
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  var page = document.getElementById('page'+n);
+  if(page) page.classList.add('active');
+}
+
+/* ========== Toast ========== */
+var toastTimer;
+function showToast(msg) {
+  var el = document.getElementById('toastEl');
+  if(!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2500);
+}
+
+/* ========== 初始化 ========== */
+renderInstruments();
+</script>
+</body>
+</html>

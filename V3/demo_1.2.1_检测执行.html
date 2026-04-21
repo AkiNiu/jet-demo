@@ -866,6 +866,7 @@
       <tr><td><span class="highlight">查看队友设备</span></td><td>P2顶部切换"全站房设备" → 看到队友的中置柜#1/低压电缆#1</td></tr>
       <tr><td><span class="highlight">协助录入</span></td><td>点击队友设备 → 进入协助模式（顶部提示条+确认/提交按钮隐藏）→ 正常录入数据</td></tr>
       <tr><td>模拟冲突通知</td><td>协助录入后 → 打开浏览器控制台 → 执行 simulateConflict() → 查看冲突弹窗</td></tr>
+      <tr><td><span class="highlight">查看冲突详情</span></td><td>进入断路器#1 → 电气Tab → "回路电阻"组的A/B相录完后 → 试验项右侧⚡标记 → 点击查看协同录入记录</td></tr>
     </table>
 
     <!-- ====== 下半区：技术说明（默认折叠） ====== -->
@@ -1393,6 +1394,10 @@ function renderContent() {
           displayVal = it.val + (it.unit ? it.unit : '') + (it._pass ? ' \u2713' : ' \u2717');
         }
         html += '<span class="'+valCls+'">'+displayVal+'</span>';
+      }
+      /* D34：协同录入⚡标记（模拟e6/e7项被李四协同录入过） */
+      if(!isHelperMode && done && (it.id==='e6' || it.id==='e7')) {
+        html += '<span class="conflict-mark" onclick="event.stopPropagation();showConflictDetail(\''+it.id+'\')" title="有协同录入记录">⚡</span>';
       }
       html += '</div>';
       /* D33：photo类型选中时展开照片缩略图网格（沿用核查/安措的ci-photos范式） */
@@ -2540,6 +2545,19 @@ function exitDetail() {
   document.getElementById('p3HelperBar').classList.remove('show');
   document.getElementById('p3Title').textContent = '断路器 #1';
   goPage(2);
+}
+
+/* D34：冲突详情查看（组确认时点⚡标记） */
+function showConflictDetail(itemId) {
+  var it = findItemById(itemId);
+  var name = it ? it.name : '';
+  var curVal = it ? (it.val + (it.unit||'')) : '';
+  showConfirmDialog(
+    name + ' · 协同录入记录',
+    '李四 158μΩ (14:20) → 张三 ' + curVal + ' (14:25)\n\n当前保留：' + curVal + '（张三录入时间更晚）',
+    '保留当前值',
+    function(){}
+  );
 }
 
 /* 模拟冲突通知 */

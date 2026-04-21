@@ -403,13 +403,21 @@ function renderFlow() {
 }
 
 function tapStage(id, st, name, role) {
+  // 方案 B · 2026-04-19 修订：
+  // - 节点操作人：todo Toast / doing 操作 / done 只读回看
+  // - 本工单工作负责人（非当前节点操作人时）：todo 不响应 / doing 只读监督 / done 只读
+  // - 其他角色（试验人员非本节点时、项目经理、部门经理等）：todo 不响应 / doing 不响应 / done 只读
   var isOp = false;
   if(globalRole==='leader' && role.indexOf('工作负责人')!==-1) isOp = true;
   if(globalRole==='member' && role.indexOf('试验')!==-1) isOp = true;
 
+  // 本工单工作负责人身份（Demo 中以 globalRole='leader' 简化表达：
+  // 真实运行时用"当前用户 id === 工单.leader_id"判定）
+  var isWorkLeader = (globalRole === 'leader');
+
   if(st==='todo') {
     if(isOp) showToast('前置环节未完成，暂时无法进入');
-    // non-operator: no response for todo
+    // 其他角色：不响应
     return;
   }
   if(st==='done') {
@@ -418,14 +426,23 @@ function tapStage(id, st, name, role) {
     return;
   }
   if(st==='doing') {
-    /* 检测执行卡片：跳转到检测执行Demo */
     if(id==='testexec') {
-      window.open('demo_1.2.1_检测执行.html', '_blank');
+      // 检测执行：操作人/工作负责人都能进
+      if(isOp || isWorkLeader) {
+        window.open('demo_1.2.1_检测执行.html', '_blank');
+      } else {
+        showToast('doing 状态仅操作人与本工单工作负责人可查看');
+      }
       return;
     }
-    /* 其他已有独立Demo的卡片也可在此添加跳转 */
-    if(isOp) showToast('进入"'+name+'"操作页面');
-    else showToast('查看"'+name+'"（只读）');
+    if(isOp) {
+      showToast('进入"'+name+'"操作页面');
+    } else if(isWorkLeader) {
+      showToast('查看"'+name+'"实时进度（只读监督）');
+    } else {
+      // 其他角色（项目经理/部门经理/其他工单人员）：不响应
+      showToast('doing 状态仅操作人与本工单工作负责人可查看；done 后开放只读');
+    }
     return;
   }
 }

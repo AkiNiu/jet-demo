@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PC端后台配置 — 作业前准备检查项配置</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans SC',system-ui,sans-serif;background:#f5f5f5;color:#303133;min-height:100vh}
+
+/* ========== 顶部导航栏 (与编辑器保持一致) ========== */
+.topbar{height:48px;background:#fff;border-bottom:1px solid #dcdfe6;display:flex;align-items:center;padding:0 20px;position:sticky;top:0;z-index:100}
+.topbar .logo{font-size:14px;font-weight:700;color:#1890ff}
+.topbar .sep{color:#dcdfe6;margin:0 10px}
+.topbar .nav{font-size:13px;color:#909399}
+.topbar .nav b{color:#303133;font-weight:500}
+.topbar .spacer{flex:1}
+.topbar .btn{padding:6px 16px;border:1px solid #dcdfe6;border-radius:4px;font-size:13px;cursor:pointer;transition:all .15s;background:#fff;color:#606266;margin-left:8px}
+.topbar .btn:hover{border-color:#1890ff;color:#1890ff}
+.topbar .btn.primary{background:#1890ff;color:#fff;border-color:#1890ff}
+.topbar .btn.primary:hover{background:#40a9ff}
+
+/* ========== 主布局 ========== */
+.main{display:flex;height:calc(100vh - 48px)}
+
+/* ========== 左侧菜单 ========== */
+.sidebar{width:200px;background:#fff;border-right:1px solid #dcdfe6;padding:12px 0;flex-shrink:0}
+.sb-title{font-size:11px;font-weight:600;color:#909399;padding:8px 16px;text-transform:uppercase;letter-spacing:1px}
+.sb-item{padding:10px 16px;font-size:13px;color:#606266;cursor:pointer;border-left:3px solid transparent;transition:all .1s;display:flex;align-items:center;gap:8px}
+.sb-item:hover{background:#f5f7fa;color:#303133}
+.sb-item.active{background:#e6f7ff;color:#1890ff;border-left-color:#1890ff;font-weight:500}
+.sb-item .sb-icon{font-size:14px}
+
+/* ========== 右侧内容区 ========== */
+.content{flex:1;display:flex;overflow:hidden}
+.config-area{flex:1;overflow-y:auto;padding:20px 24px 60px}
+.config-area::-webkit-scrollbar{width:5px}
+.config-area::-webkit-scrollbar-thumb{background:#c0c4cc;border-radius:3px}
+
+/* 页头 */
+.page-head{margin-bottom:20px}
+.page-head h1{font-size:18px;font-weight:700;color:#303133}
+.page-head p{font-size:13px;color:#909399;margin-top:4px}
+
+/* 分组卡片 */
+.group-card{background:#fff;border-radius:4px;border:1px solid #e4e7ed;margin-bottom:16px;transition:box-shadow .2s}
+.group-card:hover{box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.group-hd{padding:12px 16px;background:#fafafa;border-bottom:1px solid #ebeef5;display:flex;align-items:center;gap:10px}
+.group-hd .drag{color:#c0c4cc;cursor:grab;font-size:14px}
+.group-hd .g-name-input{flex:1;border:none;background:transparent;font-size:14px;font-weight:600;color:#303133;outline:none;padding:2px 0}
+.group-hd .g-name-input:focus{border-bottom:2px solid #1890ff}
+.group-hd .g-count{font-size:11px;color:#909399;background:#f0f0f0;padding:2px 8px;border-radius:10px}
+.group-hd .g-del{border:none;background:none;color:#c0c4cc;font-size:16px;cursor:pointer;padding:2px 6px;border-radius:4px}
+.group-hd .g-del:hover{background:#fee;color:#f56c6c}
+
+/* 检查项行 */
+.ck-item{padding:12px 16px;border-bottom:1px solid #f0f0f0}
+.ck-item:last-child{border-bottom:none}
+.ck-item:hover{background:#fafafa}
+.ck-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.ck-top .drag{color:#dcdfe6;cursor:grab;font-size:12px}
+.ck-top .seq{width:20px;height:20px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#909399;flex-shrink:0}
+.ck-top .ck-name{flex:1;border:1px solid #dcdfe6;border-radius:4px;padding:6px 10px;font-size:13px;color:#303133;outline:none;font-family:inherit}
+.ck-top .ck-name:focus{border-color:#1890ff}
+.ck-top .ck-del{border:none;background:none;color:#c0c4cc;font-size:14px;cursor:pointer;padding:2px 6px;border-radius:4px}
+.ck-top .ck-del:hover{background:#fee;color:#f56c6c}
+
+/* 不合格原因 */
+.reasons{padding-left:36px}
+.reasons-label{font-size:11px;font-weight:600;color:#909399;margin-bottom:4px}
+.reasons-tags{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.r-tag{display:flex;align-items:center;gap:3px;font-size:12px;color:#606266;background:#f5f7fa;border:1px solid #e4e7ed;padding:3px 10px;border-radius:16px}
+.r-tag .r-x{cursor:pointer;color:#c0c4cc;font-size:13px;margin-left:2px}
+.r-tag .r-x:hover{color:#f56c6c}
+.r-add{display:inline-flex;align-items:center;gap:2px;font-size:12px;color:#1890ff;background:#e6f7ff;border:1px dashed #91d5ff;padding:3px 10px;border-radius:16px;cursor:pointer}
+.r-add:hover{background:#bae7ff}
+.r-add-input{border:1px solid #1890ff;border-radius:16px;padding:3px 10px;font-size:12px;outline:none;width:90px;font-family:inherit}
+
+/* 额外选项 */
+.ck-extra{display:flex;align-items:center;gap:14px;padding-left:36px;margin-top:6px}
+.ck-extra label{font-size:12px;color:#606266;display:flex;align-items:center;gap:4px;cursor:pointer}
+.ck-extra input[type=checkbox]{accent-color:#1890ff;width:14px;height:14px}
+
+/* 添加按钮 */
+.btn-add-item{width:100%;padding:8px;border:1px dashed #c0c4cc;border-radius:4px;background:#fff;font-size:12px;color:#909399;cursor:pointer;text-align:center;transition:all .1s}
+.btn-add-item:hover{border-color:#1890ff;color:#1890ff}
+.btn-add-group{width:100%;padding:10px;border:1px dashed #c0c4cc;border-radius:4px;background:#fff;font-size:13px;color:#909399;cursor:pointer;text-align:center;transition:all .1s;margin-bottom:20px}
+.btn-add-group:hover{border-color:#1890ff;color:#1890ff}
+
+/* 通用设置卡片 */
+.setting-card{background:#fff;border:1px solid #e4e7ed;border-radius:4px;padding:16px;margin-bottom:16px}
+.setting-card h3{font-size:14px;font-weight:600;color:#303133;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #f0f0f0}
+.st-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #fafafa}
+.st-row:last-child{border-bottom:none}
+.st-left{flex:1}
+.st-label{font-size:13px;color:#303133;font-weight:500}
+.st-desc{font-size:11px;color:#909399;margin-top:2px}
+/* 开关 */
+.sw{position:relative;width:36px;height:20px;cursor:pointer;flex-shrink:0}
+.sw input{display:none}
+.sw .sl{position:absolute;inset:0;background:#c0c4cc;border-radius:10px;transition:.2s}
+.sw .sl::before{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;left:2px;top:2px;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.sw input:checked+.sl{background:#1890ff}
+.sw input:checked+.sl::before{transform:translateX(16px)}
+
+/* 配合事项文本域 */
+.tpl-area{margin-top:8px}
+.tpl-textarea{width:100%;border:1px solid #dcdfe6;border-radius:4px;padding:10px;font-size:12px;color:#303133;line-height:1.8;resize:vertical;min-height:140px;font-family:inherit;outline:none}
+.tpl-textarea:focus{border-color:#1890ff}
+
+/* ========== 右侧预览 ========== */
+.preview-area{width:400px;flex-shrink:0;background:#e8ecf0;border-left:1px solid #dcdfe6;display:flex;flex-direction:column;align-items:center;padding:20px 16px;overflow-y:auto}
+.preview-label{font-size:11px;font-weight:600;color:#909399;margin-bottom:12px;letter-spacing:.5px}
+
+/* 手机壳 */
+.phone{width:340px;height:700px;background:#fff;border-radius:24px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.15);border:1px solid #d0d0d0;position:relative}
+.phone::before{content:'';position:absolute;inset:-3px;border-radius:27px;background:#1a1a1a;z-index:-1}
+.phone .sbar{height:40px;background:linear-gradient(135deg,#36b5a0,#2ea88e);display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;color:#fff;font-size:13px;font-weight:600;flex-shrink:0}
+.phone .nbar{height:42px;background:linear-gradient(135deg,#36b5a0,#2ea88e);display:flex;align-items:center;padding:0 14px;color:#fff;flex-shrink:0}
+.phone .nbar .back{font-size:18px;opacity:.9;width:36px}
+.phone .nbar .nt{flex:1;text-align:center;font-size:15px;font-weight:600;margin-right:36px}
+.phone .scroll{flex:1;overflow-y:auto;background:#f5f5f5;padding-bottom:8px}
+.phone .scroll::-webkit-scrollbar{width:3px}
+.phone .scroll::-webkit-scrollbar-thumb{background:#c0c4cc;border-radius:2px}
+
+/* 预览内组件 */
+.pv-summary{margin:6px 10px;padding:10px 12px;background:#fff;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.pv-summary .r{display:flex;justify-content:space-between}
+.pv-summary .nm{font-size:13px;font-weight:600;color:#303133}
+.pv-summary .dt{font-size:11px;color:#909399}
+.pv-summary .sub{font-size:11px;color:#909399;margin-top:3px}
+
+.pv-grp{margin:6px 10px;background:#fff;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden}
+.pv-ghd{padding:8px 12px;display:flex;align-items:center;border-bottom:1px solid #f0f0f0}
+.pv-ghd .t{flex:1;font-size:12px;font-weight:600;color:#303133}
+.pv-ghd .c{font-size:10px;color:#909399}
+.pv-ck{display:flex;align-items:center;min-height:36px;padding:0 12px;border-bottom:1px solid #fafafa}
+.pv-ck:last-child{border-bottom:none}
+.pv-ck .n{flex:1;font-size:12px;color:#606266}
+.pv-jg{display:flex}
+.pv-jg span{padding:2px 8px;font-size:10px;border:1px solid #dcdfe6;color:#c0c4cc;background:#fff}
+.pv-jg span:first-child{border-radius:3px 0 0 3px;border-right:none}
+.pv-jg span:last-child{border-radius:0 3px 3px 0}
+
+.pv-ft{flex-shrink:0;background:#fff;border-top:1px solid #f0f0f0;padding:8px 14px 14px;text-align:center}
+.pv-ft .batch{font-size:11px;color:#36b5a0;margin-bottom:4px}
+.pv-ft .sub-btn{width:100%;padding:10px;border:none;border-radius:6px;background:#36b5a0;color:#fff;font-size:13px;font-weight:600;opacity:.5}
+
+/* 关系提示 */
+.relation-bar{background:#fffbe6;border:1px solid #ffe58f;border-radius:4px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:8px;font-size:12px;color:#d48806}
+.relation-bar b{color:#ad6800}
+
+/* Toast */
+.toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);color:#fff;padding:10px 24px;border-radius:4px;font-size:13px;z-index:999;display:none}
+.toast.show{display:block;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0;transform:translateX(-50%) translateY(6px)}}
+</style>
+</head>
+<body>
+
+<!-- 顶栏 -->
+<div class="topbar">
+  <span class="logo">能源低代码平台</span>
+  <span class="sep">|</span>
+  <span class="nav">数据配置 / <b>作业前准备 — 检查项配置</b></span>
+  <span class="spacer"></span>
+  <button class="btn" onclick="resetAll()">重置</button>
+  <button class="btn primary" onclick="saveConfig()">保存配置</button>
+</div>
+
+<div class="main">
+  <!-- 左侧菜单 -->
+  <div class="sidebar">
+    <div class="sb-title">数据配置</div>
+    <div class="sb-item"><span class="sb-icon">📋</span>表单管理</div>
+    <div class="sb-item"><span class="sb-icon">🔄</span>流程管理</div>
+    <div class="sb-item active"><span class="sb-icon">⚙️</span>检查项配置</div>
+    <div class="sb-item"><span class="sb-icon">👥</span>角色权限</div>
+    <div class="sb-item"><span class="sb-icon">📊</span>数据字典</div>
+    <div class="sb-item"><span class="sb-icon">🔔</span>通知配置</div>
+  </div>
+
+  <!-- 中间配置区 -->
+  <div class="config-area">
+    <div class="page-head">
+      <h1>作业前准备 — 检查项配置</h1>
+      <p>配置APP端「作业前准备」页面中的检查项分组、检查项名称和不合格原因选项。修改后新建工单生效，已派发工单不受影响。</p>
+    </div>
+
+    <!-- 关系提示 -->
+    <div class="relation-bar">
+      💡 这里配的是<b>具体业务数据</b>（检查项内容）。页面结构和功能开关在<b>低代码编辑器</b>中配置（见另一个Demo）。
+    </div>
+
+    <div id="groupsBox"></div>
+    <div class="btn-add-group" onclick="addGroup()">＋ 添加检查项分组</div>
+
+    <!-- 通用设置 -->
+    <div class="setting-card">
+      <h3>⚙️ 通用设置</h3>
+      <div class="st-row">
+        <div class="st-left"><div class="st-label">一键全部合格</div><div class="st-desc">底部显示快捷按钮，一键将所有未判定项标为合格</div></div>
+        <label class="sw"><input type="checkbox" id="opt-batch" checked onchange="renderPreview()"><span class="sl"></span></label>
+      </div>
+      <div class="st-row">
+        <div class="st-left"><div class="st-label">不合格时弹窗确认</div><div class="st-desc">存在不合格项时，提交前弹窗二次确认</div></div>
+        <label class="sw"><input type="checkbox" id="opt-confirm" checked onchange="renderPreview()"><span class="sl"></span></label>
+      </div>
+      <div class="st-row">
+        <div class="st-left"><div class="st-label">允许带不合格项提交</div><div class="st-desc">不合格仅记录，不阻断后续流程</div></div>
+        <label class="sw"><input type="checkbox" id="opt-fail" checked onchange="renderPreview()"><span class="sl"></span></label>
+      </div>
+      <div class="st-row">
+        <div class="st-left"><div class="st-label">提交后不可修改</div><div class="st-desc">V3.0 一次性过门，提交后锁定</div></div>
+        <label class="sw"><input type="checkbox" id="opt-lock" checked onchange="renderPreview()"><span class="sl"></span></label>
+      </div>
+    </div>
+
+    <!-- 配合事项模板 -->
+    <div class="setting-card">
+      <h3>📋 配合事项模板</h3>
+      <div class="st-row" style="border-bottom:none">
+        <div class="st-left"><div class="st-label">启用配合事项一键复制</div><div class="st-desc">APP端可展开查看模板内容并复制到剪贴板发给供电公司</div></div>
+        <label class="sw"><input type="checkbox" id="opt-co" checked onchange="renderPreview()"><span class="sl"></span></label>
+      </div>
+      <div class="tpl-area">
+        <textarea class="tpl-textarea" id="tplText" oninput="renderPreview()">■ 现场条件
+1. 进线电缆两头不得搭接，或未敷设
+2. 报检范围内设备不得带电
+
+■ 资料准备
+3. 8:30前准备好项目蓝图
+4. 所有报检设备的出厂报告、合格证、交接报告
+   （中置柜/环网柜/变压器/低压柜/分支箱/计量表箱/高低压电缆）
+
+■ 电源与工具
+5. 380V、220V试验电源及电源线、插座
+6. 通流试验用发电机及电源线
+7. 拆卸高压柜、变压器、电缆的工具
+
+■ 人员
+8. 配合人员≥6人，穿工作服、戴安全帽
+   必须有熟悉现场电缆位置的师傅</textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右侧手机预览 -->
+  <div class="preview-area">
+    <div class="preview-label">📱 APP端实时预览</div>
+    <div class="phone">
+      <div class="sbar">9:30</div>
+      <div class="nbar"><div class="back">‹</div><div class="nt">作业前准备</div></div>
+      <div class="scroll" id="pvScroll"></div>
+      <div class="pv-ft" id="pvFt"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let data = {
+  groups: [
+    { name:'材料准备', items:[
+      {name:'纸质记录单', reasons:['未携带','不齐全','破损'], remark:true},
+      {name:'检测仪器', reasons:['未校准','缺少','损坏'], remark:true},
+      {name:'安全工器具', reasons:['过期','缺失','损坏'], remark:true},
+      {name:'工程车辆', reasons:['故障','未安排'], remark:true}
+    ]},
+    { name:'人员准备', items:[
+      {name:'人员情况', reasons:['人数不足','资质过期'], remark:true},
+      {name:'主业联系', reasons:['未联系上','对方未确认'], remark:true}
+    ]},
+    { name:'项目准备', items:[
+      {name:'配合事项要求', reasons:['现场未准备好','资料未准备好','人员未到位'], remark:true}
+    ]}
+  ]
+};
+const defaultData = JSON.parse(JSON.stringify(data));
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function renderConfig(){
+  const box = document.getElementById('groupsBox');
+  box.innerHTML = data.groups.map((g,gi) => `
+    <div class="group-card">
+      <div class="group-hd">
+        <span class="drag">⠿</span>
+        <input class="g-name-input" value="${esc(g.name)}" oninput="data.groups[${gi}].name=this.value;renderPreview()" placeholder="分组名称">
+        <span class="g-count">${g.items.length} 项</span>
+        <button class="g-del" onclick="delGroup(${gi})" title="删除分组">✕</button>
+      </div>
+      ${g.items.map((it,ii) => `
+        <div class="ck-item">
+          <div class="ck-top">
+            <span class="drag">⠿</span>
+            <span class="seq">${ii+1}</span>
+            <input class="ck-name" value="${esc(it.name)}" oninput="data.groups[${gi}].items[${ii}].name=this.value;renderPreview()" placeholder="检查项名称">
+            <button class="ck-del" onclick="delItem(${gi},${ii})" title="删除">✕</button>
+          </div>
+          <div class="reasons">
+            <div class="reasons-label">不合格原因选项</div>
+            <div class="reasons-tags">
+              ${it.reasons.map((r,ri) => `<span class="r-tag">${esc(r)}<span class="r-x" onclick="delReason(${gi},${ii},${ri})">×</span></span>`).join('')}
+              <span class="r-add" onclick="addReason(${gi},${ii},this)">＋ 添加</span>
+            </div>
+          </div>
+          <div class="ck-extra">
+            <label><input type="checkbox" ${it.remark?'checked':''} onchange="data.groups[${gi}].items[${ii}].remark=this.checked;renderPreview()"> 允许补充说明</label>
+          </div>
+        </div>
+      `).join('')}
+      <div style="padding:8px 16px 12px">
+        <div class="btn-add-item" onclick="addItem(${gi})">＋ 添加检查项</div>
+      </div>
+    </div>
+  `).join('');
+  renderPreview();
+}
+
+function renderPreview(){
+  const pv = document.getElementById('pvScroll');
+  let total = 0;
+  data.groups.forEach(g => total += g.items.length);
+  let h = `<div class="pv-summary"><div class="r"><span class="nm">建湖复兴花园一期</span><span class="dt">2026-03-20</span></div><div class="r"><span class="sub">江苏省盐城市建湖县</span><span class="sub">规模 2-0-4-1</span></div></div>`;
+  data.groups.forEach(g => {
+    h += `<div class="pv-grp"><div class="pv-ghd"><span class="t">${esc(g.name)}</span><span class="c">0/${g.items.length}</span></div>`;
+    g.items.forEach(it => {
+      h += `<div class="pv-ck"><span class="n">${esc(it.name)}</span><div class="pv-jg"><span>合格</span><span>不合格</span></div></div>`;
+    });
+    h += `</div>`;
+  });
+  pv.innerHTML = h;
+  const ft = document.getElementById('pvFt');
+  const batch = document.getElementById('opt-batch').checked;
+  ft.innerHTML = `${batch?'<div class="batch">一键全部合格</div>':''}<button class="sub-btn">提交（共 ${total} 项）</button>`;
+}
+
+// Actions
+function addGroup(){
+  data.groups.push({name:'新分组',items:[{name:'新检查项',reasons:['原因1'],remark:true}]});
+  renderConfig();showToast('已添加新分组');
+}
+function delGroup(gi){
+  if(data.groups.length<=1){showToast('至少保留一个分组');return}
+  if(!confirm(`确认删除「${data.groups[gi].name}」分组？`))return;
+  data.groups.splice(gi,1);renderConfig();showToast('已删除分组');
+}
+function addItem(gi){
+  data.groups[gi].items.push({name:'新检查项',reasons:['原因1'],remark:true});
+  renderConfig();showToast('已添加检查项');
+}
+function delItem(gi,ii){
+  if(data.groups[gi].items.length<=1){showToast('每组至少保留一个检查项');return}
+  data.groups[gi].items.splice(ii,1);renderConfig();
+}
+function delReason(gi,ii,ri){
+  if(data.groups[gi].items[ii].reasons.length<=1){showToast('至少保留一个不合格原因');return}
+  data.groups[gi].items[ii].reasons.splice(ri,1);renderConfig();
+}
+function addReason(gi,ii,el){
+  const input=document.createElement('input');input.className='r-add-input';input.placeholder='输入后回车';
+  el.replaceWith(input);input.focus();
+  input.onkeydown=e=>{if(e.key==='Enter'&&input.value.trim()){data.groups[gi].items[ii].reasons.push(input.value.trim());renderConfig()}if(e.key==='Escape')renderConfig()};
+  input.onblur=()=>{if(input.value.trim())data.groups[gi].items[ii].reasons.push(input.value.trim());renderConfig()};
+}
+function saveConfig(){showToast('✅ 配置已保存！新建工单将使用更新后的检查项')}
+function resetAll(){if(!confirm('确认重置为默认配置？'))return;data=JSON.parse(JSON.stringify(defaultData));renderConfig();showToast('已重置')}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500)}
+
+renderConfig();
+</script>
+</body>
+</html>

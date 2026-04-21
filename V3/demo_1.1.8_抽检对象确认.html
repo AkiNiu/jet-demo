@@ -19,16 +19,82 @@
   .demo-right ul { padding-left:20px; }
   .demo-right code { background:#F3F4F6; padding:1px 5px; border-radius:4px; font-size:12px; }
 
-  /* === Step indicator (two steps) === */
-  .step-bar { display:flex; align-items:center; padding:10px 16px; background:var(--g50); border-bottom:1px solid var(--g200); }
-  .step-pill { display:flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; transition:.2s; }
+  /* === Step indicator (three steps) === */
+  .step-bar { display:flex; align-items:center; justify-content:center; padding:8px 10px; background:var(--g50); border-bottom:1px solid var(--g200); gap:0; }
+  .step-pill { display:flex; align-items:center; gap:4px; padding:5px 10px; border-radius:16px; font-size:12px; font-weight:600; cursor:pointer; transition:.2s; white-space:nowrap; flex-shrink:0; }
   .step-pill.active { background:var(--pri); color:#fff; }
   .step-pill.done { background:#D1FAE5; color:#065F46; }
   .step-pill.pending { background:var(--g100); color:var(--g400); }
-  .step-pill .num { width:20px; height:20px; border-radius:50%; background:rgba(255,255,255,.3); display:flex; align-items:center; justify-content:center; font-size:11px; }
+  .step-pill .num { width:18px; height:18px; border-radius:50%; background:rgba(255,255,255,.3); display:flex; align-items:center; justify-content:center; font-size:10px; flex-shrink:0; }
   .step-pill.pending .num { background:var(--g200); }
-  .step-conn { width:24px; height:2px; background:var(--g200); margin:0 4px; }
+  .step-conn { width:16px; height:2px; background:var(--g200); margin:0 2px; flex-shrink:0; }
   .step-conn.done { background:#10B981; }
+
+  /* === Step 0: station review (复用建设情况确认UI) === */
+  .s0-grp { padding:10px var(--sp) 4px; font-size:13px; font-weight:600; color:var(--g600); }
+  .s0-list { margin:0 var(--sp); background:#fff; border-radius:var(--rs); box-shadow:var(--shadow-sm); overflow:hidden; margin-bottom:8px; }
+  .s0-row {
+    display:flex; align-items:center; border-bottom:1px solid var(--g100);
+    min-height:56px; padding:0 4px; transition:background .15s;
+  }
+  .s0-row:last-child { border-bottom:none; }
+  .s0-num {
+    min-width:48px; min-height:48px; display:flex; align-items:baseline;
+    justify-content:flex-end; gap:1px; cursor:pointer; padding:0 4px 0 12px;
+  }
+  .s0-val {
+    font-size:18px; font-weight:700; color:var(--g800);
+    border-bottom:2px dashed var(--g300); min-width:14px; text-align:center;
+  }
+  .s0-suf { font-size:13px; color:var(--g500); white-space:nowrap; padding-left:1px; }
+  .s0-space { flex:1; }
+  .s0-type-btn {
+    min-width:48px; min-height:48px; display:flex; align-items:center;
+    justify-content:center; cursor:pointer; flex-shrink:0; padding:0 8px;
+  }
+  .s0-type-tag {
+    font-size:11px; padding:3px 8px; border-radius:4px; font-weight:500;
+    white-space:nowrap; background:var(--g100); color:var(--g600);
+  }
+  .s0-del-btn {
+    min-width:48px; min-height:48px; display:flex; align-items:center;
+    justify-content:center; cursor:pointer; flex-shrink:0; color:var(--g400);
+    font-size:16px;
+  }
+  .s0-del-btn:active { color:var(--ng); }
+  .s0-add { margin:4px var(--sp) 8px; }
+  .s0-add-btn {
+    width:100%; padding:12px; border:1.5px dashed var(--g300); border-radius:var(--rs);
+    background:#fff; font-size:13px; color:var(--g500); cursor:pointer; text-align:center;
+  }
+  .s0-add-btn:active { background:var(--pri-l); border-color:var(--pri); color:var(--pri-d); }
+
+  /* === Step 2: station row with首站房 + 安措 === */
+  .s1-actions {
+    display:flex; flex-direction:column; gap:6px; margin-top:8px;
+  }
+  /* 安措指派——主操作，突出显示 */
+  .s1-safety-btn {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 14px; border-radius:var(--rs); cursor:pointer; transition:.15s;
+    border:1.5px solid var(--pri); background:var(--pri-l); color:var(--pri-d);
+    font-size:13px; font-weight:600; min-height:44px;
+  }
+  .s1-safety-btn:active { opacity:.7; }
+  .s1-safety-btn .s1-sb-arrow { font-size:16px; }
+  .s1-safety-btn.assigned {
+    border-color:#059669; background:#D1FAE5; color:#065F46;
+  }
+  /* 首站房——次要操作，轻量文字 */
+  .s1-first-link {
+    font-size:12px; color:var(--g500); cursor:pointer; padding:2px 0;
+  }
+  .s1-first-link:active { color:var(--pri-d); }
+  .s1-first-link.active { color:#92400E; font-weight:600; }
+  .s1-first-tag {
+    font-size:11px; padding:2px 8px; border-radius:10px;
+    background:#FEF3C7; color:#92400E; font-weight:600; flex-shrink:0;
+  }
 
   /* === Step 1: inspection type selector === */
   .s1-type-sel { display:flex; gap:0; margin:12px 16px 0; border-radius:var(--r); overflow:hidden; border:1.5px solid var(--g200); }
@@ -66,7 +132,7 @@
   .s2-tab {
     padding:8px 14px; border-radius:20px; font-size:13px; cursor:pointer;
     white-space:nowrap; background:var(--g100); color:var(--g500); min-height:38px;
-    display:flex; align-items:center; gap:5px; transition:.15s;
+    display:flex; align-items:center; gap:5px; transition:.15s; flex-shrink:0;
   }
   .s2-tab.active { background:var(--pri-l); color:var(--pri-d); font-weight:600; border:1.5px solid var(--pri); }
   .s2-tab.submitted { background:#D1FAE5; color:#065F46; opacity:.7; }
@@ -126,7 +192,7 @@
     position:relative; background:#fff; transition:transform .2s;
   }
   .dg-item:active { background:var(--g50); }
-  .dg-item-name { flex:1; font-size:14px; color:var(--g700); }
+  .dg-item-name { flex:1; min-width:0; font-size:14px; color:var(--g700); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .dg-item-tag { font-size:11px; padding:3px 8px; border-radius:10px; background:#D1FAE5; color:#065F46; }
   .dg-empty { padding:16px; text-align:center; font-size:13px; color:var(--g400); }
   .dg-del-btn {
@@ -142,8 +208,14 @@
 
   /* === Confirm dialog === */
   @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-  .cd-mask { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.45); z-index:300; justify-content:center; align-items:center; }
+  .cd-mask { display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.45); z-index:300; justify-content:center; align-items:center; }
   .cd-mask.show { display:flex; animation:fadeIn .2s; }
+  @keyframes shUp { from { transform:translateY(100%); } to { transform:translateY(0); } }
+
+  /* === Step底部按钮区 === */
+  .step-bot { padding:10px 16px; border-top:1px solid var(--g200); }
+  .step-bot-btns { display:flex; gap:10px; }
+  .step-bot-btns .btn { min-height:48px; flex:1; }
   .cd-box { width:280px; background:#fff; border-radius:16px; padding:24px 20px 16px; text-align:center; }
   .cd-box h3 { font-size:16px; font-weight:700; color:var(--g800); margin-bottom:8px; }
   .cd-box p { font-size:14px; color:var(--g500); margin-bottom:20px; line-height:1.6; }
@@ -187,21 +259,21 @@
   .cable-add-row .label { font-size:13px; color:var(--g500); flex-shrink:0; }
   .cable-num-input { width:64px; padding:10px 8px; border:1.5px solid var(--g200); border-radius:var(--rs); font-size:16px; font-weight:600; color:var(--g800); text-align:center; box-sizing:border-box; }
   .cable-num-input:focus { border-color:var(--pri); outline:none; }
-  .cable-matrix-row { display:flex; align-items:center; padding:6px 16px; min-height:56px; border-bottom:1px solid var(--g100); }
-  .cable-mr-label { width:56px; font-size:14px; font-weight:600; color:var(--g800); flex-shrink:0; }
-  .cable-mr-cells { display:flex; flex:1; gap:6px; }
+  .cable-matrix-row { display:flex; align-items:center; padding:6px 12px; min-height:56px; border-bottom:1px solid var(--g100); gap:6px; }
+  .cable-mr-label { width:48px; font-size:13px; font-weight:600; color:var(--g800); flex-shrink:0; }
+  .cable-mr-cells { display:flex; flex:1; gap:4px; min-width:0; }
   .cable-mr-cb {
-    width:44px; height:44px; border-radius:10px; border:2px solid var(--g200);
+    flex:1; min-width:0; height:36px; border-radius:8px; border:2px solid var(--g200);
     display:flex; align-items:center; justify-content:center;
-    cursor:pointer; transition:.15s; font-size:14px; font-weight:600; color:var(--g400); background:#fff;
+    cursor:pointer; transition:.15s; font-size:13px; font-weight:600; color:var(--g400); background:#fff;
   }
   .cable-mr-cb:active { transform:scale(.92); }
   .cable-mr-cb.on { background:var(--pri); border-color:var(--pri); color:#fff; }
-  .cable-mr-actions { width:64px; flex-shrink:0; display:flex; gap:2px; justify-content:flex-end; }
-  .cable-mr-btn { padding:6px 8px; border-radius:6px; border:none; font-size:12px; cursor:pointer; background:none; color:var(--g400); min-height:44px; display:flex; align-items:center; }
+  .cable-mr-actions { flex-shrink:0; display:flex; gap:4px; justify-content:flex-end; align-items:center; }
+  .cable-mr-btn { padding:0 6px; border-radius:6px; border:1px solid var(--g200); font-size:12px; cursor:pointer; background:#fff; color:var(--g600); height:36px; min-width:34px; display:flex; align-items:center; justify-content:center; }
   .cable-mr-btn:active { background:var(--g100); }
-  .cable-mr-btn.sel-all { color:var(--pri); }
-  .cable-mr-btn.del { color:var(--ng); font-size:16px; }
+  .cable-mr-btn.sel-all { color:var(--pri); border-color:var(--pri); }
+  .cable-mr-btn.del { color:var(--ng); font-size:14px; border-color:var(--ng); }
   .cable-stats { padding:10px 16px; background:var(--pri-l); font-size:13px; color:var(--pri-d); font-weight:600; }
   .cable-empty { padding:40px 16px; text-align:center; font-size:14px; color:var(--g400); }
 
@@ -229,7 +301,7 @@
   .dev-page.active { display:flex; }
   .dev-scroll { flex:1; overflow-y:auto; min-height:0; }
 
-  .phone { display:flex; flex-direction:column; overflow:hidden; }
+  .phone { display:flex; flex-direction:column; overflow:hidden; position:relative; }
 </style>
 </head>
 <body>
@@ -242,24 +314,43 @@
 
       <!-- Step Bar -->
       <div class="step-bar">
-        <div class="step-pill active" id="sp1" onclick="goStep(1)"><span class="num">1</span>检测范围</div>
+        <div class="step-pill active" id="sp0"><span class="num">1</span>站房核对</div>
+        <div class="step-conn" id="sc0"></div>
+        <div class="step-pill pending" id="sp1"><span class="num">2</span>检测范围</div>
         <div class="step-conn" id="sc1"></div>
-        <div class="step-pill pending" id="sp2" onclick="goStep(2)"><span class="num">2</span>站房详情</div>
+        <div class="step-pill pending" id="sp2"><span class="num">3</span>站房详情</div>
       </div>
 
-      <!-- Step 1 -->
-      <div class="step-content active" id="step1">
+      <!-- Step 0: 站房信息核对（复用建设情况确认UI） -->
+      <div class="step-content active" id="step0">
         <div class="scroll-area">
-          <div class="s1-type-sel">
-            <div class="s1-type-btn" id="typeAll" onclick="setInspType('all')">全检</div>
-            <div class="s1-type-btn" id="typeSample" onclick="setInspType('sample')">抽检</div>
+          <div style="margin:4px 12px;padding:8px 12px;background:rgba(60,200,180,.08);border-radius:var(--rs);border-left:3px solid var(--pri);">
+            <div style="font-size:12px;color:var(--g700);line-height:1.6;">核对站房编号和类型，有问题直接修改。没问题可直接下一步</div>
           </div>
-          <div class="s1-hint disabled" id="s1Hint">请先选择检测类型</div>
-          <div class="s1-list disabled" id="s1List"></div>
+          <div class="s0-grp">站房列表</div>
+          <div id="s0List"></div>
+          <div class="s0-add"><div class="s0-add-btn" onclick="s0AddStation()">+ 新增站房</div></div>
         </div>
-        <div style="padding:10px 16px; border-top:1px solid var(--g200);">
+        <div class="step-bot">
+          <button class="btn btn-primary btn-block btn-lg" onclick="finishStep0()">下一步</button>
+        </div>
+      </div>
+
+      <!-- Step 2: 检测范围 -->
+      <div class="step-content" id="step1">
+        <div class="scroll-area">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px 4px;">
+            <span style="font-size:13px;color:var(--g600);font-weight:600;">勾选需要检测的站房</span>
+            <span style="font-size:12px;color:var(--pri-d);cursor:pointer;" onclick="toggleSelectAll()" id="s1SelectAll">全选</span>
+          </div>
+          <div class="s1-list" id="s1List"></div>
+        </div>
+        <div class="step-bot">
           <div class="s1-count" id="s1Count">已选 0 个站房</div>
-          <button class="btn btn-primary btn-block btn-lg" onclick="finishStep1()">下一步：进入站房详情</button>
+          <div class="step-bot-btns">
+            <button class="btn btn-outline btn-lg" onclick="goStep(0)">上一步</button>
+            <button class="btn btn-primary btn-lg" onclick="finishStep1()">下一步</button>
+          </div>
         </div>
       </div>
 
@@ -267,8 +358,11 @@
       <div class="step-content" id="step2">
         <div class="s2-tabs" id="s2Tabs"></div>
         <div class="scroll-area" id="s2Body"></div>
-        <div style="padding:10px 16px; border-top:1px solid var(--g200);">
-          <button class="btn btn-primary btn-block btn-lg" id="submitBtn" onclick="submitStation()">提交此站房</button>
+        <div class="step-bot">
+          <div class="step-bot-btns">
+            <button class="btn btn-outline btn-lg" onclick="goStep(1)">上一步</button>
+            <button class="btn btn-primary btn-lg" id="submitBtn" onclick="submitStation()">提交此站房</button>
+          </div>
         </div>
       </div>
 
@@ -339,42 +433,48 @@
 
     <h3>设计决策</h3>
     <ul>
-      <li><b>两步向导，不是三步</b>——Step 1选范围（全检/抽检+站房标记），Step 2逐站房配置（属性+设备+试验项）。只收结构信息，不收铭牌信息（铭牌在检测执行时现场采集）</li>
-      <li><b>从2.4系统78+次点击大幅精简</b>——砍掉5个无消费方字段（序号/进线数/配变数/规则参照/首测标记），站房编号继承不重填，所有少选项改为平铺chip一次点击</li>
-      <li><b>设备自动生成空壳</b>——选柜体类型后按行业默认规则自动生成设备列表（只有类型，编号和试验项待配置）。"+"按钮追加，左滑删除。默认规则可通过数据中台配置</li>
-      <li><b>设备配置走全屏页面</b>——解决Bottom Sheet键盘冲突，上半区设备属性+下半区试验项Checkbox List，一页保存。试验项默认全选，每行48dp防误触</li>
-      <li><b>电缆/分支箱/表箱用矩阵批量创建</b>——高压电缆一维网格(1-20)直选，低压电缆二维矩阵(柜号×间隔号)，分支箱/表箱同低压+固定后缀"下侧"。创建后逐根选型号规格或填位置描述</li>
-      <li><b>逐站房提交解锁</b>——不等全部站房配完，提交一个就解锁一个站房的安措和检测分工。提交时同时选安措执行人（单选1人）</li>
-      <li><b>撤回+增补双轨修正</b>——大问题用撤回（安措未开始可撤），小问题用增补（始终可加设备）。增补设备标橙色区分</li>
+      <li><b>三步向导</b>——Step 1核对站房信息（编号可改，可增删站房），Step 2勾选检测范围+指定首站房+指派安措，Step 3逐站房配设备。Step 2/3可回退编辑（Step 3不回Step 1，改站房代价大走撤回机制）。只收结构信息，不收铭牌信息</li>
+      <li><b>Step 1"回头看"</b>——建设情况确认时填得快、填得粗，到了抽检阶段对现场更熟悉，给一次核对站房编号/类型的机会。修改回写建设情况确认（单一数据源）</li>
+      <li><b>首站房标记</b>——工作负责人在Step 2指定1个站房为首站房。首站房安措完成→开工会解锁（流程控制字段，不进包裹）</li>
+      <li><b>安措批量派发</b>——Step 2的勾选/首站房/安措指派在"下一步"确认前都是本地编辑。点"下一步"弹出派发确认弹窗→确认后全部安措一次性派发→执行人同时收到任务</li>
+      <li><b>设备自动生成空壳</b>——选柜体类型后按行业默认规则自动生成设备列表。"+"按钮追加，左滑删除。默认规则可通过数据配置模块配置</li>
+      <li><b>设备配置走全屏页面</b>——上半区设备属性+下半区试验项Checkbox List，一页保存。试验项默认全选，每行48dp防误触</li>
+      <li><b>电缆/分支箱/表箱用矩阵批量创建</b>——高压电缆一维网格(1-20)直选，低压电缆二维矩阵(柜号×间隔号)。需原生开发（非低代码标准控件）</li>
+      <li><b>逐站房提交解锁</b>——不等全部站房配完，提交一个就解锁该站房的检测分工（安措可能已在进行中）</li>
+      <li><b>本地优先保存</b>——操作量大（78+次点击），不论网络状态暂存后数据不可丢失</li>
+      <li><b>撤回+增补双轨修正</b>——大问题用撤回（未达检测中可撤），小问题用增补（始终可加设备）</li>
     </ul>
 
     <h3>请试试以下操作</h3>
     <table>
       <tr><th style="width:35%">做什么</th><th>怎么做</th></tr>
-      <tr><td>选检测类型</td><td>顶部"全检/抽检"切换→全检自动全选，抽检手动勾选→下一步</td></tr>
-      <tr><td>配置站房属性</td><td>Step 2 Tab切换站房→选柜体类型（chip点选）→系统自动生成空壳设备</td></tr>
+      <tr><td>核对站房信息</td><td>Step 1→逐行检查编号→点击行弹出编辑框→"+"新增→✕删除→下一步</td></tr>
+      <tr><td>勾选检测范围</td><td>Step 2→勾选需要检测的站房（右上角"全选"快捷按钮）</td></tr>
+      <tr><td>指定首站房</td><td>Step 2→勾选站房后点"设为首站房"文字链接</td></tr>
+      <tr><td>指派安措执行人</td><td>Step 2→勾选站房后点指派按钮→Bottom Sheet选人（本地编辑，确认派发后生效）</td></tr>
+      <tr><td>配置站房属性</td><td>Step 3 Tab切换站房→选柜体类型→系统自动生成空壳设备</td></tr>
       <tr><td>配置单个设备</td><td>点击空壳设备→全屏页面→填编号+选子类型→勾选试验项→保存</td></tr>
       <tr><td>批量创建电缆</td><td>设备列表"+"→矩阵页→选前缀+点选编号→确认→逐根选型号规格</td></tr>
-      <tr><td>批量创建分支箱</td><td>同电缆矩阵→确认后跳转位置描述快速填写</td></tr>
-      <tr><td>删除设备</td><td>设备行左滑→红色删除按钮→二次确认弹窗</td></tr>
-      <tr><td>提交站房</td><td>底部"提交此站房"→选安措执行人→确认→Tab变灰锁定</td></tr>
-      <tr><td>撤回已提交</td><td>已提交站房Tab→"撤回此站房"（安措未开始才可用）</td></tr>
+      <tr><td>删除设备</td><td>设备行✕按钮→二次确认弹窗</td></tr>
+      <tr><td>提交站房</td><td>底部"提交此站房"→确认弹窗（展示设备数+安措状态）→Tab变灰锁定</td></tr>
+      <tr><td>撤回已提交</td><td>已提交站房Tab→"撤回此站房"（未达检测中才可用）</td></tr>
       <tr><td>增补设备</td><td>已提交站房→底部"增补设备"→同正常创建流程→橙色标记</td></tr>
     </table>
 
     <h3>业务规则</h3>
     <table>
       <tr><th style="width:30%">规则</th><th>说明</th></tr>
-      <tr><td>全检/抽检</td><td>无默认值必须选。全检→全选只读；抽检→手动勾选至少1个。切换时清空/全选</td></tr>
-      <tr><td>站房属性继承</td><td>编号从建设情况确认继承（只读）。柜体类型/PT形式/规模/位置在此补填</td></tr>
+      <tr><td>Step 1 站房核对</td><td>编号以蓝图为基准核对（点击行弹编辑框），可增删站房（✕删除+底部新增）。修改回写建设情况确认（单一数据源）。Step 2/3可回退编辑</td></tr>
+      <tr><td>检测范围</td><td>直接勾选站房，右上角"全选/取消全选"快捷按钮。全选=全检，部分选=抽检，不区分模式</td></tr>
+      <tr><td>首站房</td><td>全部站房中指定1个为首站房。首站房安措完成→开工会解锁。不进包裹</td></tr>
+      <tr><td>安措指派</td><td>勾选站房后随时可指派（不等设备配置）。仅限试验人员，工作负责人不可选自己。本地编辑，Step 2"下一步"确认派发后批量生效</td></tr>
       <tr><td>设备自动生成</td><td>选柜体类型后触发。开关站默认：中置柜(进/出/段各1)+断路器+PT+高压电缆。空壳显示"待配置"蓝标</td></tr>
-      <tr><td>柜体类型切换</td><td>已有已配置设备时二次确认（切换将清空设备）</td></tr>
+      <tr><td>柜体类型切换</td><td>独立数据维度，切换不清空已配置设备。用户可自行增删调整</td></tr>
       <tr><td>空壳校验</td><td>提交时空壳设备必须删除或配置完成，否则阻断提交</td></tr>
       <tr><td>分段柜独有字段</td><td>母联类型（分段隔离柜/双分段柜）+连接方式（电缆/铜排）+联锁方式（机械锁/程序锁），影响试验项</td></tr>
-      <tr><td>安措执行人</td><td>提交站房时单选1人（候选=仅试验人员，工作负责人不可选自己）。安措和检测分工并行解锁</td></tr>
-      <tr><td>撤回条件</td><td>站房状态=submitted或divided→可撤回；safety_doing及之后→不可撤回（引导增补）</td></tr>
+      <tr><td>撤回条件</td><td>未达testing→可撤回（V3.0直接执行无审批）；testing及之后→不可撤回（引导增补）</td></tr>
       <tr><td>增补</td><td>已提交站房始终可增补。标橙色"增补"标签，自动出现在检测分工待分工列表</td></tr>
-      <tr><td>设备删除</td><td>左滑+二次确认。已提交站房的设备不可删除（只读）</td></tr>
+      <tr><td>暂存</td><td>本地优先保存，不论网络状态数据不丢失。暂存不触发校验，不锁定站房</td></tr>
     </table>
 
     <h3>电缆/分支箱/表箱编号规则</h3>
@@ -397,15 +497,17 @@
 
     <h3>站房状态模型</h3>
     <p style="font-size:12px;color:#6B7280;line-height:1.8">
-      submitted（刚提交）→ divided（检测分工完成）→ safety_doing（安措进行中）→ testing（检测中）→ test_done（检测完成）<br>
-      撤回窗口：submitted/divided 可撤回 | safety_doing 及之后不可撤回
+      安措已指派 → 安措执行中 → 安措完成（安措轨道，Step 2派发后并行推进）<br>
+      已提交 → 已分工（设备轨道，Step 3提交后推进）<br>
+      三条件全满足（安措完成+分工完成+开工会完成）→ 检测中 → 检测完成<br>
+      撤回窗口：testing之前全部可撤回 | testing及之后不可撤回（实测数据不可逆）
     </p>
 
     <h3>版本边界</h3>
     <table>
       <tr><th style="width:35%">能力</th><th>V3.0</th><th>V3.1</th></tr>
       <tr><td>站房属性</td><td>7字段精简</td><td>按需扩展</td></tr>
-      <tr><td>设备生成规则</td><td>行业默认（数据中台可配）</td><td>按地区/项目类型差异化</td></tr>
+      <tr><td>设备生成规则</td><td>行业默认（数据配置模块可配）</td><td>按地区/项目类型差异化</td></tr>
       <tr><td>撤回</td><td>直接撤回无审批</td><td>新增审批节点</td></tr>
       <tr><td>编号校验</td><td>不做（编号规则复杂，待完整梳理）</td><td>同类型内唯一校验</td></tr>
       <tr><td>铭牌信息</td><td>不在此阶段收集</td><td>同（检测执行时收集）</td></tr>
@@ -427,7 +529,7 @@
     <h3>低代码组件映射</h3>
     <table>
       <tr><th>UI元素</th><th>组件</th><th>状态</th></tr>
-      <tr><td>Step 1 全检/抽检 Segmented</td><td>MetaSegmented</td><td>✅</td></tr>
+      <tr><td>Step 2 站房勾选列表+全选</td><td>MetaCheckboxMultiple</td><td>✅</td></tr>
       <tr><td>Step 1 站房勾选列表</td><td>MetaCheckboxMultiple</td><td>✅</td></tr>
       <tr><td>Step 2 站房Tab切换</td><td>MetaTabs</td><td>✅</td></tr>
       <tr><td>站房属性chip字段</td><td>MetaCheckbox(radio)</td><td>✅</td></tr>
@@ -459,7 +561,7 @@
       <tr><td>110 表箱</td><td>单一类型</td></tr>
     </table>
 
-    <h3>默认设备生成规则（数据中台可配）</h3>
+    <h3>默认设备生成规则（数据配置模块可配）</h3>
     <table>
       <tr><th>站房类型</th><th>默认生成</th></tr>
       <tr><td>开关站（中置式）</td><td>中置柜(进+出+段各1) + 断路器1 + PT1 + 高压电缆1</td></tr>
@@ -498,38 +600,50 @@
   </div>
 </div>
 
-<!-- 站房提交弹窗（含安措分工） -->
-<div class="cd-mask" id="submitMask">
-  <div class="cd-box" style="width:300px;text-align:left;">
-    <h3 style="text-align:center;" id="submitTitle">提交站房</h3>
-    <p style="font-size:13px;color:var(--g600);margin-bottom:12px;" id="submitDevCount"></p>
-    <div style="font-size:13px;font-weight:600;color:var(--g700);margin-bottom:8px;">安措执行人（选1人）</div>
-    <div id="submitPersonList" style="margin-bottom:16px;"></div>
-    <p style="font-size:11px;color:var(--g400);margin-bottom:16px;">提交后该站房的安措和检测分工可同时开展</p>
-    <div class="cd-btns">
-      <button class="btn btn-outline" onclick="closeSubmitDialog()">取消</button>
-      <button class="btn btn-primary" id="submitOkBtn" onclick="doSubmit()">确认提交</button>
-    </div>
+<!-- 站房提交弹窗已改为使用通用 showDialog()，安措在Step 1独立指派 -->
+
+<!-- 安措执行人指派 Bottom Sheet -->
+<div class="cd-mask" id="safetySh" style="align-items:flex-end;">
+  <div style="width:100%;max-width:360px;background:#fff;border-radius:16px 16px 0 0;padding:16px 16px 24px;animation:shUp .2s ease-out;">
+    <div style="font-size:14px;font-weight:600;text-align:center;margin-bottom:4px;color:var(--g700);">指派安措执行人</div>
+    <div style="font-size:12px;text-align:center;color:var(--g500);margin-bottom:12px;" id="safetyShSub"></div>
+    <div id="safetyShList"></div>
+    <div style="margin-top:8px;padding:14px;text-align:center;font-size:14px;color:var(--g500);cursor:pointer;border-top:1px solid var(--g200);" onclick="document.getElementById('safetySh').classList.remove('show')">取消</div>
+  </div>
+</div>
+
+<!-- Step 1 新增站房 Bottom Sheet（复用建设情况确认UI） -->
+<div class="cd-mask" id="s0AddSh" style="align-items:flex-end;">
+  <div style="width:100%;max-width:360px;background:#fff;border-radius:16px 16px 0 0;padding:16px 16px 24px;animation:shUp .2s ease-out;">
+    <div style="font-size:14px;font-weight:600;text-align:center;margin-bottom:12px;color:var(--g700);">选择站房类型</div>
+    <div style="padding:14px;border-bottom:1px solid var(--g100);font-size:14px;color:var(--g700);cursor:pointer;display:flex;align-items:center;gap:10px;" onclick="doS0Add('100')"><span style="width:8px;height:8px;border-radius:50%;background:#3B82F6;flex-shrink:0;"></span>开关站</div>
+    <div style="padding:14px;border-bottom:1px solid var(--g100);font-size:14px;color:var(--g700);cursor:pointer;display:flex;align-items:center;gap:10px;" onclick="doS0Add('101')"><span style="width:8px;height:8px;border-radius:50%;background:#D97706;flex-shrink:0;"></span>配电室</div>
+    <div style="padding:14px;border-bottom:1px solid var(--g100);font-size:14px;color:var(--g700);cursor:pointer;display:flex;align-items:center;gap:10px;" onclick="doS0Add('102')"><span style="width:8px;height:8px;border-radius:50%;background:#6366F1;flex-shrink:0;"></span>合建开关站</div>
+    <div style="padding:14px;font-size:14px;color:var(--g700);cursor:pointer;display:flex;align-items:center;gap:10px;" onclick="doS0Add('103')"><span style="width:8px;height:8px;border-radius:50%;background:#6B7280;flex-shrink:0;"></span>箱式变电站</div>
+    <div style="margin-top:8px;padding:14px;text-align:center;font-size:14px;color:var(--g500);cursor:pointer;border-top:1px solid var(--g200);" onclick="document.getElementById('s0AddSh').classList.remove('show')">取消</div>
   </div>
 </div>
 
 <script>
 // ===== Data =====
+// name = 纯编号部分（如"1#"），类型后缀由type code即时拼接显示（与建设情况确认一致）
+const tlMap = {'100':'开关站','101':'配电室','102':'合建站','103':'箱变'};
+function stationDisplay(s) { return s.name + tlMap[s.type]; } // 显示用拼接
 const stations = [
-  { id:1, name:'1#开关站', type:'100', tl:'开关站', checked:false },
-  { id:2, name:'2#开关站', type:'100', tl:'开关站', checked:false },
-  { id:3, name:'1#配电室', type:'101', tl:'配电室', checked:false },
-  { id:4, name:'2#配电室', type:'101', tl:'配电室', checked:false },
-  { id:5, name:'3#配电室', type:'101', tl:'配电室', checked:false },
-  { id:6, name:'4#箱变',   type:'103', tl:'箱变',   checked:false },
+  { id:1, name:'1#', type:'100', tl:'开关站', checked:false },
+  { id:2, name:'2#', type:'100', tl:'开关站', checked:false },
+  { id:3, name:'1#', type:'101', tl:'配电室', checked:false },
+  { id:4, name:'2#', type:'101', tl:'配电室', checked:false },
+  { id:5, name:'3#', type:'101', tl:'配电室', checked:false },
+  { id:6, name:'4#', type:'103', tl:'箱变',   checked:false },
 ];
 const roomData = {};   // {stationId: {number,hvType,ptType,hvScale,ringScale,pos,ugLayers}}
 const devData = {};    // {stationId: {setCode: [{name,sub,configured,trials,isSupp}]}}
 const submitted = {};  // {stationId: true}
 const stationStatus = {}; // {stationId: 'submitted'|'divided'|'safety_doing'|'testing'...} 模拟站房级状态
-let curStep = 1, curTab = 0;
+let curStep = 0, curTab = 0;
 let editCtx = null;    // {stationId, setCode, label, curSub, segType, editIndex, isSupplement}
-let inspType = null;   // null | 'all' | 'sample'
+// inspType removed — 不再区分全检/抽检模式，全选=全检
 
 // 根据站房类型+柜体类型动态获取设备模板（参照V2.4 conf_station_room_type_and_test_obj_type_mapping）
 function getDevTpls(s, r) {
@@ -606,16 +720,119 @@ function showToast(msg, type) {
 function getChecked() { return stations.filter(s=>s.checked); }
 
 // ===== Step Nav =====
+let step0Confirmed = false;
+let step1Confirmed = false; // Step 2(检测范围)是否已确认进入过Step 3
+
 function goStep(n) {
+  // 前进时校验
+  if (n===1 && curStep===0) { step0Confirmed = true; }
+  if (n===1 && !step0Confirmed && curStep!==1) { showToast('请先完成站房核对','error'); return; }
   if (n===2 && !getChecked().length) { showToast('请先勾选抽中站房','error'); return; }
+  // 回退到Step 1时解锁编辑
+  if (n===0 && curStep > 0) { step0Confirmed = false; step1Confirmed = false; }
+  // 进入Step 3时标记Step 2已确认
+  if (n===2 && curStep===1) { step1Confirmed = true; }
   curStep = n;
   document.querySelectorAll('.step-content').forEach(e=>e.classList.remove('active'));
   document.getElementById('step'+n).classList.add('active');
-  const sp1=document.getElementById('sp1'), sp2=document.getElementById('sp2'), sc=document.getElementById('sc1');
-  if (n===1) { sp1.className='step-pill active'; sp2.className='step-pill pending'; sc.className='step-conn'; }
-  else { sp1.className='step-pill done'; sp2.className='step-pill active'; sc.className='step-conn done'; initStep2(); }
+  const sp0=document.getElementById('sp0'), sp1=document.getElementById('sp1'), sp2=document.getElementById('sp2');
+  const sc0=document.getElementById('sc0'), sc1=document.getElementById('sc1');
+  if (n===0) { sp0.className='step-pill active'; sp1.className='step-pill pending'; sp2.className='step-pill pending'; sc0.className='step-conn'; sc1.className='step-conn'; renderS0(); }
+  else if (n===1) {
+    sp0.className='step-pill done'; sp1.className='step-pill active'; sp2.className='step-pill pending'; sc0.className='step-conn done'; sc1.className='step-conn';
+    renderS1(); // Step 2始终可编辑（首次进入/从Step 3回退均可操作）
+  }
+  else { sp0.className='step-pill done'; sp1.className='step-pill done'; sp2.className='step-pill active'; sc0.className='step-conn done'; sc1.className='step-conn done'; initStep2(); }
 }
-function goBack() { if(curStep>1) goStep(1); }
+function goBack() {
+  if (curStep===2) goStep(1); // Step 3→Step 2：可编辑
+  else if (curStep===1 && !step1Confirmed) goStep(0); // Step 2→Step 1：可编辑（仅首次派发前）
+  // Step 2已派发后，上一步不回Step 1（改站房代价太大，走撤回机制）
+}
+// renderS1ReadOnly removed — Step 3回退到Step 2始终可编辑
+
+// ===== Step 0: 站房信息核对 =====
+let firstStationId = null; // 首站房ID
+function renderS0() {
+  const list = document.getElementById('s0List');
+  const typeMap = {'100':'开关站','101':'配电室','102':'合建站','103':'箱变'};
+  const sufMap = {'100':'开关站','101':'配电室','102':'合建站','103':'箱变'};
+  let html = '<div class="s0-list">';
+  stations.forEach((s,i) => {
+    html += `
+    <div class="s0-row">
+      <div class="s0-num" onclick="s0EditNum(${i})" title="点击修改编号">
+        <span class="s0-val">${s.name}</span>
+      </div>
+      <span class="s0-suf">${sufMap[s.type]||''}</span>
+      <div class="s0-space"></div>
+      <div class="s0-del-btn" onclick="s0Delete(${i})" title="删除">✕</div>
+    </div>`;
+  });
+  html += '</div>';
+  list.innerHTML = html;
+}
+function s0EditNum(i) {
+  const s = stations[i];
+  const tlMap = {'100':'开关站','101':'配电室','102':'合建站','103':'箱变'};
+  const suffix = tlMap[s.type] || '';
+  document.getElementById('cdTitle').textContent = '修改站房编号';
+  document.getElementById('cdMsg').innerHTML =
+    `<div style="font-size:12px;color:var(--g500);margin-bottom:8px;line-height:1.6;">当前：${s.name}${suffix}<br>📐 <b>以蓝图编号为基准</b>，对照施工单位提供的蓝图核对。编号=数字+符号（如"1#"→"P1号"），类型后缀"${suffix}"不在此修改</div>` +
+    `<input class="field-input" id="s0NumInput" value="${s.name}" placeholder="例：1#、P1号、A1-" style="font-size:16px;">`;
+  const okBtn = document.getElementById('cdOkBtn');
+  okBtn.textContent = '确认';
+  okBtn.style.display = '';
+  okBtn.setAttribute('onclick', 'execDialog()');
+  dialogCallback = () => {
+    const val = document.getElementById('s0NumInput')?.value?.trim();
+    if (!val) { showToast('请输入编号','error'); return; }
+    // 同类型编号唯一性检查
+    const dup = stations.find((x,j) => j!==i && x.type===s.type && x.name===val);
+    if (dup) { showToast(`编号「${val}」在${suffix}中已存在`,'error'); return; }
+    stations[i].name = val;
+    renderS0();
+    showToast(`编号已确认为 ${val}${suffix}`,'ok');
+  };
+  document.getElementById('cdMask').classList.add('show');
+  setTimeout(() => { const inp = document.getElementById('s0NumInput'); inp?.focus(); inp?.select(); }, 200);
+}
+function s0EditName(i, val) { stations[i].name = val.trim() || stations[i].name; }
+function s0EditType(i, type) {
+  const tlMap = {'100':'开关站','101':'配电室','102':'合建站','103':'箱变'};
+  stations[i].type = type; stations[i].tl = tlMap[type] || type;
+  renderS0();
+}
+function s0Delete(i) {
+  if (stations.length <= 1) { showToast('至少保留一个站房','error'); return; }
+  showDialog('删除站房', `确定删除"${stationDisplay(stations[i])}"？该站房的全部抽检配置将被清除。`, '确认删除', () => {
+    const sid = stations[i].id;
+    stations.splice(i, 1);
+    delete roomData[sid]; delete devData[sid]; delete submitted[sid];
+    if (firstStationId === sid) firstStationId = null;
+    renderS0();
+    showToast('已删除', 'ok');
+  });
+}
+function s0AddStation() {
+  document.getElementById('s0AddSh').classList.add('show');
+}
+function doS0Add(typeCode) {
+  document.getElementById('s0AddSh').classList.remove('show');
+  const nextId = Date.now();
+  const count = stations.filter(s => s.type === typeCode).length;
+  const newStation = { id: nextId, name: (count+1) + '#', type: typeCode, tl: tlMap[typeCode], checked: false };
+  stations.push(newStation);
+  renderS0();
+  // 自动滚动到新站房+弹出编号编辑（与建设情况确认一致）
+  setTimeout(() => s0EditNum(stations.length - 1), 300);
+}
+function finishStep0() {
+  if (stations.length === 0) { showToast('至少保留一个站房','error'); return; }
+  step0Confirmed = true;
+  showToast('站房列表已确认','ok');
+  goStep(1);
+}
 
 // ===== Dialog Utility =====
 let dialogCallback = null;
@@ -628,53 +845,114 @@ function showDialog(title, msg, okText, onOk) {
   okBtn.setAttribute('onclick', 'execDialog()');
   document.getElementById('cdMask').classList.add('show');
 }
-function execDialog() { closeDialog(); if (dialogCallback) dialogCallback(); }
+function execDialog() { const cb = dialogCallback; closeDialog(); if (cb) cb(); }
 function closeDialog() { document.getElementById('cdMask').classList.remove('show'); dialogCallback = null; }
 
-// ===== Inspection Type =====
-function setInspType(type) {
-  inspType = type;
-  document.getElementById('typeAll').className = 's1-type-btn' + (type==='all'?' sel':'');
-  document.getElementById('typeSample').className = 's1-type-btn' + (type==='sample'?' sel':'');
-  const hint = document.getElementById('s1Hint');
-  const list = document.getElementById('s1List');
-  if (type==='all') {
-    stations.forEach(s => s.checked = true);
-    hint.textContent = '全检模式：全部站房参与检测';
-    hint.className = 's1-hint';
-    list.className = 's1-list';
-    renderS1();
-  } else {
-    stations.forEach(s => s.checked = false);
-    hint.textContent = '根据供电公司抽检规则，勾选需要检测的站房';
-    hint.className = 's1-hint';
-    list.className = 's1-list';
-    renderS1();
-  }
+// ===== 全选/取消全选 =====
+function toggleSelectAll() {
+  const allChecked = stations.every(s => s.checked);
+  stations.forEach(s => s.checked = !allChecked);
+  if (allChecked) { firstStationId = null; Object.keys(safetyAssign).forEach(k => delete safetyAssign[k]); }
+  renderS1();
 }
 
 // ===== Step 1 =====
+const crewMembers = ['张三','李四','王五','赵六']; // 试验人员候选池
+const safetyAssign = {}; // {stationId: '张三'}
+
 function renderS1() {
   const list = document.getElementById('s1List');
-  const isAll = inspType==='all';
-  list.innerHTML = stations.map((s,i) => `
-    <div class="s1-row ${s.checked?'checked':''}" onclick="${isAll?'':('toggleS('+i+')')}" style="${isAll?'cursor:default;opacity:.7;':''}">
-      <div class="s1-cb"></div>
-      <span class="s1-name">${s.name}</span>
-      <span class="s1-type">${s.tl}</span>
-    </div>`).join('');
+  list.innerHTML = stations.map((s,i) => {
+    const isFirst = firstStationId === s.id;
+    const assigned = safetyAssign[s.id];
+    return `
+    <div class="s1-row ${s.checked?'checked':''}">
+      <div class="s1-cb" onclick="toggleS(${i})"></div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span class="s1-name" onclick="toggleS(${i})">${stationDisplay(s)}</span>
+          ${isFirst?'<span class="s1-first-tag">首站房</span>':''}
+        </div>
+        ${s.checked?`<div class="s1-actions">
+          <div class="s1-safety-btn ${assigned?'assigned':''}" onclick="event.stopPropagation();assignSafety(${s.id})">
+            <span>${assigned?'✓ 安措执行人：'+assigned:'点击指派安措执行人'}</span>
+            <span class="s1-sb-arrow">${assigned?'':'→'}</span>
+          </div>
+          <span class="s1-first-link ${isFirst?'active':''}" onclick="event.stopPropagation();setFirstStation(${s.id})">${isFirst?'★ 已设为首站房':'设为首站房'}</span>
+        </div>`:''}
+      </div>
+    </div>`;
+  }).join('');
   const cnt = stations.filter(s=>s.checked).length;
-  document.getElementById('s1Count').textContent = `已选 ${cnt} 个站房` + (isAll?' (全检)':'');
+  const allChecked = cnt === stations.length;
+  document.getElementById('s1Count').textContent = `已选 ${cnt} 个站房`;
+  document.getElementById('s1SelectAll').textContent = allChecked ? '取消全选' : '全选';
 }
 function toggleS(i) {
-  if (inspType==='all') return;
   stations[i].checked = !stations[i].checked;
+  if (!stations[i].checked && firstStationId === stations[i].id) firstStationId = null;
+  if (!stations[i].checked) delete safetyAssign[stations[i].id];
+  // 仅1个站房被勾选时自动设为首站房
+  const checked = getChecked();
+  if (checked.length === 1 && !firstStationId) firstStationId = checked[0].id;
+  renderS1();
+}
+function setFirstStation(sid) {
+  firstStationId = sid;
+  renderS1();
+  const s = stations.find(x=>x.id===sid);
+  showToast(`${stationDisplay(s)} 已设为首站房`, 'ok');
+}
+function assignSafety(sid) {
+  const s = stations.find(x=>x.id===sid);
+  const current = safetyAssign[sid];
+  document.getElementById('safetyShSub').textContent = stationDisplay(s);
+  document.getElementById('safetyShList').innerHTML = crewMembers.map(m =>
+    `<div style="padding:14px;border-bottom:1px solid var(--g100);font-size:14px;color:var(--g700);cursor:pointer;display:flex;align-items:center;gap:10px;" onclick="doAssignSafety(${sid},'${m}')">` +
+    (m===current ? `<span style="color:var(--pri-d);font-weight:700;">✓</span>` : `<span style="width:14px;"></span>`) +
+    `<span${m===current?' style="color:var(--pri-d);font-weight:600;"':''}>${m}</span></div>`
+  ).join('');
+  document.getElementById('safetySh').classList.add('show');
+}
+function doAssignSafety(sid, name) {
+  safetyAssign[sid] = name;
+  document.getElementById('safetySh').classList.remove('show');
+  const s = stations.find(x=>x.id===sid);
+  showToast(`${stationDisplay(s)} → ${name}`, 'ok');
   renderS1();
 }
 function finishStep1() {
-  if (!inspType) { showToast('请先选择检测类型','error'); return; }
   if (!getChecked().length) { showToast('请至少选择一个站房','error'); return; }
-  goStep(2);
+  if (!firstStationId) { showToast('请指定一个首站房','error'); return; }
+  const unassigned = getChecked().filter(s => !safetyAssign[s.id]);
+  if (unassigned.length > 0) {
+    showToast(`还有 ${unassigned.length} 个站房未指派安措执行人`,'error');
+    return;
+  }
+  // 弹出派发确认弹窗
+  const checked = getChecked();
+  const firstS = stations.find(x=>x.id===firstStationId);
+  let summary = checked.map(s =>
+    `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--g100);font-size:14px;">
+      <span style="color:var(--g800);">${stationDisplay(s)}${s.id===firstStationId?' <span style="font-size:11px;color:#92400E;background:#FEF3C7;padding:1px 6px;border-radius:8px;">首站房</span>':''}</span>
+      <span style="color:var(--g600);">→ ${safetyAssign[s.id]}</span>
+    </div>`
+  ).join('');
+  const isUpdate = step1Confirmed; // 是否是从Step 3回退后的重新派发
+  document.getElementById('cdTitle').textContent = isUpdate ? '确认更新安措派发' : '确认派发安措任务';
+  document.getElementById('cdMsg').innerHTML =
+    `<div style="margin-bottom:12px;">${summary}</div>` +
+    `<div style="font-size:12px;color:var(--g500);line-height:1.6;">${isUpdate?'确认后将更新安措派发，变更的执行人将收到新任务通知。':'确认后安措任务将立即派发，'}${checked.map(s=>safetyAssign[s.id]).filter((v,i,a)=>a.indexOf(v)===i).join('、')}可开始执行安措工作。</div>`;
+  const okBtn = document.getElementById('cdOkBtn');
+  okBtn.textContent = isUpdate ? '确认更新' : '确认派发';
+  okBtn.style.display = '';
+  okBtn.setAttribute('onclick', 'execDialog()');
+  dialogCallback = () => {
+    step1Confirmed = true;
+    showToast(isUpdate ? '安措派发已更新' : '安措任务已派发', 'ok');
+    goStep(2);
+  };
+  document.getElementById('cdMask').classList.add('show');
 }
 
 // ===== Step 2 =====
@@ -696,7 +974,8 @@ function renderS2() {
   document.getElementById('s2Tabs').innerHTML = checked.map((s,i) => {
     const isSub = submitted[s.id];
     const cls = isSub ? 'submitted' : i===curTab ? 'active' : '';
-    return `<div class="s2-tab ${cls}" onclick="switchTab(${i})">${isSub?'<span class="tick">🔒</span>':''}${s.name}</div>`;
+    const isFirst = firstStationId === s.id;
+    return `<div class="s2-tab ${cls}" onclick="switchTab(${i})">${isSub?'<span class="tick">🔒</span>':''}${stationDisplay(s)}${isFirst?' ★':''}</div>`;
   }).join('');
   renderDetail(checked[curTab]);
   document.getElementById('submitBtn').textContent = submitted[checked[curTab]?.id] ? '已提交 ✓' : '提交此站房';
@@ -709,7 +988,15 @@ function renderDetail(s) {
   const r = roomData[s.id] || {};
   const body = document.getElementById('s2Body');
   const dis = submitted[s.id] ? 'pointer-events:none;opacity:.6;' : '';
-  let h = `<div style="${dis}">`;
+  const isFirst = firstStationId === s.id;
+  const assigned = safetyAssign[s.id];
+  let h = '';
+  // 站房信息横幅（所有站房统一展示，保持一致）
+  h += `<div style="margin:4px 12px;padding:8px 12px;background:var(--g50);border-radius:var(--rs);font-size:12px;color:var(--g600);display:flex;justify-content:space-between;">`;
+  h += `<span>${isFirst?'★ 首站房':'非首站房'}</span>`;
+  h += `<span>安措执行人：${assigned||'—'}</span>`;
+  h += `</div>`;
+  h += `<div style="${dis}">`;
 
   // ---- Station info section (V3.0设计：精简字段，继承建设情况确认数据) ----
   h += `<div class="section-divider">站房属性</div>`;
@@ -826,21 +1113,15 @@ function chipField(sid, label, key, opts, val, req) {
 function setR(sid, key, val) {
   if (!roomData[sid]) roomData[sid]={};
   roomData[sid][key] = val;
-  // 联动清除：柜体类型切换时清空PT形式 + 重新生成设备列表
+  // 联动清除：柜体类型切换时清空PT形式（柜体类型是独立数据维度，不清空已配置设备）
   if (key==='hvType') {
     if (val!=='100') delete roomData[sid].ptType;
-    // 如果已有已配置设备，弹确认框
+    // 柜体类型切换不清空已有设备（2026-04-16决策），仅在无设备时自动生成空壳
     const existingDevs = devData[sid] || {};
-    const configuredCount = Object.values(existingDevs).flat().filter(d=>d.configured).length;
-    if (configuredCount > 0) {
-      const savedVal = val;
-      showDialog('切换柜体类型', `将清空已配置的 ${configuredCount} 个设备，确认切换？`, '确认切换', () => {
-        autoGenDevices(sid);
-        renderS2();
-      });
-      return; // 等用户确认后再重建
+    const hasAnyDevs = Object.values(existingDevs).some(arr => arr.length > 0);
+    if (!hasAnyDevs) {
+      autoGenDevices(sid); // 首次选择柜体类型时自动生成空壳设备
     }
-    autoGenDevices(sid); // 柜体类型决定设备列表
   }
   // 联动清除：建设位置切换为地面时清空地下层数
   if (key==='pos' && val==='100') { delete roomData[sid].ugLayers; }
@@ -883,12 +1164,21 @@ function openDevPage(stationId, setCode, label, devIndex) {
   document.querySelector('.nbar .back').setAttribute('onclick', 'closeDevPage()');
   document.querySelector('.step-bar').style.display = 'none';
   // 面包屑（仅补充站房名，标题已有设备类型信息）
-  document.getElementById('devBreadcrumb').textContent = `${s.name}`;
+  document.getElementById('devBreadcrumb').textContent = stationDisplay(s);
   document.getElementById('devBreadcrumb').style.display = 'block';
   renderDevPage();
 }
 
-function closeDevPage() {
+function closeDevPage(force) {
+  // 检查是否有未保存的修改（编辑过编号或试验项）
+  if (!force && devPageDirty) {
+    showDialog('当前修改未保存', '退出后修改将丢失，确定放弃？', '放弃修改', () => {
+      devPageDirty = false;
+      closeDevPage(true);
+    });
+    return;
+  }
+  devPageDirty = false;
   document.getElementById('devPage').classList.remove('active');
   document.getElementById('step2').classList.add('active');
   document.querySelector('.nbar .title').textContent = '抽检对象确认';
@@ -897,6 +1187,7 @@ function closeDevPage() {
   document.getElementById('devBreadcrumb').style.display = 'none';
   renderS2();
 }
+let devPageDirty = false; // 设备配置页是否有未保存修改
 
 function renderDevPage() {
   const { stationId, setCode, curSub, segType, editIndex } = editCtx;
@@ -1046,9 +1337,10 @@ function getTrialItems(setCode, curSub, segType) {
   return trials[setCode] || ['外观检查','装配检查'];
 }
 
-function devSubChange(sub) { editCtx.curSub = sub; editCtx.segType = null; renderDevPage(); }
-function devSegChange(code) { editCtx.segType = code; renderDevPage(); }
+function devSubChange(sub) { devPageDirty = true; editCtx.curSub = sub; editCtx.segType = null; renderDevPage(); }
+function devSegChange(code) { devPageDirty = true; editCtx.segType = code; renderDevPage(); }
 function devChipSel(el) {
+  devPageDirty = true;
   const g = el.dataset.g;
   if (g) { el.parentElement.querySelectorAll(`.chip-opt[data-g="${g}"]`).forEach(c=>c.classList.remove('sel')); }
   else { el.parentElement.querySelectorAll('.chip-opt').forEach(c=>c.classList.remove('sel')); }
@@ -1056,11 +1348,13 @@ function devChipSel(el) {
 }
 
 function devTrialToggle(i) {
+  devPageDirty = true;
   devPageTrials[i].on = !devPageTrials[i].on;
   const rows = document.querySelectorAll('#devBody .trial-row');
   rows[i]?.classList.toggle('on');
 }
 function devTrialAll(on) {
+  devPageDirty = true;
   devPageTrials.forEach(t => t.on = on);
   document.querySelectorAll('#devBody .trial-row').forEach(r => { on ? r.classList.add('on') : r.classList.remove('on'); });
 }
@@ -1103,54 +1397,21 @@ function submitStation() {
     showToast(`还有 ${unconfigured.length} 个设备未配置，请完成配置或删除后再提交`, 'error');
     return;
   }
-  // 打开含安措分工的提交弹窗
-  pendingSubmitStation = s;
-  selectedExecutor[s.id] = selectedExecutor[s.id] || null;
-  document.getElementById('submitTitle').textContent = s.name + ' — 提交确认';
-  document.getElementById('submitDevCount').textContent = '已确认检测对象：' + total + ' 台设备';
-  renderPersonList(s.id);
-  document.getElementById('submitMask').classList.add('show');
-}
-
-function renderPersonList(stationId) {
-  const list = document.getElementById('submitPersonList');
-  const sel = selectedExecutor[stationId];
-  let html = '';
-  // 候选人=仅试验人员（工作负责人不可选自己，执行-确认异体分离）
-  teamMembers.forEach(p => {
-    html += `<div class="person-radio" onclick="pickExecutor('${stationId}','${p.id}')">
-      <div class="pr-dot ${sel===p.id?'on':''}"></div>
-      <div class="pr-name">${p.name}</div>
-    </div>`;
-  });
-  list.innerHTML = html;
-  // 更新确认按钮状态
-  document.getElementById('submitOkBtn').disabled = !sel;
-  document.getElementById('submitOkBtn').style.opacity = sel ? '1' : '.4';
-}
-
-function pickExecutor(stationId, personId) {
-  selectedExecutor[stationId] = personId;
-  renderPersonList(stationId);
-}
-
-function closeSubmitDialog() {
-  document.getElementById('submitMask').classList.remove('show');
-  pendingSubmitStation = null;
-}
-
-function doSubmit() {
-  const s = pendingSubmitStation;
-  if (!s) return;
-  const sel = selectedExecutor[s.id];
-  if (!sel) { showToast('请选择安措执行人','error'); return; }
-  submitted[s.id] = true;
-  stationStatus[s.id] = 'submitted';
-  document.getElementById('submitMask').classList.remove('show');
-  const execName = teamMembers.find(p=>p.id===sel)?.name || sel;
-  showToast(`${s.name} 已提交，安措执行人：${execName}`, 'ok');
-  pendingSubmitStation = null;
-  renderS2();
+  // 安措已在Step 1独立指派，提交弹窗仅展示设备数量+安措状态
+  const assigned = safetyAssign[s.id];
+  const safetyStatus = assigned ? `安措执行人：${assigned}（已派发）` : '安措：未指派';
+  const isFirst = firstStationId === s.id;
+  showDialog(
+    `提交 ${stationDisplay(s)}${isFirst?' ★首站房':''}`,
+    `已创建 ${total} 台设备。\n${safetyStatus}\n\n提交后该站房设备将锁定，检测分工可开始操作。`,
+    '确认提交',
+    () => {
+      submitted[s.id] = true;
+      stationStatus[s.id] = 'submitted';
+      showToast(`${stationDisplay(s)} 已提交，检测分工已解锁`, 'ok');
+      renderS2();
+    }
+  );
 }
 
 // ===== 左滑删除（触屏+鼠标兼容） =====
@@ -1189,10 +1450,10 @@ function recallStation(sid) {
     return;
   }
   const s = stations.find(x=>x.id===sid);
-  showDialog('撤回站房', `确认撤回 ${s.name}？撤回后该站房将回到可编辑状态，已生成的检测分工将被清除。`, '确认撤回', () => {
+  showDialog('撤回站房', `确认撤回 ${stationDisplay(s)}？撤回后该站房将回到可编辑状态，已生成的检测分工将被清除。`, '确认撤回', () => {
     submitted[sid] = false;
     delete stationStatus[sid];
-    showToast(`${s.name} 已撤回，可重新编辑`, 'ok');
+    showToast(`${stationDisplay(s)} 已撤回，可重新编辑`, 'ok');
     renderS2();
   });
 }
@@ -1212,7 +1473,7 @@ function supplementDevice(sid) {
   };
   document.querySelector('#devPage').classList.add('active');
   document.getElementById('step2').classList.remove('active');
-  document.querySelector('.nbar .title').textContent = `增补设备 · ${s.name}`;
+  document.querySelector('.nbar .title').textContent = `增补设备 · ${stationDisplay(s)}`;
   document.querySelector('.nbar .back').setAttribute('onclick', 'closeDevPage()');
   document.querySelector('.step-bar').style.display = 'none';
 
@@ -1439,7 +1700,7 @@ function openCablePage(stationId, setCode, label, isSupplement) {
   document.querySelector('.nbar .title').textContent = `${label} · 批量创建`;
   document.querySelector('.nbar .back').setAttribute('onclick', 'closeCablePage()');
   document.querySelector('.step-bar').style.display = 'none';
-  document.getElementById('cableBreadcrumb').textContent = s.name;
+  document.getElementById('cableBreadcrumb').textContent = stationDisplay(s);
   document.getElementById('cableBreadcrumb').style.display = 'block';
   document.getElementById('cableCabinetInput').value = '';
   // 根据设备类型调整UI
@@ -1667,7 +1928,7 @@ function openSpecPage(stationId, setCode, names) {
   document.getElementById('locPage').classList.add('active');
   document.querySelector('.nbar .title').textContent = '电缆型号与规格';
   document.querySelector('.nbar .back').setAttribute('onclick', 'closeLocPage()');
-  document.getElementById('locBreadcrumb').textContent = s.name;
+  document.getElementById('locBreadcrumb').textContent = stationDisplay(s);
   document.getElementById('locBreadcrumb').style.display = 'block';
 
   let h = `<div class="loc-hint">每根电缆选择型号和规格</div>`;
@@ -1713,7 +1974,7 @@ function openLocPage(stationId, setCode, names) {
   document.getElementById('locPage').classList.add('active');
   document.querySelector('.nbar .title').textContent = '补充位置描述';
   document.querySelector('.nbar .back').setAttribute('onclick', 'closeLocPage()');
-  document.getElementById('locBreadcrumb').textContent = s.name;
+  document.getElementById('locBreadcrumb').textContent = stationDisplay(s);
   document.getElementById('locBreadcrumb').style.display = 'block';
 
   // 渲染列表
@@ -1769,8 +2030,8 @@ function closeLocPage() {
 // 柜号输入回车添加
 document.getElementById('cableCabinetInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') cableAddCabinet(); });
 
-// Init
-renderS1();
+// Init — start at Step 0
+renderS0();
 </script>
 </body>
 </html>
