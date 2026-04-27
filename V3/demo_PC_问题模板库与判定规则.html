@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>问题模板库与判定规则配置 — JET居配检测平台</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans SC',system-ui,sans-serif;background:#f0f2f5;color:#333;font-size:13px;min-height:100vh;display:flex}
+
+/* 左侧深色菜单栏 */
+.sidebar{width:220px;background:#001529;color:#a6adb4;flex-shrink:0;display:flex;flex-direction:column;height:100vh}
+.sidebar-logo{height:48px;display:flex;align-items:center;padding:0 20px;color:#fff;font-size:16px;font-weight:600;letter-spacing:1px;background:#002140;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.sidebar-menu{flex:1;overflow-y:auto;padding:16px 0}
+.sb-group{margin-bottom:16px}
+.sb-title{font-size:12px;color:#6c757d;padding:0 20px 8px;text-transform:uppercase;letter-spacing:1px}
+.sb-item{padding:12px 20px 12px 30px;font-size:13px;cursor:pointer;transition:all .2s;position:relative}
+.sb-item:hover{color:#fff}
+.sb-item.active{background:#1890ff;color:#fff}
+
+/* 右侧主体区 */
+.main-area{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.topbar{height:48px;background:#fff;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;padding:0 20px;flex-shrink:0}
+.breadcrumb{font-size:13px;color:#999}
+.breadcrumb b{color:#333;font-weight:500}
+.topbar-spacer{flex:1}
+.user-info{font-size:13px;color:#666}
+.content{flex:1;overflow-y:auto;padding:16px}
+.content::-webkit-scrollbar{width:6px}
+.content::-webkit-scrollbar-thumb{background:#ccc;border-radius:3px}
+.page-container{background:#fff;border-radius:2px;min-height:calc(100vh - 80px);display:flex;flex-direction:column}
+.page-tabs{display:flex;border-bottom:1px solid #e8e8e8;background:#fafafa;padding:6px 16px 0}
+.ptab{padding:8px 16px;background:#fff;border:1px solid #e8e8e8;border-bottom:none;border-radius:4px 4px 0 0;font-size:13px;color:#1890ff;margin-right:4px;display:flex;align-items:center;gap:8px}
+.ptab .close{color:#999;font-size:14px;cursor:pointer;line-height:1}
+.page-body{padding:20px;flex:1}
+
+/* 筛选区 + 按钮 */
+.filter-area{display:flex;flex-wrap:wrap;gap:12px 16px;margin-bottom:16px}
+.f-item{display:flex;align-items:center;font-size:13px;color:#666}
+.f-label{width:70px;text-align:right;margin-right:8px}
+.f-input,.f-select{border:1px solid #dcdfe6;border-radius:2px;padding:6px 10px;font-size:13px;outline:none;width:180px;background:#fff;height:30px;font-family:inherit}
+.f-input:focus,.f-select:focus{border-color:#1890ff}
+.filter-actions{display:flex;align-items:center;gap:8px;margin-left:8px}
+.action-bar{display:flex;gap:8px;margin-bottom:12px;padding-top:16px;border-top:1px dashed #eee}
+.btn{height:30px;padding:0 14px;border:1px solid #dcdfe6;border-radius:2px;font-size:13px;cursor:pointer;background:#fff;color:#333;transition:all .2s;display:flex;align-items:center;justify-content:center;font-family:inherit}
+.btn:hover{border-color:#1890ff;color:#1890ff}
+.btn-primary{background:#1890ff;color:#fff;border-color:#1890ff}
+.btn-primary:hover{background:#40a9ff;border-color:#40a9ff;color:#fff}
+.btn-danger{color:#f5222d;border-color:#f5222d}
+.btn-danger:hover{background:#fff1f0;color:#f5222d}
+
+/* 数据表格 */
+.data-table{width:100%;border-collapse:collapse;border-top:1px solid #e8e8e8;border-left:1px solid #e8e8e8}
+.data-table th,.data-table td{border-bottom:1px solid #e8e8e8;border-right:1px solid #e8e8e8;padding:8px 12px;text-align:left}
+.data-table th{background:#fafafa;font-weight:600;color:#333;font-size:12px;white-space:nowrap}
+.data-table td{font-size:12px;color:#666;vertical-align:middle}
+.data-table tbody tr:hover{background:#f5f7fa}
+.op-link{color:#1890ff;font-size:12px;cursor:pointer;margin-right:8px;text-decoration:none}
+.op-link:hover{text-decoration:underline}
+.op-link.danger{color:#f5222d}
+.pagination{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:16px;font-size:13px;color:#666}
+.pagination select{border:1px solid #dcdfe6;border-radius:2px;padding:2px 4px;height:24px;font-size:12px}
+.pg-btn{min-width:28px;height:28px;border:1px solid #dcdfe6;border-radius:2px;background:#fff;color:#666;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center}
+.pg-btn.active{background:#1890ff;border-color:#1890ff;color:#fff}
+
+/* 标签 */
+.lvl{display:inline-block;padding:1px 8px;border-radius:2px;font-size:11px;font-weight:500;border:1px solid transparent}
+.lvl.major{background:#fff1f0;color:#cf1322;border-color:#ffa39e}
+.lvl.minor{background:#fff7e6;color:#d46b08;border-color:#ffd591}
+.typ-tag{display:inline-block;padding:1px 6px;border-radius:2px;font-size:11px;background:#f5f5f5;color:#595959;border:1px solid #d9d9d9}
+.var-count{display:inline-block;background:#e6f7ff;color:#0050b3;padding:1px 6px;border-radius:10px;font-size:11px;font-weight:600}
+.ref-num{background:#e6fffb;color:#08979c;padding:2px 8px;border-radius:10px;font-weight:600;font-size:12px;cursor:help}
+
+/* 占位符 / 变量标签 */
+.ph-tag{display:inline-block;padding:1px 6px;border-radius:2px;font-size:12px;margin:0 1px;font-weight:500}
+.ph-tag.sys{background:#e6f7ff;color:#0050b3;border:1px dashed #91d5ff}
+.ph-tag.var{background:#f9f0ff;color:#722ed1;border:1px dashed #b37feb}
+
+/* 模态框 */
+.modal-mask{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center}
+.modal-mask.show{display:flex}
+.modal-box{background:#fff;border-radius:4px;width:760px;max-width:95vw;max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
+.modal-box.lg{width:900px}
+.modal-box.sm{width:560px}
+.modal-hd{height:48px;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;padding:0 20px;flex-shrink:0;background:#fafafa}
+.modal-hd h3{font-size:14px;font-weight:600;color:#303133;flex:1}
+.modal-close{border:none;background:none;font-size:18px;color:#909399;cursor:pointer;padding:4px 8px}
+.modal-bd{padding:20px;flex:1;overflow-y:auto}
+.modal-ft{padding:10px 16px;border-top:1px solid #e8e8e8;background:#fafafa;display:flex;justify-content:flex-end;gap:8px}
+
+/* 表单 */
+.fm-row{display:flex;gap:12px;margin-bottom:14px}
+.fm-grp{flex:1;display:flex;flex-direction:column;margin-bottom:14px}
+.fm-lbl{font-size:12px;color:#606266;margin-bottom:4px;font-weight:500}
+.fm-lbl .req{color:#f5222d;margin-right:2px}
+.fm-grp input,.fm-grp select,.fm-grp textarea{padding:6px 10px;border:1px solid #dcdfe6;border-radius:2px;font-size:13px;outline:none;font-family:inherit}
+.fm-grp textarea{min-height:60px;resize:vertical}
+.fm-grp input:focus,.fm-grp select:focus,.fm-grp textarea:focus{border-color:#1890ff}
+.radio-grp{display:flex;gap:14px}
+.radio-grp label{font-size:13px;color:#303133;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+
+/* 占位符面板（模板编辑器内） */
+.ph-panel{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+.ph-col{border:1px solid #e8e8e8;border-radius:2px;background:#fafafa;padding:10px;min-height:120px}
+.ph-col h5{font-size:12px;color:#606266;margin-bottom:8px;font-weight:600;display:flex;align-items:center;gap:6px}
+.ph-col h5 .badge{font-size:10px;background:#1890ff;color:#fff;padding:1px 6px;border-radius:8px;font-weight:500}
+.ph-col h5 .badge.purple{background:#722ed1}
+.ph-col p{font-size:11px;color:#909399;margin-bottom:8px;line-height:1.5}
+.ph-list{display:flex;flex-wrap:wrap;gap:4px}
+.ph-btn{padding:3px 8px;border-radius:2px;background:#fff;font-size:12px;cursor:pointer;border:1px dashed transparent;transition:all .15s}
+.ph-btn.sys{border-color:#91d5ff;color:#0050b3}
+.ph-btn.sys:hover{background:#e6f7ff}
+.ph-btn.var{border-color:#b37feb;color:#722ed1}
+.ph-btn.var:hover{background:#f9f0ff}
+.ph-btn .x{margin-left:4px;color:#f5222d;cursor:pointer}
+.add-var-row{margin-top:10px;display:flex;gap:6px;align-items:center}
+.add-var-row input{flex:1;padding:4px 8px;border:1px solid #dcdfe6;border-radius:2px;font-size:12px;outline:none}
+.add-var-row select{padding:4px 8px;border:1px solid #dcdfe6;border-radius:2px;font-size:12px;outline:none}
+.add-var-row button{padding:4px 10px;background:#1890ff;color:#fff;border:none;border-radius:2px;font-size:12px;cursor:pointer}
+
+/* 实时预览 */
+.preview-box{background:#f6ffed;border:1px solid #b7eb8f;border-radius:2px;padding:8px 12px;font-size:12px;color:#389e0d;margin-top:10px}
+.preview-box .lbl{font-size:11px;color:#52c41a;margin-bottom:4px;font-weight:600}
+
+/* 试验项规则配置 */
+.test-bar{background:#fff;padding:12px 16px;border:1px solid #e8e8e8;border-radius:2px;margin-bottom:12px;display:flex;align-items:center;gap:12px}
+.test-bar .lbl{font-size:12px;color:#606266}
+.di-card{background:#fff;border:1px solid #e8e8e8;border-radius:2px;margin-bottom:12px}
+.di-hd{background:#fafafa;padding:10px 16px;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;gap:10px;font-size:13px}
+.di-hd .di-name{font-weight:600;color:#303133}
+.di-hd .di-meta{color:#909399;font-size:12px;flex:1}
+.di-bd{padding:12px 16px}
+.rule-card{background:#fafafa;border:1px solid #e8e8e8;border-left:3px solid #1890ff;border-radius:2px;padding:12px;margin-bottom:10px}
+.rule-title{font-size:13px;font-weight:600;color:#303133;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.cond-builder{background:#fff;padding:6px 10px;border:1px dashed #d9d9d9;border-radius:2px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px;font-size:12px}
+.cond-pill{background:#f9f0ff;color:#722ed1;padding:2px 8px;border-radius:2px;font-size:12px;font-weight:500}
+.cond-builder select,.cond-builder input{padding:3px 8px;border:1px solid #e8e8e8;border-radius:2px;font-size:12px;outline:none}
+.cond-hint{font-size:11px;color:#909399;margin-left:6px}
+.cand-hint{font-size:12px;color:#606266;margin:6px 0 4px}
+.cand-list{padding:2px 0}
+.cand-item{display:flex;align-items:flex-start;gap:8px;padding:8px;font-size:12px;color:#606266;border-radius:2px;background:#fff;border:1px solid #f0f0f0;margin-bottom:6px}
+.cand-item .desc{flex:1}
+.cand-item .desc .id-line b{color:#303133}
+.cand-item .src-tag{display:inline-block;font-size:10px;padding:1px 5px;border-radius:2px;margin-left:4px;font-weight:500}
+.cand-item .src-tag.tpl{background:#f9f0ff;color:#722ed1;border:1px solid #b37feb}
+.cand-item .src-tag.preset{background:#fff7e6;color:#fa8c16;border:1px solid #ffd591}
+.cand-item .preview-line{color:#52c41a;font-size:12px;margin-top:4px;font-style:italic;background:#f6ffed;padding:4px 8px;border-radius:2px}
+.cand-item .binding-info{font-size:11px;color:#0050b3;margin-top:4px;background:#e6f7ff;padding:4px 8px;border-radius:2px}
+.cand-item .binding-info .bind-key{color:#722ed1;font-weight:600}
+.cand-item .binding-info .bind-val{color:#0050b3;font-weight:600}
+.add-cand{padding:8px 0 0;border-top:1px dashed #e8e8e8;margin-top:6px}
+.toggle-row{background:#e6f7ff;padding:6px 12px;border-radius:2px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#0050b3}
+.toggle{position:relative;width:32px;height:18px;background:#bfbfbf;border-radius:9px;cursor:pointer;transition:background .2s;flex-shrink:0}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;background:#fff;border-radius:50%;transition:transform .2s}
+.toggle.on{background:#1890ff}
+.toggle.on::after{transform:translateX(14px)}
+
+/* 绑定对话框（核心创新） */
+.bind-warning{background:#fffbe6;border:1px solid #ffe58f;border-radius:2px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#874d00}
+.bind-warning b{color:#fa8c16}
+.bind-section{margin-bottom:14px}
+.bind-section-title{font-size:12px;color:#303133;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.bind-info-card{background:#fafafa;border:1px solid #e8e8e8;border-radius:2px;padding:10px 12px;font-size:12px;color:#606266;line-height:1.7}
+.bind-info-card .row{display:flex;padding:2px 0}
+.bind-info-card .k{color:#909399;width:80px;flex-shrink:0}
+.bind-info-card .v{color:#303133;font-weight:500}
+.bind-row{background:#fff;border:1px solid #e8e8e8;border-radius:2px;padding:12px;margin-bottom:8px}
+.bind-row-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px}
+.bind-row-head .var-name{color:#722ed1;font-weight:600;font-family:monospace;background:#f9f0ff;padding:2px 8px;border-radius:2px;border:1px dashed #b37feb}
+.bind-row-head .var-type{font-size:11px;color:#909399;background:#f5f5f5;padding:1px 6px;border-radius:2px}
+.bind-options{display:flex;flex-direction:column;gap:5px;padding-left:8px}
+.bind-option{display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer}
+.bind-option input[type=radio]{cursor:pointer}
+.bind-option select,.bind-option input[type=text]{padding:3px 8px;border:1px solid #dcdfe6;border-radius:2px;font-size:12px;outline:none}
+.bind-option .opt-label{color:#606266}
+.bind-option.active .opt-label{color:#303133;font-weight:500}
+
+/* APP 预览抽屉 */
+.drawer-mask{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;display:none}
+.drawer-mask.show{display:block}
+.drawer{position:fixed;top:0;right:-680px;width:440px;height:100vh;background:#fff;box-shadow:-4px 0 16px rgba(0,0,0,.12);z-index:201;display:flex;flex-direction:column;transition:right .25s ease}
+.drawer.show{right:0}
+.drawer-hd{height:48px;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;padding:0 20px;flex-shrink:0;background:#fafafa}
+.drawer-hd h3{font-size:15px;font-weight:600;color:#303133;flex:1}
+.drawer-close{border:none;background:none;font-size:20px;color:#909399;cursor:pointer;padding:4px 8px}
+.drawer-body{flex:1;overflow-y:auto;padding:0;background:#f5f7fa}
+.app-prev-stage{display:flex;flex-direction:column;align-items:center;gap:14px;padding:14px}
+.app-prev-tip{font-size:12px;color:#0050b3;background:#e6f7ff;border:1px solid #91d5ff;border-radius:2px;padding:8px 12px;width:100%;text-align:center}
+.phone{width:340px;height:680px;background:#fff;border-radius:24px;border:8px solid #1a1a1a;overflow:hidden;position:relative;box-shadow:0 8px 30px rgba(0,0,0,.15);display:flex;flex-direction:column}
+.sbar{padding:6px 16px;background:#fff;font-size:11px;font-weight:600;color:#111}
+.nbar-app{padding:8px 14px;background:#fff;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:10px}
+.nbar-app .back{font-size:18px;cursor:pointer;color:#303133}
+.nbar-app .title{font-size:14px;font-weight:600;flex:1;color:#303133}
+.app-summary{background:#e6fffb;padding:8px 12px;font-size:11px;border-bottom:1px solid #b5f5ec;color:#006d75}
+.app-summary .row{display:flex;justify-content:space-between;padding:1px 0}
+.app-summary b{color:#003a3f}
+.app-content{flex:1;overflow-y:auto;padding:14px;background:#f5f7fa}
+.di-input-card{background:#fff;border-radius:4px;padding:12px;margin-bottom:10px;border:1px solid #e8e8e8}
+.di-input-card h5{font-size:13px;font-weight:600;margin-bottom:6px;color:#303133}
+.di-input-card .meta{font-size:11px;color:#909399;margin-bottom:8px}
+.input-row{display:flex;align-items:center;gap:10px}
+.input-row label{font-size:12px;min-width:50px;color:#606266}
+.num-input{flex:1;padding:8px 10px;border:2px solid #e8e8e8;border-radius:4px;font-size:15px;font-weight:600;text-align:right;outline:none}
+.num-input:focus{border-color:#1890ff}
+.num-input.ng{border-color:#ffa39e;background:#fff1f0;color:#f5222d}
+.unit{font-size:12px;color:#909399;min-width:25px}
+.standard-hint{font-size:11px;color:#909399;margin-top:6px}
+.judge-result{margin-top:8px;padding:6px 10px;border-radius:2px;font-size:12px;display:flex;align-items:center;gap:6px}
+.judge-result.ok{background:#f6ffed;color:#389e0d;border:1px solid #b7eb8f}
+.judge-result.ng{background:#fff1f0;color:#cf1322;font-weight:600;border:1px solid #ffa39e}
+.sheet-mask{position:absolute;inset:0;background:rgba(0,0,0,.4);display:none;align-items:flex-end;z-index:50}
+.sheet-mask.show{display:flex}
+.sheet{background:#fff;width:100%;border-top-left-radius:14px;border-top-right-radius:14px;max-height:75%;display:flex;flex-direction:column;overflow:hidden}
+.sheet-handle{width:36px;height:3px;background:#d9d9d9;border-radius:2px;margin:6px auto}
+.sheet-hd{padding:6px 14px 10px;border-bottom:1px solid #f0f0f0}
+.sheet-hd h4{font-size:14px;font-weight:600;margin:0;color:#303133}
+.sheet-hd p{font-size:11px;color:#909399;margin-top:3px}
+.sheet-bd{padding:10px 14px;overflow-y:auto;flex:1}
+.sheet-ft{padding:10px 14px;border-top:1px solid #f0f0f0;background:#fafafa;display:flex;gap:8px}
+.sheet-ft .btn{flex:1;height:36px;font-size:13px;border-radius:4px}
+.opt-item{background:#fff;border:1.5px solid #e8e8e8;border-radius:4px;padding:10px;margin-bottom:6px;cursor:pointer;display:flex;gap:8px;transition:all .15s}
+.opt-item.checked{border-color:#1890ff;background:#e6f7ff}
+.opt-item input{margin-top:2px;cursor:pointer}
+.opt-text{flex:1;font-size:12px;color:#303133;line-height:1.5}
+.opt-text .src-tag{display:inline-block;font-size:10px;padding:1px 5px;border-radius:2px;margin-left:4px;font-weight:500}
+.opt-text .src-tag.tpl{background:#f9f0ff;color:#722ed1}
+.opt-text .src-tag.preset{background:#fff7e6;color:#fa8c16}
+.custom-block{background:#fff;border:1.5px dashed #d9d9d9;border-radius:4px;padding:10px;margin-top:8px}
+.custom-block h6{font-size:11px;color:#606266;margin-bottom:6px;font-weight:600}
+.custom-block textarea{width:100%;padding:6px;border:1px solid #e8e8e8;border-radius:2px;font-size:12px;min-height:50px;resize:vertical;font-family:inherit;outline:none}
+.app-toast{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);background:rgba(31,41,55,.92);color:#fff;padding:8px 14px;border-radius:4px;font-size:12px;opacity:0;transition:opacity .25s;z-index:200;pointer-events:none;white-space:nowrap}
+.app-toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- ===== 左侧深色菜单 ===== -->
+<div class="sidebar">
+  <div class="sidebar-logo">JET 3.0 数据配置中心</div>
+  <div class="sidebar-menu">
+    <div class="sb-group">
+      <div class="sb-title">配置主线</div>
+      <div class="sb-item active" data-page="issue-template" onclick="switchPage('issue-template')">问题模板库</div>
+      <div class="sb-item" data-page="rule-config" onclick="switchPage('rule-config')">判定规则配置</div>
+    </div>
+    <div class="sb-group">
+      <div class="sb-title">关联配置</div>
+      <div class="sb-item" data-page="test-item" onclick="switchPage('test-item')">试验项与设备类型</div>
+      <div class="sb-item">数据字典</div>
+      <div class="sb-item">检查项配置</div>
+    </div>
+    <div class="sb-group">
+      <div class="sb-title">返回</div>
+      <div class="sb-item" onclick="window.location.href='demo_PC_项目与工单管理.html'">← 返回主后台</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 右侧主体 ===== -->
+<div class="main-area">
+  <div class="topbar">
+    <div class="breadcrumb" id="navText">数据配置 / <b>问题模板库</b></div>
+    <div class="topbar-spacer"></div>
+    <div class="user-info">配置管理员：王工 | 退出</div>
+  </div>
+
+  <div class="content">
+    <div class="page-container">
+      <div class="page-tabs">
+        <div class="ptab"><span id="tabText">问题模板库</span><span class="close">×</span></div>
+      </div>
+      <div class="page-body">
+
+        <!-- ================= 问题模板库 ================= -->
+        <div class="page" id="page-issue-template">
+          <div class="filter-area">
+            <div class="f-item"><div class="f-label">问题简称</div><input class="f-input" id="searchTpl" placeholder="搜索简称或描述..."></div>
+            <div class="f-item"><div class="f-label">问题等级</div><select class="f-select" id="filterLvl"><option value="">全部</option><option value="major">严重问题</option><option value="minor">一般问题</option></select></div>
+            <div class="f-item"><div class="f-label">问题类型</div><select class="f-select" id="filterTyp"><option value="">全部</option><option>核心性能类</option><option>功能类</option><option>施工类</option><option>未分类</option></select></div>
+            <div class="filter-actions">
+              <button class="btn btn-primary" onclick="renderTplTable()">搜索</button>
+              <button class="btn" onclick="resetTplFilter()">重置</button>
+            </div>
+          </div>
+
+          <div class="action-bar">
+            <button class="btn btn-primary" onclick="openTplModal()">+ 新增模板</button>
+            <button class="btn">📥 批量导入Excel</button>
+            <button class="btn">📤 导出</button>
+            <div style="margin-left:auto;font-size:12px;color:#909399;align-self:center">
+              共 <b id="tplTotal" style="color:#1890ff">10</b> 条问题模板 · 已被 <b style="color:#1890ff">186</b> 个试验项规则引用
+            </div>
+          </div>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:30px"><input type="checkbox"></th>
+                <th style="width:70px">编号</th>
+                <th style="width:130px">问题简称</th>
+                <th style="width:80px">等级</th>
+                <th style="width:90px">类型</th>
+                <th>描述模板（蓝=系统占位符 / 紫=自定义变量）</th>
+                <th style="width:80px">变量数</th>
+                <th style="width:90px">被引用</th>
+                <th style="width:130px">操作</th>
+              </tr>
+            </thead>
+            <tbody id="tplTbody"></tbody>
+          </table>
+
+          <div class="pagination">
+            <span class="total">共 <span id="tplTotal2">10</span> 条</span>
+            <select><option>10条/页</option></select>
+            <button class="pg-btn">&lt;</button>
+            <button class="pg-btn active">1</button>
+            <button class="pg-btn">&gt;</button>
+          </div>
+
+          <div style="margin-top:14px;padding:12px 16px;background:#e6f7ff;border:1px solid #91d5ff;border-radius:2px;font-size:12px;color:#0050b3;line-height:1.7">
+            💡 <b>设计说明 · 模板的"两类占位符"</b><br>
+            • <b style="color:#0050b3">蓝色 = 系统内置占位符</b>（[站房名]/[设备名]/[相]/[步骤号]...）：所有模板可任意使用，从工单/抽检对象上下文取值<br>
+            • <b style="color:#722ed1">紫色 = 自定义变量</b>（如 [实测损耗]/[标准损耗]/[单位]）：模板创建时声明，只在被试验项引用时**绑定到具体数据项字段**——这就是 V3.0 的核心创新，让一条模板可被多个试验项复用
+          </div>
+        </div>
+
+        <!-- ================= 试验项规则配置 ================= -->
+        <div class="page" id="page-rule-config" style="display:none">
+          <div class="test-bar">
+            <span class="lbl">设备类型</span>
+            <select class="f-select" style="width:160px"><option>配电变压器</option><option>中置柜</option><option>高压电缆</option></select>
+            <span class="lbl">→ 试验项</span>
+            <select class="f-select" style="width:180px"><option>空载损耗试验</option><option>绝缘电阻测试</option><option>耐压试验</option></select>
+            <div style="flex:1"></div>
+            <button class="btn">📋 复制其他试验项规则</button>
+            <button class="btn btn-primary" onclick="openAppPreview()">📱 APP端效果预览</button>
+          </div>
+
+          <div class="di-card">
+            <div class="di-hd">
+              <span class="di-name">数据项 1：损耗值</span>
+              <span class="di-meta">类型：数值 · 单位：kW · 标准值：1.035</span>
+              <button class="op-link" onclick="addRule(1)" style="margin-left:auto">+ 添加规则</button>
+            </div>
+            <div class="di-bd">
+              <div class="rule-card">
+                <div class="rule-title">
+                  <span>📐 规则 1（不合格 - 超标）</span>
+                  <button class="op-link danger">删除规则</button>
+                </div>
+                <div class="cond-builder">
+                  <span class="cond-pill">实测值</span>
+                  <select><option>大于</option><option>大于等于</option><option>小于</option></select>
+                  <span class="cond-pill">标准值</span>
+                  <select><option>×</option><option>+</option></select>
+                  <input type="text" value="1.05" style="width:60px;text-align:center">
+                  <span class="cond-hint">即超出标准 5%</span>
+                </div>
+                <div class="cand-hint">↓ 触发时弹出以下候选问题，让一线人员勾选：</div>
+                <div class="cand-list">
+                  <div class="cand-item">
+                    <input type="checkbox" checked>
+                    <div class="desc">
+                      <div class="id-line"><span class="src-tag tpl">模板</span> <b>T001 · 损耗超标</b></div>
+                      <div class="binding-info">
+                        🔗 变量绑定：<span class="bind-key">[实测损耗]</span> → <span class="bind-val">本数据项实测值</span> · <span class="bind-key">[标准损耗]</span> → <span class="bind-val">本数据项标准值(1.035)</span> · <span class="bind-key">[单位]</span> → <span class="bind-val">"kW"</span>
+                      </div>
+                      <div class="preview-line">⚡ 预览：3#变压器 损耗超标（实测：9.1kW，标准：1.035kW）</div>
+                    </div>
+                    <button class="op-link" onclick="openBindModal('T001')">改绑定</button>
+                    <button class="op-link danger">移除</button>
+                  </div>
+                  <div class="cand-item">
+                    <input type="checkbox" checked>
+                    <div class="desc">
+                      <div class="id-line"><span class="src-tag tpl">模板</span> <b>T010 · 损耗严重超标</b></div>
+                      <div class="binding-info">
+                        🔗 变量绑定：<span class="bind-key">[实测损耗]</span> → <span class="bind-val">本数据项实测值</span> · <span class="bind-key">[超出比例]</span> → <span class="bind-val">自动计算 (实测-标准)/标准×100</span>
+                      </div>
+                      <div class="preview-line">⚡ 预览：3#变压器 损耗严重超标（实测：9.1kW，超出标准 779%）</div>
+                    </div>
+                    <button class="op-link" onclick="openBindModal('T010')">改绑定</button>
+                    <button class="op-link danger">移除</button>
+                  </div>
+                  <div class="cand-item">
+                    <input type="checkbox">
+                    <div class="desc">
+                      <div class="id-line"><span class="src-tag preset">预设</span> <b>P001 · 需复测</b></div>
+                      <div style="color:#606266;font-size:12px;margin-top:4px">需复测（固定文本，无变量，无需绑定）</div>
+                    </div>
+                    <button class="op-link danger">移除</button>
+                  </div>
+                  <div class="add-cand">
+                    <button class="op-link" onclick="openAddCandModal()">+ 从模板库添加</button>
+                    <button class="op-link" onclick="alert('+ 添加预设固定文本（Demo略）')">+ 添加预设文本</button>
+                  </div>
+                </div>
+                <div class="toggle-row">
+                  <span>✏️ 允许一线"+ 自定义补充问题描述"</span>
+                  <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="di-card">
+            <div class="di-hd">
+              <span class="di-name">数据项 2：铭牌完整性</span>
+              <span class="di-meta">类型：选择 · 选项：完整 / 不完整 / 未设置</span>
+              <button class="op-link" onclick="addRule(2)" style="margin-left:auto">+ 添加规则</button>
+            </div>
+            <div class="di-bd">
+              <div class="rule-card">
+                <div class="rule-title">
+                  <span>📐 规则 1（不合格）</span>
+                  <button class="op-link danger">删除规则</button>
+                </div>
+                <div class="cond-builder">
+                  <span class="cond-pill">实测值</span>
+                  <select><option>等于</option></select>
+                  <select><option>未设置</option><option>不完整</option></select>
+                </div>
+                <div class="cand-hint">↓ 触发时弹出以下候选问题：</div>
+                <div class="cand-list">
+                  <div class="cand-item">
+                    <input type="checkbox" checked>
+                    <div class="desc">
+                      <div class="id-line"><span class="src-tag tpl">模板</span> <b>T006 · 铭牌未设置</b></div>
+                      <div style="color:#909399;font-size:11px;margin-top:4px">此模板无自定义变量，只用系统占位符 [设备名]，无需绑定</div>
+                      <div class="preview-line">⚡ 预览：3#变压器 铭牌未设置</div>
+                    </div>
+                    <button class="op-link danger">移除</button>
+                  </div>
+                  <div class="add-cand"><button class="op-link" onclick="openAddCandModal()">+ 从模板库添加</button></div>
+                </div>
+                <div class="toggle-row">
+                  <span>✏️ 允许一线"+ 自定义补充问题描述"</span>
+                  <div class="toggle" onclick="this.classList.toggle('on')"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:14px;padding:12px 16px;background:#fffbe6;border:1px solid #ffe58f;border-radius:2px;font-size:12px;color:#874d00;line-height:1.7">
+            💡 <b>核心创新点</b>：候选问题清单里每条"模板"都显示<b>变量绑定关系</b>。<br>
+            同一条模板"T001 损耗超标"，被变压器"损耗值"引用时绑定到这个数据项；如果将来被中置柜某试验项引用，再去那里绑定到对应字段——<b>模板真正复用</b>，而 V2.4 是 38,528 条不能复用的复制噩梦。
+          </div>
+        </div>
+
+        <!-- ================= 试验项与设备类型（占位） ================= -->
+        <div class="page" id="page-test-item" style="display:none">
+          <div style="padding:60px 20px;text-align:center;color:#909399">
+            <h3 style="font-size:16px;color:#303133;margin-bottom:12px">试验项与设备类型管理</h3>
+            <p>这里维护"哪些设备类型适用哪些试验项、每个试验项有哪些数据项"</p>
+            <p style="margin-top:8px;font-size:12px">这一层和"问题模板库"是<b>解耦</b>的——模板不用知道有哪些设备/试验项，引用时再绑定</p>
+            <p style="margin-top:20px;font-size:12px;color:#bfbfbf">（Demo 占位，独立模块未展开）</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 模态框 1：新增/编辑问题模板（核心改造：分层占位符面板）         -->
+<!-- ============================================================ -->
+<div class="modal-mask" id="tplModal">
+  <div class="modal-box lg">
+    <div class="modal-hd">
+      <h3 id="tplModalTitle">+ 新增问题模板</h3>
+      <button class="modal-close" onclick="closeTplModal()">×</button>
+    </div>
+    <div class="modal-bd">
+      <div class="fm-row">
+        <div class="fm-grp" style="margin-bottom:0">
+          <div class="fm-lbl"><span class="req">*</span>问题简称</div>
+          <input type="text" id="newTplName" value="损耗超标" placeholder="如：损耗超标">
+        </div>
+        <div class="fm-grp" style="margin-bottom:0">
+          <div class="fm-lbl"><span class="req">*</span>问题等级</div>
+          <div class="radio-grp" style="padding:6px 0">
+            <label><input type="radio" name="lvl"> 一般问题</label>
+            <label><input type="radio" name="lvl" checked> 严重问题</label>
+          </div>
+        </div>
+        <div class="fm-grp" style="margin-bottom:0">
+          <div class="fm-lbl"><span class="req">*</span>问题类型</div>
+          <select>
+            <option>核心性能类</option>
+            <option>功能类</option>
+            <option>施工类</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="fm-grp" style="margin-top:14px">
+        <div class="fm-lbl"><span class="req">*</span>描述模板</div>
+        <textarea id="newTplDesc">[设备名] 损耗超标（实测：[实测损耗][单位]，标准：[标准损耗][单位]）</textarea>
+
+        <div class="ph-panel">
+          <!-- 左栏：系统内置占位符 -->
+          <div class="ph-col">
+            <h5>🌐 系统内置占位符 <span class="badge">10 个</span></h5>
+            <p>所有模板可任意使用，从工单/抽检对象/系统上下文自动取值</p>
+            <div class="ph-list" id="sysPhList"></div>
+          </div>
+          <!-- 右栏：自定义变量 -->
+          <div class="ph-col">
+            <h5>📊 自定义变量 <span class="badge purple" id="varCount">3 个</span></h5>
+            <p>模板需要的"形参"，被试验项引用时再绑定到具体数据项字段</p>
+            <div class="ph-list" id="varList"></div>
+            <div class="add-var-row">
+              <input type="text" id="newVarName" placeholder="变量业务名（如：实测损耗）">
+              <select id="newVarType">
+                <option value="num">数值</option>
+                <option value="text">文本</option>
+                <option value="enum">枚举</option>
+              </select>
+              <button onclick="addVar()">＋ 声明</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="preview-box">
+          <div class="lbl">⚡ 实时预览（用样例数据填充占位符与变量）</div>
+          <div id="livePreview"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" onclick="closeTplModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveTpl()">保存模板</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 模态框 2：从模板库添加候选问题（选模板）                        -->
+<!-- ============================================================ -->
+<div class="modal-mask" id="addCandModal">
+  <div class="modal-box sm">
+    <div class="modal-hd">
+      <h3>从模板库选择候选问题</h3>
+      <button class="modal-close" onclick="closeAddCandModal()">×</button>
+    </div>
+    <div class="modal-bd">
+      <input type="text" placeholder="🔍 搜索模板..." style="width:100%;padding:6px 10px;border:1px solid #dcdfe6;border-radius:2px;margin-bottom:10px;font-size:13px;outline:none">
+      <div id="addCandList" style="max-height:380px;overflow-y:auto"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" onclick="closeAddCandModal()">取消</button>
+      <button class="btn btn-primary" onclick="goToBind()">下一步：绑定变量</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 模态框 3：变量绑定对话框（V3.0 核心创新）                       -->
+<!-- ============================================================ -->
+<div class="modal-mask" id="bindModal">
+  <div class="modal-box">
+    <div class="modal-hd">
+      <h3>🔗 绑定模板变量到当前数据项</h3>
+      <button class="modal-close" onclick="closeBindModal()">×</button>
+    </div>
+    <div class="modal-bd">
+      <div class="bind-warning">
+        ⚠️ 此模板有 <b id="bindVarCount">3</b> 个自定义变量，必须全部绑定到数据源后才能保存到候选问题清单。
+      </div>
+
+      <div class="bind-section">
+        <div class="bind-section-title">📌 绑定上下文</div>
+        <div class="bind-info-card">
+          <div class="row"><span class="k">模板：</span><span class="v" id="bindTplName">T001 · 损耗超标</span></div>
+          <div class="row"><span class="k">描述模板：</span><span class="v" id="bindTplDesc"></span></div>
+          <div class="row"><span class="k">当前试验项：</span><span class="v">配电变压器 · 空载损耗试验</span></div>
+          <div class="row"><span class="k">当前数据项：</span><span class="v">损耗值（数值型，单位 kW，标准值 1.035）</span></div>
+        </div>
+      </div>
+
+      <div class="bind-section">
+        <div class="bind-section-title">📊 变量绑定（每个变量必填）</div>
+        <div id="bindRows"></div>
+      </div>
+
+      <div class="preview-box">
+        <div class="lbl">⚡ 绑定后的实时预览（用本数据项的样例数据）</div>
+        <div id="bindPreview">3#配电室站 2#干式变压器 损耗超标（实测：9.1kW，标准：1.035kW）</div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" onclick="closeBindModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveBinding()">确认绑定</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- APP 端效果预览抽屉                                              -->
+<!-- ============================================================ -->
+<div class="drawer-mask" id="appPrevMask" onclick="closeAppPreview()"></div>
+<div class="drawer" id="appPrevDrawer">
+  <div class="drawer-hd">
+    <h3>📱 APP 端效果预览 · 现场触发</h3>
+    <button class="drawer-close" onclick="closeAppPreview()">×</button>
+  </div>
+  <div class="drawer-body">
+    <div class="app-prev-stage">
+      <div class="app-prev-tip">
+        💡 在手机里输入 <b>9.1</b> 试试 — 模拟现场录入超标值
+      </div>
+      <div class="phone">
+        <div class="sbar">9:41</div>
+        <div class="nbar-app">
+          <div class="back">←</div>
+          <div class="title">空载损耗试验</div>
+        </div>
+        <div class="app-summary">
+          <div class="row"><b>检测对象</b><span>2#干式变压器</span></div>
+          <div class="row"><b>所在站房</b><span>3#配电室站</span></div>
+          <div class="row"><b>试验项</b><span>空载损耗试验</span></div>
+        </div>
+        <div class="app-content">
+          <div class="di-input-card">
+            <h5>损耗值</h5>
+            <div class="meta">单位：kW · 标准值：1.035 kW · 必填</div>
+            <div class="input-row">
+              <label>实测值</label>
+              <input type="text" class="num-input" id="numInput" placeholder="请输入" inputmode="decimal">
+              <span class="unit">kW</span>
+            </div>
+            <div class="standard-hint">提示：超出标准 5% 即触发"损耗超标"规则</div>
+            <div class="judge-result ok" id="judgeBox">
+              <span>✓</span><span>请输入实测值</span>
+            </div>
+          </div>
+          <div class="di-input-card">
+            <h5>损耗温度</h5>
+            <div class="meta">单位：℃ · 选填</div>
+            <div class="input-row">
+              <label>实测值</label>
+              <input type="text" class="num-input" placeholder="请输入">
+              <span class="unit">℃</span>
+            </div>
+          </div>
+        </div>
+        <div class="sheet-mask" id="sheetMask">
+          <div class="sheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-hd">
+              <h4>检测到不合格 · 请勾选问题</h4>
+              <p>系统已根据"超出标准 5%"规则判定不合格</p>
+            </div>
+            <div class="sheet-bd">
+              <div class="opt-item checked" onclick="toggleOpt(this)">
+                <input type="checkbox" checked>
+                <div class="opt-text">
+                  3#配电室站 2#干式变压器 损耗超标（实测：<b style="color:#f5222d">9.1</b>kW，标准：1.035kW）
+                  <span class="src-tag tpl">模板</span>
+                </div>
+              </div>
+              <div class="opt-item" onclick="toggleOpt(this)">
+                <input type="checkbox">
+                <div class="opt-text">
+                  3#配电室站 2#干式变压器 损耗严重超标（实测：<b style="color:#f5222d">9.1</b>kW，超出标准 <b>779%</b>）
+                  <span class="src-tag tpl">模板</span>
+                </div>
+              </div>
+              <div class="opt-item" onclick="toggleOpt(this)">
+                <input type="checkbox">
+                <div class="opt-text">需复测<span class="src-tag preset">预设</span></div>
+              </div>
+              <div class="custom-block">
+                <h6>＋ 自定义补充问题描述（选填）</h6>
+                <textarea placeholder="如有现场观察到的其他异常..."></textarea>
+              </div>
+            </div>
+            <div class="sheet-ft">
+              <button class="btn" onclick="closeSheet()">取消</button>
+              <button class="btn btn-primary" onclick="submitIssues()">确认提交（已选 <span id="optCount">1</span>）</button>
+            </div>
+          </div>
+        </div>
+        <div class="app-toast" id="appToast"></div>
+      </div>
+      <div style="font-size:11px;color:#909399;text-align:center;padding:0 14px">
+        ← 提交后写入 <code style="background:#f5f5f5;padding:1px 4px">data_issue_record</code>，进 002 PDF 和分项报告
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================ */
+/* 数据：10 条问题模板 · 含自定义变量声明                          */
+/* ============================================================ */
+const SYS_PLACEHOLDERS = ['站房名','设备名','设备型号','厂家','相','步骤号','检测时间','检测人','试验项名','工单号'];
+
+const SAMPLE_VAL = {
+  '[站房名]':'3#配电室站', '[设备名]':'3#配电室站 2#干式变压器',
+  '[设备型号]':'SCB10-1000', '[厂家]':'江苏华鹏', '[相]':'A', '[步骤号]':'⑥',
+  '[检测时间]':'2026-04-22 14:30', '[检测人]':'李工', '[试验项名]':'空载损耗试验',
+  '[工单号]':'WO-20260421-001',
+  '[实测损耗]':'9.1', '[标准损耗]':'1.035', '[单位]':'kW',
+  '[超出比例]':'779', '[实测电阻]':'0.5', '[标准电阻]':'10',
+  '[资料类型]':'合格证', '[实测厚度]':'1.8', '[标准厚度]':'2.0', '[失效步骤]':'⑥'
+};
+
+// 每条模板：vars = [{name, type}] 是声明的自定义变量
+const TEMPLATES = [
+  {id:'T001', name:'损耗超标',          lvl:'major', typ:'核心性能类',
+   tpl:'[设备名] 损耗超标（实测：[实测损耗][单位]，标准：[标准损耗][单位]）',
+   vars:[{name:'实测损耗',type:'num'},{name:'标准损耗',type:'num'},{name:'单位',type:'text'}], refs:12},
+  {id:'T002', name:'继电保护未配置',     lvl:'major', typ:'功能类',
+   tpl:'[设备名] 继电保护装置未配置', vars:[], refs:8},
+  {id:'T003', name:'继电保护损坏',       lvl:'major', typ:'功能类',
+   tpl:'[设备名] 继电保护装置损坏', vars:[], refs:6},
+  {id:'T004', name:'资料缺失',           lvl:'minor', typ:'未分类',
+   tpl:'[设备名] 资料检查 [资料类型]缺失', vars:[{name:'资料类型',type:'text'}], refs:32},
+  {id:'T005', name:'铭牌未设置',         lvl:'minor', typ:'未分类',
+   tpl:'[设备名] 铭牌未设置', vars:[], refs:28},
+  {id:'T006', name:'铭牌未设置',         lvl:'minor', typ:'未分类',
+   tpl:'[设备名] 铭牌未设置', vars:[], refs:28},
+  {id:'T007', name:'柜体板厚低于标准',   lvl:'minor', typ:'未分类',
+   tpl:'[设备名] 柜体板厚低于标准（实测：[实测厚度]mm，标准：≥[标准厚度]mm）',
+   vars:[{name:'实测厚度',type:'num'},{name:'标准厚度',type:'num'}], refs:18},
+  {id:'T008', name:'五防联锁失效',       lvl:'major', typ:'功能类',
+   tpl:'[设备名] 五防联锁步骤[失效步骤]异常',
+   vars:[{name:'失效步骤',type:'text'}], refs:15},
+  {id:'T009', name:'绝缘电阻偏低',       lvl:'major', typ:'核心性能类',
+   tpl:'[设备名] [相]相绝缘电阻低于标准（实测：[实测电阻]MΩ，标准：≥[标准电阻]MΩ）',
+   vars:[{name:'实测电阻',type:'num'},{name:'标准电阻',type:'num'}], refs:22},
+  {id:'T010', name:'损耗严重超标',       lvl:'major', typ:'核心性能类',
+   tpl:'[设备名] 损耗严重超标（实测：[实测损耗][单位]，超出标准[超出比例]%）',
+   vars:[{name:'实测损耗',type:'num'},{name:'单位',type:'text'},{name:'超出比例',type:'num'}], refs:12}
+];
+
+/* ============================================================ */
+/* 切换页                                                         */
+/* ============================================================ */
+function switchPage(page){
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  const tgt = document.querySelector(`.sb-item[data-page="${page}"]`);
+  if(tgt) tgt.classList.add('active');
+  document.querySelectorAll('.page').forEach(p=>p.style.display='none');
+  document.getElementById('page-'+page).style.display='block';
+  const titles = {
+    'issue-template':{nav:'问题模板库', tab:'问题模板库'},
+    'rule-config':   {nav:'判定规则配置', tab:'判定规则配置'},
+    'test-item':     {nav:'试验项与设备类型', tab:'试验项与设备类型'}
+  };
+  const t = titles[page] || titles['issue-template'];
+  document.getElementById('navText').innerHTML = '数据配置 / <b>' + t.nav + '</b>';
+  document.getElementById('tabText').innerHTML = t.tab;
+}
+
+/* ============================================================ */
+/* 模板列表                                                       */
+/* ============================================================ */
+function highlightPh(s, vars){
+  const varNames = (vars || []).map(v => v.name);
+  return s.replace(/\[([^\]]+)\]/g, (m, k) => {
+    const cls = varNames.includes(k) ? 'var' : 'sys';
+    return `<span class="ph-tag ${cls}">[${k}]</span>`;
+  });
+}
+function renderTplTable(){
+  const kw = (document.getElementById('searchTpl').value || '').trim();
+  const lv = document.getElementById('filterLvl').value;
+  const ty = document.getElementById('filterTyp').value;
+  const list = TEMPLATES.filter(t =>
+    (!kw || t.name.includes(kw) || t.tpl.includes(kw) || t.id.toLowerCase().includes(kw.toLowerCase())) &&
+    (!lv || t.lvl === lv) &&
+    (!ty || t.typ === ty)
+  );
+  document.getElementById('tplTbody').innerHTML = list.map(t => `
+    <tr>
+      <td><input type="checkbox"></td>
+      <td style="font-family:monospace;color:#909399">${t.id}</td>
+      <td style="color:#1890ff;cursor:pointer;font-weight:500" onclick="openTplModal('${t.id}')">${t.name}</td>
+      <td><span class="lvl ${t.lvl}">${t.lvl==='major'?'严重':'一般'}</span></td>
+      <td><span class="typ-tag">${t.typ}</span></td>
+      <td>${highlightPh(t.tpl, t.vars)}</td>
+      <td><span class="var-count">${t.vars.length}</span></td>
+      <td><span class="ref-num" title="鼠标悬停可查看哪些试验项引用了此模板（Demo略）">${t.refs}</span></td>
+      <td>
+        <span class="op-link" onclick="openTplModal('${t.id}')">编辑</span>
+        <span class="op-link" onclick="alert('查看 ${t.refs} 个引用方（Demo略）')">引用</span>
+        <span class="op-link danger">删除</span>
+      </td>
+    </tr>`).join('');
+  document.getElementById('tplTotal').textContent = list.length;
+  document.getElementById('tplTotal2').textContent = list.length;
+}
+function resetTplFilter(){
+  document.getElementById('searchTpl').value = '';
+  document.getElementById('filterLvl').value = '';
+  document.getElementById('filterTyp').value = '';
+  renderTplTable();
+}
+
+/* ============================================================ */
+/* 模板编辑器：分层占位符面板                                      */
+/* ============================================================ */
+let editingTpl = {vars:[], tpl:''};
+
+function openTplModal(id){
+  document.getElementById('tplModal').classList.add('show');
+  if(id){
+    const t = TEMPLATES.find(x => x.id === id);
+    if(t){
+      editingTpl = JSON.parse(JSON.stringify(t));
+      document.getElementById('newTplName').value = t.name;
+      document.getElementById('newTplDesc').value = t.tpl;
+      document.getElementById('tplModalTitle').textContent = '✏️ 编辑模板 ' + t.id;
+    }
+  } else {
+    editingTpl = {vars:[{name:'实测损耗',type:'num'},{name:'标准损耗',type:'num'},{name:'单位',type:'text'}], tpl:''};
+    document.getElementById('newTplName').value = '损耗超标';
+    document.getElementById('newTplDesc').value = '[设备名] 损耗超标（实测：[实测损耗][单位]，标准：[标准损耗][单位]）';
+    document.getElementById('tplModalTitle').textContent = '+ 新增问题模板';
+  }
+  renderPhPanel();
+  updatePreview();
+}
+function closeTplModal(){ document.getElementById('tplModal').classList.remove('show'); }
+
+function renderPhPanel(){
+  document.getElementById('sysPhList').innerHTML = SYS_PLACEHOLDERS.map(p =>
+    `<button class="ph-btn sys" onclick="insertPh('[${p}]')">[${p}]</button>`
+  ).join('');
+  document.getElementById('varList').innerHTML = editingTpl.vars.map((v,i) => `
+    <button class="ph-btn var" onclick="insertPh('[${v.name}]')">
+      [${v.name}]<span style="font-size:10px;opacity:.6">·${v.type}</span>
+      <span class="x" onclick="event.stopPropagation();delVar(${i})">×</span>
+    </button>`).join('') || '<span style="font-size:11px;color:#bfbfbf">暂无声明，从下方添加</span>';
+  document.getElementById('varCount').textContent = editingTpl.vars.length + ' 个';
+}
+function addVar(){
+  const name = document.getElementById('newVarName').value.trim();
+  const type = document.getElementById('newVarType').value;
+  if(!name){ alert('请输入变量名'); return; }
+  if(editingTpl.vars.some(v => v.name === name) || SYS_PLACEHOLDERS.includes(name)){
+    alert('变量名已存在或与系统占位符冲突'); return;
+  }
+  editingTpl.vars.push({name, type});
+  document.getElementById('newVarName').value = '';
+  renderPhPanel();
+}
+function delVar(i){
+  if(!confirm('确认删除变量 [' + editingTpl.vars[i].name + ']？描述模板里的引用也会保留为字面字符串。')) return;
+  editingTpl.vars.splice(i,1);
+  renderPhPanel();
+}
+function insertPh(ph){
+  const ta = document.getElementById('newTplDesc');
+  const s = ta.selectionStart, e = ta.selectionEnd;
+  ta.value = ta.value.substring(0,s) + ph + ta.value.substring(e);
+  ta.focus();
+  ta.setSelectionRange(s+ph.length, s+ph.length);
+  updatePreview();
+}
+function updatePreview(){
+  const tpl = document.getElementById('newTplDesc')?.value || '';
+  let p = tpl;
+  Object.keys(SAMPLE_VAL).forEach(k => p = p.split(k).join(SAMPLE_VAL[k]));
+  // 用 highlight 显示分类
+  const html = highlightPh(tpl, editingTpl.vars) + '<br><span style="color:#389e0d;font-weight:600;margin-top:6px;display:inline-block">→ ' + p + '</span>';
+  document.getElementById('livePreview').innerHTML = html;
+}
+function saveTpl(){
+  const name = document.getElementById('newTplName').value.trim();
+  if(!name){ alert('请填写问题简称'); return; }
+  alert('✅ 模板已保存（Demo 演示）\n\n关键事实：\n• 此模板声明了 ' + editingTpl.vars.length + ' 个自定义变量\n• 任何试验项引用此模板时，必须把这 ' + editingTpl.vars.length + ' 个变量绑定到具体数据项字段\n• 同一模板可被多试验项复用，每次绑定关系独立\n• 数据写入 conf_issue_template 表 + 关联 conf_issue_template_var 子表');
+  closeTplModal();
+}
+
+/* ============================================================ */
+/* 添加候选问题（弹模板列表 → 进入绑定流程）                       */
+/* ============================================================ */
+let pickedTplForBind = null;
+function openAddCandModal(){
+  document.getElementById('addCandModal').classList.add('show');
+  document.getElementById('addCandList').innerHTML = TEMPLATES.map(t => `
+    <label style="display:block;padding:10px;border:1px solid #f0f0f0;border-radius:2px;margin-bottom:6px;cursor:pointer">
+      <input type="radio" name="pickTpl" value="${t.id}" onchange="pickedTplForBind='${t.id}'" style="margin-right:8px">
+      <b>${t.id} · ${t.name}</b>
+      <span class="lvl ${t.lvl}" style="margin-left:6px">${t.lvl==='major'?'严重':'一般'}</span>
+      <span class="var-count" style="margin-left:6px">${t.vars.length} 变量</span>
+      <div style="font-size:11px;color:#909399;margin-top:4px;margin-left:22px">${highlightPh(t.tpl, t.vars)}</div>
+    </label>
+  `).join('');
+  pickedTplForBind = null;
+}
+function closeAddCandModal(){ document.getElementById('addCandModal').classList.remove('show'); }
+function goToBind(){
+  if(!pickedTplForBind){ alert('请先选择一条模板'); return; }
+  closeAddCandModal();
+  openBindModal(pickedTplForBind);
+}
+
+/* ============================================================ */
+/* 变量绑定对话框（V3.0 核心创新）                                 */
+/* ============================================================ */
+function openBindModal(tplId){
+  const t = TEMPLATES.find(x => x.id === tplId);
+  if(!t) return;
+  document.getElementById('bindModal').classList.add('show');
+  document.getElementById('bindTplName').textContent = t.id + ' · ' + t.name;
+  document.getElementById('bindTplDesc').innerHTML = highlightPh(t.tpl, t.vars);
+  document.getElementById('bindVarCount').textContent = t.vars.length;
+
+  if(t.vars.length === 0){
+    document.getElementById('bindRows').innerHTML = '<div style="padding:14px;background:#f6ffed;border:1px solid #b7eb8f;border-radius:2px;font-size:12px;color:#389e0d;text-align:center">✓ 此模板无自定义变量，无需绑定，直接确认即可</div>';
+    return;
+  }
+
+  document.getElementById('bindRows').innerHTML = t.vars.map((v, i) => {
+    const isFirstNum = (v.type === 'num' && i === 0);
+    const isSecondNum = (v.type === 'num' && i === 1 && t.vars[0]?.type === 'num');
+    const isUnit = (v.name === '单位');
+    return `
+      <div class="bind-row">
+        <div class="bind-row-head">
+          <span class="var-name">[${v.name}]</span>
+          <span class="var-type">${v.type==='num'?'数值':v.type==='text'?'文本':'枚举'}型</span>
+        </div>
+        <div class="bind-options">
+          <label class="bind-option ${isFirstNum?'active':''}">
+            <input type="radio" name="bind${i}" ${isFirstNum?'checked':''}>
+            <span class="opt-label">本数据项实测值</span>
+          </label>
+          <label class="bind-option ${isSecondNum?'active':''}">
+            <input type="radio" name="bind${i}" ${isSecondNum?'checked':''}>
+            <span class="opt-label">本数据项标准值（1.035）</span>
+          </label>
+          <label class="bind-option">
+            <input type="radio" name="bind${i}">
+            <span class="opt-label">引用其他数据项</span>
+            <select disabled style="margin-left:6px"><option>请选择...</option><option>损耗温度</option><option>电压等级</option></select>
+          </label>
+          <label class="bind-option ${isUnit?'active':''}">
+            <input type="radio" name="bind${i}" ${isUnit?'checked':''}>
+            <span class="opt-label">本数据项配置的单位（kW）</span>
+          </label>
+          <label class="bind-option">
+            <input type="radio" name="bind${i}">
+            <span class="opt-label">固定值</span>
+            <input type="text" placeholder="输入..." style="margin-left:6px;width:100px">
+          </label>
+          ${v.type === 'num' ? `
+          <label class="bind-option">
+            <input type="radio" name="bind${i}">
+            <span class="opt-label">自动计算</span>
+            <select style="margin-left:6px"><option>(实测-标准)/标准×100</option><option>实测/标准</option></select>
+          </label>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+function closeBindModal(){ document.getElementById('bindModal').classList.remove('show'); }
+function saveBinding(){
+  alert('✅ 绑定已保存（Demo 演示）\n\n关键事实：\n• 绑定关系存到 conf_judge_rule.template_binding JSON\n• 同一模板被其他试验项引用时绑定关系独立\n• 一线触发时按此映射拼装最终问题描述');
+  closeBindModal();
+}
+
+/* ============================================================ */
+/* APP 端预览                                                     */
+/* ============================================================ */
+function openAppPreview(){
+  document.getElementById('appPrevMask').classList.add('show');
+  document.getElementById('appPrevDrawer').classList.add('show');
+}
+function closeAppPreview(){
+  document.getElementById('appPrevMask').classList.remove('show');
+  document.getElementById('appPrevDrawer').classList.remove('show');
+  document.getElementById('sheetMask').classList.remove('show');
+  const ni = document.getElementById('numInput');
+  if(ni){ ni.value = ''; ni.classList.remove('ng'); }
+  const jb = document.getElementById('judgeBox');
+  if(jb){ jb.className = 'judge-result ok'; jb.innerHTML = '<span>✓</span><span>请输入实测值</span>'; }
+}
+const STD = 1.035;
+document.addEventListener('input', e => {
+  if(e.target && e.target.id === 'numInput'){
+    const val = parseFloat(e.target.value);
+    const ni = e.target, jb = document.getElementById('judgeBox');
+    if(isNaN(val)){ ni.classList.remove('ng'); jb.className='judge-result ok'; jb.innerHTML='<span>✓</span><span>请输入实测值</span>'; return; }
+    if(val > STD * 1.05){
+      ni.classList.add('ng');
+      jb.className = 'judge-result ng';
+      jb.innerHTML = '<span>✗</span><span>不合格 · 触发"超标"规则</span>';
+      setTimeout(() => document.getElementById('sheetMask').classList.add('show'), 350);
+    } else if(val < STD * 0.5){
+      ni.classList.add('ng');
+      jb.className = 'judge-result ng';
+      jb.innerHTML = '<span>✗</span><span>不合格 · 触发"异常偏低"规则</span>';
+    } else {
+      ni.classList.remove('ng');
+      jb.className = 'judge-result ok';
+      jb.innerHTML = '<span>✓</span><span>合格（标准 ' + STD + ' kW）</span>';
+    }
+  }
+});
+function toggleOpt(el){
+  const cb = el.querySelector('input[type="checkbox"]');
+  cb.checked = !cb.checked;
+  el.classList.toggle('checked', cb.checked);
+  const n = document.querySelectorAll('#sheetMask .opt-item input[type="checkbox"]:checked').length;
+  document.getElementById('optCount').textContent = n;
+}
+function closeSheet(){ document.getElementById('sheetMask').classList.remove('show'); }
+function submitIssues(){
+  const n = document.querySelectorAll('#sheetMask .opt-item input[type="checkbox"]:checked').length;
+  const custom = document.querySelector('#sheetMask .custom-block textarea').value.trim();
+  if(n === 0 && !custom){ showAppToast('请至少勾选一条问题或填写自定义'); return; }
+  showAppToast('✅ 已提交 ' + (n + (custom?1:0)) + ' 条问题');
+  setTimeout(closeSheet, 800);
+}
+function showAppToast(msg){
+  const t = document.getElementById('appToast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+function addRule(diNum){
+  alert('+ 添加规则到数据项 ' + diNum + '\n\n弹出规则编辑器（Demo略）');
+}
+
+/* 初始化 */
+renderTplTable();
+['searchTpl','filterLvl','filterTyp'].forEach(id => {
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('input', renderTplTable);
+});
+const ndt = document.getElementById('newTplDesc');
+if(ndt) ndt.addEventListener('input', updatePreview);
+</script>
+</body>
+</html>

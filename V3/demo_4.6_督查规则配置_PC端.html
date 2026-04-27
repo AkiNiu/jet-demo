@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>督查规则配置 — JET 3.0 督查模块</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans SC',system-ui,-apple-system,sans-serif;background:#f5f6f7;color:#1f2329;font-size:13px;min-height:100vh;line-height:1.5}
+
+.app-body{display:flex;min-height:100vh}
+
+/* ========== 左侧菜单 ========== */
+.sidebar{width:208px;background:#1d2129;color:#c9cdd4;flex-shrink:0;display:flex;flex-direction:column;min-height:100vh}
+.sidebar-logo{height:48px;display:flex;align-items:center;padding:0 20px;color:#fff;font-size:14px;font-weight:500;border-bottom:1px solid #2a2f38}
+.sidebar-menu{flex:1;padding:12px 0;overflow-y:auto}
+.sb-group{margin-bottom:12px}
+.sb-title{font-size:11px;color:#86909c;padding:8px 20px 6px;letter-spacing:.3px}
+.sb-item{padding:9px 20px;font-size:13px;cursor:pointer;color:#c9cdd4;display:flex;align-items:center;gap:8px}
+.sb-item:hover{color:#fff;background:#242934}
+.sb-item.active{background:#165dff;color:#fff}
+.sb-item .sb-n{margin-left:auto;font-size:11px;color:#86909c}
+.sb-item.active .sb-n{color:rgba(255,255,255,.7)}
+
+/* ========== 右侧主体 ========== */
+.main-area{flex:1;display:flex;flex-direction:column;min-height:100vh;overflow:hidden}
+.topbar{height:48px;background:#fff;border-bottom:1px solid #e5e6eb;display:flex;align-items:center;padding:0 20px;flex-shrink:0}
+.breadcrumb{font-size:13px;color:#86909c}
+.breadcrumb b{color:#1f2329;font-weight:500}
+.breadcrumb .bc-sep{margin:0 6px;color:#c9cdd4}
+.topbar-spacer{flex:1}
+.user-info{font-size:13px;color:#4e5969}
+
+.content{flex:1;overflow-y:auto;padding:16px 20px}
+.content::-webkit-scrollbar{width:6px}
+.content::-webkit-scrollbar-thumb{background:#c9cdd4;border-radius:3px}
+
+.page{display:none}
+.page.active{display:block}
+
+.page-title{font-size:16px;font-weight:500;color:#1f2329;margin-bottom:4px}
+.page-subtitle{font-size:12px;color:#86909c;margin-bottom:16px;line-height:1.7}
+
+/* ========== 统计条 ========== */
+.stat-row{display:flex;background:#fff;border:1px solid #e5e6eb;border-radius:2px;margin-bottom:12px}
+.stat-cell{flex:1;padding:14px 20px;border-right:1px solid #f2f3f5}
+.stat-cell:last-child{border-right:none}
+.sc-label{font-size:12px;color:#86909c;margin-bottom:6px}
+.sc-val{font-size:20px;font-weight:500;color:#1f2329}
+.sc-val .sc-u{font-size:12px;color:#86909c;font-weight:400;margin-left:2px}
+.sc-sub{font-size:11px;color:#86909c;margin-top:4px}
+
+/* ========== 主白板 ========== */
+.panel{background:#fff;border:1px solid #e5e6eb;border-radius:2px}
+
+/* 维度 Tab */
+.dim-tabs{display:flex;border-bottom:1px solid #e5e6eb;padding:0 16px}
+.dim-tab{padding:12px 16px;font-size:13px;color:#4e5969;cursor:pointer;border-bottom:2px solid transparent}
+.dim-tab:hover{color:#165dff}
+.dim-tab.active{color:#165dff;border-bottom-color:#165dff}
+.dim-tab .dim-count{color:#86909c;margin-left:4px;font-size:12px}
+.dim-tab.active .dim-count{color:#165dff}
+
+/* 工具条 */
+.toolbar{padding:12px 16px;display:flex;gap:8px;align-items:center;border-bottom:1px solid #f2f3f5;flex-wrap:wrap}
+.search-box{display:flex;align-items:center;border:1px solid #e5e6eb;border-radius:2px;padding:0 10px;width:240px;height:30px;background:#fff}
+.search-box:focus-within{border-color:#165dff}
+.search-box input{flex:1;border:none;outline:none;font-size:13px;padding:0 4px;background:transparent;font-family:inherit}
+.f-select{border:1px solid #e5e6eb;border-radius:2px;padding:0 24px 0 10px;font-size:13px;height:30px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2386909c'/%3E%3C/svg%3E") no-repeat right 8px center;-webkit-appearance:none;appearance:none;color:#1f2329;min-width:140px;font-family:inherit}
+.f-select:focus{border-color:#165dff;outline:none}
+.toolbar-spacer{flex:1}
+.btn{height:30px;padding:0 14px;border:1px solid #e5e6eb;border-radius:2px;font-size:13px;cursor:pointer;background:#fff;color:#1f2329;display:inline-flex;align-items:center;gap:4px;justify-content:center;font-family:inherit}
+.btn:hover{border-color:#165dff;color:#165dff}
+.btn-primary{background:#165dff;color:#fff;border-color:#165dff}
+.btn-primary:hover{background:#4080ff;border-color:#4080ff;color:#fff}
+.btn-sm{height:26px;padding:0 10px;font-size:12px}
+
+/* ========== 数据表格 ========== */
+.data-table{width:100%;border-collapse:collapse}
+.data-table th,.data-table td{border-bottom:1px solid #f2f3f5;padding:11px 12px;text-align:left;vertical-align:middle}
+.data-table th{background:#fafbfc;font-weight:500;color:#4e5969;font-size:12px;white-space:nowrap;border-bottom:1px solid #e5e6eb}
+.data-table td{font-size:13px;color:#1f2329}
+.data-table tbody tr{cursor:pointer}
+.data-table tbody tr:hover{background:#fafbfc}
+.data-table .col-code{width:54px;color:#86909c;font-size:12px;font-family:Consolas,Monaco,monospace}
+.data-table .col-name{min-width:170px}
+.data-table .col-trigger{max-width:360px;color:#4e5969;font-size:12px;line-height:1.7}
+.data-table .col-switch{width:60px;text-align:center}
+.data-table .col-ops{width:120px;text-align:right;white-space:nowrap}
+
+/* 级别小圆点 */
+.lv{display:inline-flex;align-items:center;gap:6px;color:#4e5969;font-size:12px}
+.lv::before{content:'';width:6px;height:6px;border-radius:50%;display:inline-block}
+.lv.red::before{background:#f53f3f}
+.lv.yellow::before{background:#ff7d00}
+.lv.gray::before{background:#c9cdd4}
+.lv.red{color:#f53f3f}
+.lv.yellow{color:#ff7d00}
+.lv.gray{color:#86909c}
+
+/* 维度文字 */
+.dim-text{font-size:12px;color:#4e5969}
+
+/* 齐备度 */
+.prep{font-size:12px;display:inline-flex;align-items:center;gap:5px}
+.prep::before{content:'';width:6px;height:6px;border-radius:50%;display:inline-block}
+.prep.ok{color:#00b42a}
+.prep.ok::before{background:#00b42a}
+.prep.warn{color:#ff7d00}
+.prep.warn::before{background:#ff7d00}
+.prep.miss{color:#f53f3f}
+.prep.miss::before{background:#f53f3f}
+
+/* 启用阶段 */
+.ver{font-size:12px;color:#4e5969}
+.ver.v31{color:#86909c}
+
+/* 开关 */
+.switch{position:relative;display:inline-block;width:32px;height:18px}
+.switch input{opacity:0;width:0;height:0}
+.switch-slider{position:absolute;cursor:pointer;inset:0;background:#c9cdd4;border-radius:9px;transition:.2s}
+.switch-slider::before{content:'';position:absolute;height:14px;width:14px;left:2px;top:2px;background:#fff;border-radius:50%;transition:.2s}
+.switch input:checked + .switch-slider{background:#165dff}
+.switch input:checked + .switch-slider::before{transform:translateX(14px)}
+.switch input:disabled + .switch-slider{opacity:.4;cursor:not-allowed}
+
+.op-link{color:#165dff;font-size:12px;cursor:pointer;margin-left:10px}
+.op-link:hover{text-decoration:underline}
+.op-link.danger{color:#f53f3f}
+
+.pagination{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:12px 16px;font-size:12px;color:#4e5969;border-top:1px solid #f2f3f5}
+.pg-btn{min-width:26px;height:26px;border:1px solid #e5e6eb;border-radius:2px;background:#fff;color:#4e5969;cursor:pointer;font-size:12px;display:inline-flex;align-items:center;justify-content:center}
+.pg-btn:hover{border-color:#165dff;color:#165dff}
+.pg-btn.active{background:#165dff;border-color:#165dff;color:#fff}
+
+/* ========== 抽屉 ========== */
+.drawer-mask{position:fixed;inset:0;background:rgba(29,33,41,.3);z-index:200;display:none}
+.drawer-mask.show{display:block}
+.drawer{position:fixed;top:0;right:-760px;width:720px;max-width:92vw;height:100vh;background:#fff;z-index:201;display:flex;flex-direction:column;transition:right .25s ease;border-left:1px solid #e5e6eb}
+.drawer.show{right:0}
+.drawer-hd{padding:14px 20px;border-bottom:1px solid #e5e6eb;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.dh-title{font-size:14px;font-weight:500;color:#1f2329;flex:1;display:flex;align-items:center;gap:8px}
+.dh-code{color:#86909c;font-family:Consolas,monospace;font-weight:400;font-size:12px}
+.drawer-close{border:none;background:none;font-size:16px;color:#86909c;cursor:pointer;padding:4px 8px}
+.drawer-close:hover{color:#1f2329}
+
+.drawer-tabs{display:flex;border-bottom:1px solid #e5e6eb;flex-shrink:0;padding:0 20px}
+.d-tab{padding:11px 14px;font-size:13px;color:#4e5969;cursor:pointer;border-bottom:2px solid transparent}
+.d-tab:hover{color:#165dff}
+.d-tab.active{color:#165dff;border-bottom-color:#165dff}
+
+.drawer-body{flex:1;overflow-y:auto;padding:20px 24px;background:#fafbfc}
+.drawer-body::-webkit-scrollbar{width:5px}
+.drawer-body::-webkit-scrollbar-thumb{background:#c9cdd4;border-radius:3px}
+.drawer-foot{padding:10px 20px;border-top:1px solid #e5e6eb;display:flex;justify-content:flex-end;gap:10px;background:#fff;flex-shrink:0}
+
+.d-panel{display:none}
+.d-panel.active{display:block}
+.dp-card{background:#fff;border:1px solid #e5e6eb;border-radius:2px;padding:16px 18px;margin-bottom:12px}
+.dp-card h4{font-size:13px;font-weight:500;color:#1f2329;margin-bottom:10px}
+.dp-card p{font-size:13px;color:#4e5969;line-height:1.8}
+.dp-card ol,.dp-card ul{font-size:13px;color:#4e5969;line-height:1.9;padding-left:20px}
+.dp-card ol li,.dp-card ul li{margin-bottom:2px}
+.dp-scene{padding:12px 14px;background:#fafbfc;border-left:2px solid #165dff;font-size:12px;color:#4e5969;line-height:1.85}
+.dp-scene b{color:#1f2329;font-weight:500}
+.dp-note{padding:10px 14px;background:#fffbe6;border:1px solid #ffe9ab;font-size:12px;color:#7d5a00;line-height:1.8;border-radius:2px}
+
+/* 参数表 */
+.param-item{border-bottom:1px solid #f2f3f5;padding:16px 18px;background:#fff}
+.param-item:first-child{border-top:1px solid #e5e6eb}
+.param-item:last-child{border-bottom:1px solid #e5e6eb}
+.pi-hd{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.pi-name{font-size:13px;color:#1f2329;font-weight:500}
+.pi-code{font-size:11px;color:#86909c;font-family:Consolas,monospace}
+.pi-desc{font-size:12px;color:#86909c;margin-bottom:10px;line-height:1.6}
+.param-row{display:flex;align-items:center;gap:10px}
+.param-row input[type=number],.param-row input[type=text]{border:1px solid #e5e6eb;border-radius:2px;padding:5px 10px;font-size:13px;width:110px;outline:none;font-family:inherit;height:30px}
+.param-row input[type=number]:focus,.param-row input[type=text]:focus{border-color:#165dff}
+.param-row input[type=range]{flex:1;max-width:240px}
+.param-row .pr-unit{font-size:12px;color:#86909c}
+
+/* 数据源条 */
+.src-item{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid #f2f3f5;background:#fff;gap:12px}
+.src-item:first-child{border-top:1px solid #e5e6eb}
+.src-item:last-child{border-bottom:1px solid #e5e6eb}
+.si-label{font-size:12px;color:#86909c;min-width:100px}
+.si-val{font-size:13px;color:#1f2329;flex:1}
+
+/* 试算 */
+.trial-card{background:#fff;border:1px solid #e5e6eb;border-radius:2px;padding:16px 18px;margin-bottom:12px}
+.trial-card h4{font-size:13px;color:#1f2329;margin-bottom:6px;font-weight:500}
+.trial-card p{font-size:12px;color:#4e5969;margin-bottom:12px;line-height:1.7}
+
+.empty{text-align:center;padding:50px 20px;color:#86909c;font-size:13px}
+
+/* 弹窗 */
+.modal-mask{position:fixed;inset:0;background:rgba(29,33,41,.4);z-index:300;display:none;align-items:center;justify-content:center}
+.modal-mask.show{display:flex}
+.modal{background:#fff;border-radius:2px;width:640px;max-width:92vw;max-height:80vh;display:flex;flex-direction:column}
+.modal-hd{padding:14px 20px;border-bottom:1px solid #e5e6eb;display:flex;align-items:center;gap:10px}
+.modal-hd h3{font-size:14px;font-weight:500;color:#1f2329;flex:1}
+.modal-body{flex:1;overflow-y:auto;padding:20px}
+.modal-foot{padding:12px 20px;border-top:1px solid #e5e6eb;display:flex;justify-content:flex-end;gap:10px}
+
+.trial-hd{padding:14px 18px;border:1px solid #e5e6eb;border-radius:2px;margin-bottom:14px;display:flex;align-items:center;gap:20px}
+.trial-hd .trh-num{font-size:22px;font-weight:500;color:#1f2329;line-height:1.1}
+.trial-hd .trh-num.red{color:#f53f3f}
+.trial-hd .trh-num.yellow{color:#ff7d00}
+.trial-hd .trh-lb{font-size:11px;color:#86909c;margin-top:3px}
+.trial-hd .trh-right{margin-left:auto;text-align:right;font-size:12px;color:#4e5969;line-height:1.7}
+
+.hit-list{border:1px solid #e5e6eb;border-radius:2px}
+.hit-row{padding:10px 14px;border-bottom:1px solid #f2f3f5;display:flex;align-items:center;gap:12px;font-size:12px}
+.hit-row:last-child{border-bottom:none}
+.hit-row:hover{background:#fafbfc}
+.hr-wo{font-family:Consolas,monospace;color:#165dff;min-width:140px;font-size:11px}
+.hr-who{color:#4e5969;min-width:100px}
+.hr-sum{flex:1;color:#1f2329}
+.hr-time{color:#86909c;font-size:11px}
+
+/* toast */
+.toast-wrap{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:500;pointer-events:none}
+.toast{background:#1f2329;color:#fff;padding:8px 16px;border-radius:2px;font-size:12px;margin-bottom:6px}
+.toast.success{background:#00b42a}
+.toast.warn{background:#ff7d00}
+
+/* 督查看板 - 极简表格版 */
+.board-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.board-card{background:#fff;border:1px solid #e5e6eb;border-radius:2px}
+.board-card-hd{padding:12px 16px;border-bottom:1px solid #f2f3f5;font-size:13px;color:#1f2329;font-weight:500}
+.board-card table{width:100%;border-collapse:collapse}
+.board-card td{padding:8px 16px;font-size:12px;color:#4e5969;border-bottom:1px solid #f2f3f5}
+.board-card td:first-child{color:#1f2329}
+.board-card td.td-num{text-align:right;width:60px;font-variant-numeric:tabular-nums}
+.board-card tr:last-child td{border-bottom:none}
+
+.note-box{background:#fafbfc;border:1px solid #e5e6eb;border-radius:2px;padding:14px 18px;font-size:12px;color:#4e5969;line-height:1.8}
+.note-box b{color:#1f2329;font-weight:500}
+</style>
+</head>
+<body>
+
+<div class="app-body">
+
+  <!-- 左侧菜单 -->
+  <div class="sidebar">
+    <div class="sidebar-logo">JET 3.0 督查模块</div>
+    <div class="sidebar-menu">
+      <div class="sb-group">
+        <div class="sb-title">督查中心</div>
+        <div class="sb-item" data-page="board" onclick="switchPage('board')">督查看板</div>
+        <div class="sb-item active" data-page="rules" onclick="switchPage('rules')">督查规则配置<span class="sb-n">17</span></div>
+        <div class="sb-item" data-page="suspects" onclick="switchPage('suspects')">可疑工单列表<span class="sb-n">8</span></div>
+      </div>
+      <div class="sb-group">
+        <div class="sb-title">数据与校准</div>
+        <div class="sb-item" data-page="accumulate" onclick="switchPage('accumulate')">数据积累看板</div>
+        <div class="sb-item" data-page="calibrate" onclick="switchPage('calibrate')">阈值校准记录</div>
+      </div>
+      <div class="sb-group">
+        <div class="sb-title">关联模块</div>
+        <div class="sb-item">工单管理</div>
+        <div class="sb-item">数据配置模块</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右侧主体 -->
+  <div class="main-area">
+
+    <div class="topbar">
+      <div class="breadcrumb" id="navText">督查模块 <span class="bc-sep">/</span> <b>督查规则配置</b></div>
+      <div class="topbar-spacer"></div>
+      <div class="user-info">刘督查（督查岗） · 南京康乐电力</div>
+    </div>
+
+    <div class="content">
+
+      <!-- ============ 督查规则配置 ============ -->
+      <div class="page active" id="page-rules">
+
+        <div class="page-title">督查规则配置</div>
+        <div class="page-subtitle">由督查岗统一维护 17 条可疑行为识别规则；V3.0 上线前 2-3 周试点校准期后可调整阈值</div>
+
+        <!-- 统计条 -->
+        <div class="stat-row">
+          <div class="stat-cell">
+            <div class="sc-label">规则总数</div>
+            <div class="sc-val">17<span class="sc-u">条</span></div>
+            <div class="sc-sub">MVP 10 + D30 新增 6 + 环节耗时 1</div>
+          </div>
+          <div class="stat-cell">
+            <div class="sc-label">红级（硬触发）</div>
+            <div class="sc-val">4<span class="sc-u">条</span></div>
+            <div class="sc-sub">命中即工单挂起</div>
+          </div>
+          <div class="stat-cell">
+            <div class="sc-label">黄级（周期审查）</div>
+            <div class="sc-val">12<span class="sc-u">条</span></div>
+            <div class="sc-sub">督查岗月度审查 · 可申诉</div>
+          </div>
+          <div class="stat-cell">
+            <div class="sc-label">启用阶段</div>
+            <div class="sc-val">14<span class="sc-u">/ 17</span></div>
+            <div class="sc-sub">V3.0 启用 14 · V3.1 延后 3</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="dim-tabs">
+            <div class="dim-tab active" data-dim="all" onclick="filterDim('all')">全部 <span class="dim-count">17</span></div>
+            <div class="dim-tab" data-dim="integrity" onclick="filterDim('integrity')">廉政 <span class="dim-count">10</span></div>
+            <div class="dim-tab" data-dim="safety" onclick="filterDim('safety')">安全 <span class="dim-count">3</span></div>
+            <div class="dim-tab" data-dim="norm" onclick="filterDim('norm')">规范 <span class="dim-count">3</span></div>
+            <div class="dim-tab" data-dim="efficiency" onclick="filterDim('efficiency')">效率 <span class="dim-count">1</span></div>
+          </div>
+
+          <div class="toolbar">
+            <div class="search-box">
+              <input id="searchInput" placeholder="搜索规则名 / 触发条件" oninput="renderTable()">
+            </div>
+            <select class="f-select" id="filterLevel" onchange="renderTable()">
+              <option value="">全部级别</option>
+              <option value="red">红级</option>
+              <option value="yellow">黄级</option>
+              <option value="gray">灰级</option>
+            </select>
+            <select class="f-select" id="filterVersion" onchange="renderTable()">
+              <option value="">全部阶段</option>
+              <option value="v30">V3.0 启用</option>
+              <option value="v31">V3.1 启用</option>
+            </select>
+            <select class="f-select" id="filterPrep" onchange="renderTable()">
+              <option value="">全部齐备度</option>
+              <option value="ok">齐备</option>
+              <option value="warn">依赖补强</option>
+              <option value="miss">缺失</option>
+            </select>
+            <div class="toolbar-spacer"></div>
+            <button class="btn" onclick="showToast('导出规则清单 Excel（演示）','success')">导出</button>
+            <button class="btn btn-primary" onclick="showToast('新增规则功能在督查模块正式产品化后开放','warn')">新增规则</button>
+          </div>
+
+          <table class="data-table" id="ruleTable">
+            <thead>
+              <tr>
+                <th class="col-code">编号</th>
+                <th class="col-name">规则名</th>
+                <th>维度</th>
+                <th>级别</th>
+                <th class="col-trigger">触发条件</th>
+                <th>数据齐备度</th>
+                <th>启用阶段</th>
+                <th class="col-switch">启用</th>
+                <th class="col-ops">操作</th>
+              </tr>
+            </thead>
+            <tbody id="ruleTbody"></tbody>
+          </table>
+
+          <div class="pagination">
+            <span>共 <b id="totalCount">17</b> 条</span>
+            <span style="margin-left:auto"></span>
+            <select class="f-select" style="min-width:76px;height:26px"><option>20 条/页</option></select>
+            <button class="pg-btn">&lt;</button>
+            <button class="pg-btn active">1</button>
+            <button class="pg-btn">&gt;</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ============ 督查看板 ============ -->
+      <div class="page" id="page-board">
+        <div class="page-title">督查看板 · 近 30 天</div>
+        <div class="page-subtitle">仅呈现本单位/下属单位执行层员工的可疑行为画像</div>
+
+        <div class="stat-row">
+          <div class="stat-cell"><div class="sc-label">命中工单数</div><div class="sc-val">19<span class="sc-u">个</span></div><div class="sc-sub">红级 3 · 黄级 14 · 灰级 2</div></div>
+          <div class="stat-cell"><div class="sc-label">涉及人员数</div><div class="sc-val">7<span class="sc-u">人</span></div><div class="sc-sub">试验人员 4 · 工作负责人 2 · 项目经理 1</div></div>
+          <div class="stat-cell"><div class="sc-label">已处置</div><div class="sc-val">11<span class="sc-u">个</span></div><div class="sc-sub">待处置 8</div></div>
+          <div class="stat-cell"><div class="sc-label">申诉数</div><div class="sc-val">1<span class="sc-u">次</span></div><div class="sc-sub">申诉成功率 100%</div></div>
+        </div>
+
+        <div class="board-grid">
+          <div class="board-card">
+            <div class="board-card-hd">各维度命中分布</div>
+            <table>
+              <tr><td>廉政</td><td class="td-num">12</td></tr>
+              <tr><td>安全</td><td class="td-num">4</td></tr>
+              <tr><td>规范</td><td class="td-num">2</td></tr>
+              <tr><td>效率</td><td class="td-num">1</td></tr>
+            </table>
+          </div>
+          <div class="board-card">
+            <div class="board-card-hd">高频触发规则 Top 5</div>
+            <table>
+              <tr><td>退回后判定反转</td><td class="td-num">6</td></tr>
+              <tr><td>跳过率异常高</td><td class="td-num">5</td></tr>
+              <tr><td>深夜集中提交</td><td class="td-num">4</td></tr>
+              <tr><td>判定反转无重拍</td><td class="td-num">3</td></tr>
+              <tr><td>派发集中度</td><td class="td-num">2</td></tr>
+            </table>
+          </div>
+          <div class="board-card">
+            <div class="board-card-hd">高风险人员</div>
+            <table>
+              <tr><td>李队 · 工作负责人</td><td class="td-num">5</td></tr>
+              <tr><td>张工 · 试验人员</td><td class="td-num">4</td></tr>
+              <tr><td>王经理 · 项目经理</td><td class="td-num">3</td></tr>
+              <tr><td>赵工 · 试验人员</td><td class="td-num">2</td></tr>
+              <tr><td>孙队 · 工作负责人</td><td class="td-num">1</td></tr>
+            </table>
+          </div>
+          <div class="board-card">
+            <div class="board-card-hd">处置状态分布</div>
+            <table>
+              <tr><td>已挂起待核查</td><td class="td-num">3</td></tr>
+              <tr><td>月度审查中</td><td class="td-num">5</td></tr>
+              <tr><td>已处置 · 约谈</td><td class="td-num">6</td></tr>
+              <tr><td>已处置 · 降级警告</td><td class="td-num">4</td></tr>
+              <tr><td>已申诉</td><td class="td-num">1</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="note-box"><b>说明：</b>完整督查看板在 4.6 正式产品化时展开。V3.1 扩展方向：项目级风险热力图、环节耗时偏离度月报、跨单位横向对比、督查岗月度报告导出。</div>
+      </div>
+
+      <!-- ============ 可疑工单列表 ============ -->
+      <div class="page" id="page-suspects">
+        <div class="page-title">可疑工单列表 · 近 30 天</div>
+        <div class="page-subtitle">命中 1 条及以上督查规则的工单；红级命中自动挂起，黄级命中进月度审查</div>
+
+        <div class="panel">
+          <div class="toolbar">
+            <div class="search-box"><input placeholder="搜索工单号 / 项目名 / 人员"></div>
+            <select class="f-select">
+              <option>全部状态</option><option>待核查</option><option>已处置</option><option>已申诉</option>
+            </select>
+            <div class="toolbar-spacer"></div>
+            <span style="color:#86909c;font-size:12px">共 8 条 · 红级 3 · 黄级 5</span>
+          </div>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>工单号</th>
+                <th>项目</th>
+                <th>涉及人员</th>
+                <th>命中规则</th>
+                <th>级别</th>
+                <th>命中时间</th>
+                <th>处置状态</th>
+                <th class="col-ops">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style="color:#165dff;font-family:Consolas,monospace">WO-20260415-032</td><td>龙泉家园小区（一期）</td><td>张工 → 李队</td><td>判定反转无重拍</td><td><span class="lv red">红级</span></td><td>2026-04-15 17:24</td><td>挂起待核查</td><td class="col-ops"><span class="op-link">详情</span><span class="op-link">处置</span></td></tr>
+              <tr><td style="color:#165dff;font-family:Consolas,monospace">WO-20260412-018</td><td>徐州华电二期扩建</td><td>李队</td><td>同设备多账号关键提交</td><td><span class="lv red">红级</span></td><td>2026-04-12 10:32</td><td>挂起待核查</td><td class="col-ops"><span class="op-link">详情</span><span class="op-link">处置</span></td></tr>
+              <tr><td style="color:#165dff;font-family:Consolas,monospace">WO-20260410-008</td><td>盐城工业园配网升级</td><td>王工</td><td>全站跳过模式</td><td><span class="lv red">红级</span></td><td>2026-04-10 16:08</td><td>已处置 · 降级警告</td><td class="col-ops"><span class="op-link">详情</span></td></tr>
+              <tr><td style="color:#165dff;font-family:Consolas,monospace">WO-20260408-021</td><td>龙泉家园小区（二期）</td><td>张工 → 李队</td><td>退回后判定反转</td><td><span class="lv yellow">黄级</span></td><td>2026-04-08 14:52</td><td>月度审查中</td><td class="col-ops"><span class="op-link">详情</span></td></tr>
+              <tr><td style="color:#165dff;font-family:Consolas,monospace">WO-20260405-003</td><td>新北科技园一期</td><td>张工</td><td>深夜集中提交</td><td><span class="lv yellow">黄级</span></td><td>2026-04-06 02:15</td><td>月度审查中</td><td class="col-ops"><span class="op-link">详情</span></td></tr>
+              <tr><td style="color:#165dff;font-family:Consolas,monospace">WO-20260403-014</td><td>盐城工业园配网升级</td><td>王工 · 跳过率 45%</td><td>跳过率异常 + 原因雷同</td><td><span class="lv yellow">黄级 ×2</span></td><td>2026-04-03 11:30</td><td>已申诉</td><td class="col-ops"><span class="op-link">详情</span></td></tr>
+              <tr><td style="color:#165dff;font-family:Consolas,monospace">WO-20260331-007</td><td>南京江北核心区</td><td>王经理</td><td>派发集中度</td><td><span class="lv yellow">黄级</span></td><td>2026-03-31 09:02</td><td>月度审查中</td><td class="col-ops"><span class="op-link">详情</span></td></tr>
+              <tr><td style="color:#165dff;font-family:Consolas,monospace">WO-20260328-042</td><td>龙泉家园小区（三期）</td><td>李队</td><td>确认耗时过短</td><td><span class="lv yellow">黄级</span></td><td>2026-03-28 15:48</td><td>已处置 · 已约谈</td><td class="col-ops"><span class="op-link">详情</span></td></tr>
+            </tbody>
+          </table>
+          <div class="pagination"><span>共 8 条</span></div>
+        </div>
+      </div>
+
+      <!-- ============ 数据积累看板 ============ -->
+      <div class="page" id="page-accumulate">
+        <div class="page-title">数据积累看板</div>
+        <div class="page-subtitle">规则 17「环节耗时偏离度」V3.0 不触发预警，仅积累数据；V3.1 基于 P50/P90 统计后启用</div>
+
+        <div class="panel">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>环节对</th>
+                <th>已积累项目数</th>
+                <th>行业基准要求</th>
+                <th>本单位基准要求</th>
+                <th>V3.1 启用状态</th>
+                <th class="col-ops">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>2.5 核查执行 → 2.6 核查确认</td><td>82</td><td>100</td><td>30</td><td>差 18 个项目</td><td class="col-ops"><span class="op-link">明细</span></td></tr>
+              <tr><td>2.3 建设确认 → 2.5 核查执行</td><td>67</td><td>100</td><td>30</td><td>差 33 个项目</td><td class="col-ops"><span class="op-link">明细</span></td></tr>
+              <tr><td>3.3 安措执行 → 3.5 开工会</td><td>105</td><td>100</td><td>30</td><td>行业达标，本单位待补</td><td class="col-ops"><span class="op-link">明细</span></td></tr>
+              <tr><td>3.5 开工会 → 3.7 检测执行</td><td>98</td><td>100</td><td>30</td><td>差 2 个项目</td><td class="col-ops"><span class="op-link">明细</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note-box" style="margin-top:12px"><b>V3.1 启用后将支持：</b>双层基准（行业 P50 + 本单位 P50）· 最小样本约束 · 等待原因前置标注 · 工作日/节假日过滤</div>
+      </div>
+
+      <!-- ============ 阈值校准记录 ============ -->
+      <div class="page" id="page-calibrate">
+        <div class="page-title">阈值校准记录</div>
+        <div class="page-subtitle">V3.0 上线前 2-3 周试点校准期所有阈值调整的审计日志</div>
+
+        <div class="panel">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>调整时间</th>
+                <th>规则</th>
+                <th>参数</th>
+                <th>原值 → 新值</th>
+                <th>调整人</th>
+                <th>调整原因</th>
+                <th>生效范围</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>2026-04-18 10:22</td><td>脱岗提交</td><td>距离阈值</td><td>300m → 500m</td><td>刘督查</td><td>地下站房 GPS 漂移大，调宽避免误报</td><td>南京康乐电力</td></tr>
+              <tr><td>2026-04-15 14:08</td><td>规模显著缺失</td><td>比例阈值</td><td>80% → 50%</td><td>老板</td><td>80% 误报率过高，对齐硬触发语义</td><td>全单位</td></tr>
+              <tr><td>2026-04-10 09:35</td><td>跳过率异常高</td><td>跳过率阈值</td><td>30% → 40%</td><td>刘督查</td><td>一线反馈 30% 触发一贯偏保守团队，调宽</td><td>南京康乐电力</td></tr>
+              <tr><td>2026-04-05 16:40</td><td>确认耗时过短</td><td>中位数阈值</td><td>10 秒/项 → 30 秒/项</td><td>刘督查</td><td>对齐 2.6 底稿已定义的 &lt;10s 硬告警口径，本规则略宽</td><td>全单位</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 规则详情抽屉 -->
+<div class="drawer-mask" id="drawerMask" onclick="closeDrawer()"></div>
+<div class="drawer" id="ruleDrawer">
+  <div class="drawer-hd">
+    <div class="dh-title">
+      <span id="drawerCode" class="dh-code">#01</span>
+      <span id="drawerName">规则名</span>
+      <span id="drawerLevel" style="font-size:12px;font-weight:400"></span>
+    </div>
+    <label class="switch" title="启用/停用">
+      <input type="checkbox" id="drawerSwitch" checked>
+      <span class="switch-slider"></span>
+    </label>
+    <button class="drawer-close" onclick="closeDrawer()">×</button>
+  </div>
+  <div class="drawer-tabs">
+    <div class="d-tab active" data-tab="biz" onclick="switchDTab('biz')">业务说明</div>
+    <div class="d-tab" data-tab="param" onclick="switchDTab('param')">触发参数</div>
+    <div class="d-tab" data-tab="source" onclick="switchDTab('source')">数据源齐备度</div>
+    <div class="d-tab" data-tab="trial" onclick="switchDTab('trial')">命中试算</div>
+  </div>
+  <div class="drawer-body">
+    <div class="d-panel active" id="dp-biz"></div>
+    <div class="d-panel" id="dp-param"></div>
+    <div class="d-panel" id="dp-source"></div>
+    <div class="d-panel" id="dp-trial"></div>
+  </div>
+  <div class="drawer-foot">
+    <button class="btn" onclick="closeDrawer()">取消</button>
+    <button class="btn btn-primary" onclick="saveRule()">保存配置</button>
+  </div>
+</div>
+
+<!-- 试算结果弹窗 -->
+<div class="modal-mask" id="trialModal" onclick="if(event.target.id==='trialModal')closeTrial()">
+  <div class="modal">
+    <div class="modal-hd">
+      <h3 id="trialTitle">命中试算结果</h3>
+      <button class="drawer-close" onclick="closeTrial()">×</button>
+    </div>
+    <div class="modal-body" id="trialBody"></div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeTrial()">关闭</button>
+      <button class="btn btn-primary" onclick="closeTrial();showToast('已保存并在督查看板生效','success')">应用此阈值</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+const RULES = [
+  {id:1, code:'R-LZ-01', name:'判定反转无重拍', dim:'integrity', dimName:'廉政', level:'red', version:'v30', enabled:true, prep:'warn', prepText:'需要核查执行模块把每次"改判动作"完整记录下来（谁改的 / 改前 / 改后 / 有没有补拍）。产品设计已完成，等开发落库。',
+    trigger:'同检测对象"不合格→合格"反转，且判定后新增的非协助者照片 = 0（通过每张照片记录的实际拍摄人识别）',
+    source:['2.5 核查执行','照片库'], output:'工单挂起 + 项目经理到场核查',
+    scene:`<b>典型场景（完整业务路径）：</b><br>① 试验人员<b>张工</b>在 2.5 核查执行里判某台变压器外观"不合格"（发现油漆锈蚀）并提交<br>② 工作负责人<b>李队</b>在 2.6 核查确认页面看到 → 点"退回给张工"（理由栏填"请再核对一下"）<br>③ 张工任务列表里该项恢复可编辑 → 把判定改为"<b>合格</b>"并再次提交<br>④ 整个过程张工没有补拍任何新照片<br><br>APP 里没有"绕过退回直接改判"的入口——必须走"提交→退回→重改→再提交"完整流程`,
+    why:'典型廉政风险——李队收了施工方好处后借"退回"动作给张工暗示，张工领会后改判放行；无新证据的改判无法用"现场发现新情况"解释。',
+    params:[
+      {key:'new_photos_threshold', name:'新增非协助者照片数阈值', code:'new_photos', value:0, unit:'张', desc:'判定后若新增此数量及以下的非协助者照片则命中（0 = 没有任何新照片）', min:0, max:5, step:1},
+      {key:'reversal_direction', name:'反转方向', code:'direction', value:'ng_to_ok', unit:'', desc:'仅监控的判定变更方向', options:[{v:'ng_to_ok',l:'仅不合格 → 合格（廉政）'},{v:'both',l:'双向（质量兜底）'}]},
+      {key:'photo_within', name:'补拍时间窗口', code:'photo_within', value:2, unit:'小时', desc:'判定变更后多长时间内的新增照片视为"补充证据"', min:0, max:24, step:1},
+    ], trialHit:3, trialSample:842},
+  {id:2, code:'R-AQ-01', name:'同设备多账号关键提交', dim:'safety', dimName:'安全', level:'red', version:'v30', enabled:true, prep:'warn', prepText:'需要给每台手机一个稳定的"设备身份证"（重装 APP 后仍不变）。已向开发提需求，等底座团队确认能否提供。',
+    trigger:'同设备 2h 内 ≥2 账号完成关键业务提交（到场/安措/审核/确认开工/核查提交等）',
+    source:['2.2 现场准备','3.3 安措执行','3.5 开工会','底座登录信息'], output:'代操作风险人员预警 + 工单挂起',
+    scene:`<b>典型场景：</b><br>工作负责人<b>李队</b>带队到配电室，只有李队一人到场。李队拿出手机：<br>① 10:15 用张工账号登录 → 完成"安措执行" → 登出<br>② 10:30 用王工账号登录 → 完成"审核" → 登出<br>③ 11:00 用赵工账号登录 → 完成"确认开工"<br><br>三个人名义上都到了场，实际都没到——系统记录的责任链全错。`,
+    why:'代人完成身份动作——一人拿手机把三人的活都替做了。一旦发生涉电事故追责，责任链完全错乱，管理层背大锅。',
+    params:[
+      {key:'time_window', name:'时间窗口', code:'time_window', value:2, unit:'小时', desc:'同一设备在此时间内的多账号提交才计入', min:1, max:8, step:1},
+      {key:'account_count', name:'账号数阈值', code:'account_count', value:2, unit:'个', desc:'不同账号数达到此值才触发', min:2, max:5, step:1},
+      {key:'critical_events', name:'关键提交类型', code:'critical_events', value:'arrival,safety,review,start,inspect', unit:'', desc:'仅这些事件类型计入（逗号分隔）', type:'text'},
+    ], trialHit:1, trialSample:842},
+  {id:3, code:'R-AQ-02', name:'脱岗提交', dim:'safety', dimName:'安全', level:'yellow', version:'v31', enabled:false, prep:'warn', prepText:'需要先建立每座站房的精确 GPS 坐标库（谁家的站房在哪里）。V3.0 还没建完，先只记录 GPS 数据不报警，V3.1 启用。',
+    trigger:'四条硬门槛同时满足：GPS 精度<50m + 站房坐标已校准 + 距离>500m + 连续 3 次采样均偏离',
+    source:['2.2 现场准备','3.3 安措执行','GPS 埋点'], output:'安全事件预警 · V3.1 启用',
+    scene:`<b>典型场景：</b><br>下雨天没出现场，<b>张工</b>在单位楼下餐厅 APP 上点"到场确认"。系统记录 GPS 显示：<br>· 距离最近站房 <b>1.2 公里</b><br>· 连续 3 次采样均偏离<br>· GPS 精度 12m（高置信）<br><br>V3.1 启用后命中黄级预警。`,
+    why:'防"不到现场就完成到场动作"。V3.0 站房坐标库未建立，仅埋点不触发；V3.1 四条硬门槛齐全后启用，避免地下站房/GPS 漂移误报。',
+    params:[
+      {key:'gps_accuracy', name:'GPS 精度阈值', code:'gps_accuracy', value:50, unit:'米', desc:'GPS 误差小于此值才视为可信（大于此值静默不触发）', min:10, max:200, step:10},
+      {key:'distance_threshold', name:'距离阈值', code:'distance', value:500, unit:'米', desc:'距离已校准站房坐标超过此距离才触发', min:100, max:2000, step:50},
+      {key:'sample_count', name:'连续偏离采样数', code:'sample_count', value:3, unit:'次', desc:'防单次 GPS 跳点误报', min:1, max:10, step:1},
+    ], trialHit:0, trialSample:842, v31Notice:true},
+  {id:4, code:'R-GF-01', name:'规模显著缺失', dim:'norm', dimName:'规范', level:'yellow', version:'v30', enabled:true, prep:'ok', prepText:'数据已齐备：建设确认模块已记录每个项目实际做了几座站房。',
+    trigger:'建设确认实际站房数 < 工单规模 × 50%',
+    source:['1.0 工单创建','2.3 建设情况确认'], output:'规模异常项目 · 进廉政看板',
+    scene:`<b>典型场景：</b><br>① 项目经理在 1.0 创建工单时规模填 <b>10 个站房</b><br>② 建设确认环节 2.3 实际只录了 <b>4 个站房</b>（40%）<br>③ 触发规则 → 自动交叉 2.3 规模差异率看板<br><br>可能是漏检大量站房，也可能项目经理虚报规模骗合同金额。`,
+    why:'甲方验收第一道闸门就是"该有的必须有"——规模缺失会被当场拒收。同时也是项目经理虚报合同规模的典型信号。',
+    params:[
+      {key:'ratio_threshold', name:'缺失比例阈值', code:'ratio', value:50, unit:'%', desc:'实际站房 / 工单规模 < 此值触发', min:10, max:90, step:5},
+      {key:'min_scale', name:'最小规模（豁免）', code:'min_scale', value:3, unit:'站房', desc:'工单规模不足此值时静默不触发（小项目天然波动大）', min:1, max:10, step:1},
+    ], trialHit:2, trialSample:842},
+  {id:5, code:'R-AQ-03', name:'深夜集中提交', dim:'safety', dimName:'安全', level:'yellow', version:'v30', enabled:true, prep:'warn', prepText:'需要同时记录"操作实际发生时间"和"上传到服务器时间"——防止离线补传被误判为深夜作业。等开发落库。',
+    trigger:'单人单日 22:00-06:00 原始操作时间占当日比例 > 30%',
+    source:['全模块提交事件'], output:'异常时段人员',
+    scene:`<b>典型场景：</b><br>① 白天<b>张工</b>只跑了 3 个站房<br>② 回住处后在晚上 23:00 至凌晨 2:00 <b>集中提交 10 条检测记录</b>（占当日 60%）<br><br>系统必须用"原始操作时间"识别深夜作业，不能用"上传到服务器时间"——否则合规的离线补传会被误判。`,
+    why:'白天没做完的活晚上"闭眼编数据"补造嫌疑。与判定反转、驳回凑照片交叉命中时，升红级联合判定。',
+    params:[
+      {key:'night_start', name:'深夜起始时间', code:'night_start', value:'22:00', unit:'', desc:'从此时间开始计入"深夜时段"', type:'text'},
+      {key:'night_end', name:'深夜结束时间', code:'night_end', value:'06:00', unit:'', desc:'到此时间为止', type:'text'},
+      {key:'ratio_threshold', name:'占比阈值', code:'ratio', value:30, unit:'%', desc:'深夜时段占当日提交比例超过此值触发', min:10, max:80, step:5},
+    ], trialHit:4, trialSample:842},
+  {id:6, code:'R-GF-02', name:'确认耗时过短', dim:'norm', dimName:'规范', level:'yellow', version:'v30', enabled:true, prep:'ok', prepText:'数据已齐备：核查确认模块已记录每项确认的耗时。',
+    trigger:'单人中位数 < 30 秒/项',
+    source:['2.6 核查确认'], output:'确认走过场风险',
+    scene:`<b>典型场景：</b><br>工作负责人李队连续 8 个项目的核查确认中，<b>单人中位数 &lt; 30 秒/项</b>（8 项只用了 4 分钟）。<br>每项核查应至少看照片+核对数据，30 秒根本来不及——走过场的典型特征。`,
+    why:'甲方验收第二道闸门"形式合规"——确认耗时过短意味着工作负责人没实质审核。',
+    params:[
+      {key:'median_threshold', name:'中位数阈值', code:'median', value:30, unit:'秒/项', desc:'单人近 30 天核查确认中位数低于此值触发', min:5, max:120, step:5},
+      {key:'min_items', name:'最小样本量', code:'min_items', value:10, unit:'项', desc:'单人近 30 天确认项数不足此值静默不触发', min:5, max:50, step:5},
+    ], trialHit:1, trialSample:842},
+  {id:7, code:'R-LZ-02', name:'退回后判定反转', dim:'integrity', dimName:'廉政', level:'yellow', version:'v30', enabled:true, prep:'ok', prepText:'数据已齐备：核查确认模块已完整记录每次退回动作。',
+    trigger:'退回后重新判定反转（不合格↔合格双向；方向"不合格→合格"重点关注）',
+    source:['2.6 核查确认','2.5 核查执行'], output:'退回诱导风险',
+    scene:`<b>典型场景（规则 1 的黄级兜底）：</b><br>① 施工方请工作负责人<b>李队</b>吃饭<br>② 张工判某台断路器"不合格"，李队退回说"再看看"<br>③ 张工心领神会，<b>重新拍了 2 张新照片</b>（看似合理的"补证据"），改判"合格"再提交<br><br>规则 1 红级抓不到"新证据伪装"——本规则只看反转动作，黄级兜底。`,
+    why:'规则 1 命中不了时的兜底黄级——施工方可能提示张工"补几张角度好看的照片再改判"。督查岗累积"同一张工-李队组合反复触发"会合并升红。',
+    params:[
+      {key:'direction', name:'反转方向', code:'direction', value:'both', unit:'', desc:'监控的判定变更方向', options:[{v:'ng_to_ok',l:'仅不合格→合格'},{v:'both',l:'双向（推荐）'}]},
+      {key:'window_days', name:'累计窗口', code:'window', value:30, unit:'天', desc:'同一试验人-工作负责人组合在此天数内的累计命中数', min:7, max:90, step:7},
+      {key:'pair_threshold', name:'组合累计阈值', code:'pair_threshold', value:3, unit:'次', desc:'同组合达到此次数升红级合并告警', min:1, max:10, step:1},
+    ], trialHit:6, trialSample:842},
+  {id:8, code:'R-LZ-03', name:'改派频次过高', dim:'integrity', dimName:'廉政', level:'yellow', version:'v31', enabled:false, prep:'warn', prepText:'需要把"任务从 A 改派给 B 又改派给 C"的完整链路记录下来。目前三个改派入口记录格式不统一，V3.0 先统一记录，V3.1 启用。',
+    trigger:'单项改派 > 2 次',
+    source:['2.4 核查分工','2.6 核查确认'], output:'改派异常项',
+    scene:`<b>典型场景：</b><br>某项核查任务被连续改派 3 次（<b>张工 → 李队 → 王工 → 赵工</b>）。<br>可能是只有特定人愿意/敢签合格，也可能是管理层在选择"配合度高"的执行人。`,
+    why:'频繁改派可能掩盖"只有特定人愿意/敢签合格"的问题。需要先把三个改派入口的记录格式统一，否则改派链数据不连贯，规则跑不准。',
+    params:[{key:'reassign_count', name:'改派次数阈值', code:'reassign_count', value:2, unit:'次', desc:'单项改派超过此数触发', min:1, max:5, step:1}],
+    trialHit:0, trialSample:842, v31Notice:true},
+  {id:9, code:'R-LZ-04', name:'派发集中度', dim:'integrity', dimName:'廉政', level:'yellow', version:'v30', enabled:true, prep:'ok', prepText:'数据已齐备：工单派发关系已完整记录（谁派给谁、什么时候派的）。',
+    trigger:'前提条件候选队伍数 ≥ 3；项目经理近 30 天派发 > 80% 给同一队伍',
+    source:['1.0 工单创建'], output:'派发偏向人员',
+    scene:`<b>典型场景：</b><br>项目经理<b>王经理</b>近 30 天派发的 20 个工单中：<br>· <b>18 个（90%）</b>都派给了自己的连襟经营的检测队伍<br>· 本单位有 <b>5 支候选队伍</b>可选<br><br>候选队伍只有 1-2 支时规则静默（不误伤小单位）。`,
+    why:'可能是项目经理与特定队伍有利益关联。必须加"候选队伍 ≥ 3"前提，否则小单位必然误报。',
+    params:[
+      {key:'concentration', name:'集中度阈值', code:'concentration', value:80, unit:'%', desc:'单个项目经理派发给同一队伍的比例', min:50, max:95, step:5},
+      {key:'min_candidates', name:'候选队伍数前提', code:'min_candidates', value:3, unit:'支', desc:'本单位候选队伍不足此数时静默不触发', min:2, max:10, step:1},
+      {key:'window_days', name:'统计窗口', code:'window', value:30, unit:'天', desc:'近多少天的派发数据', min:7, max:90, step:7},
+    ], trialHit:2, trialSample:842},
+  {id:10, code:'R-GF-03', name:'工单-建设差异告警', dim:'norm', dimName:'规范', level:'gray', version:'v30', enabled:true, prep:'ok', prepText:'数据已齐备：建设确认模块已上线。',
+    trigger:'工单规模与建设确认差异 > 阈值（灰级统计信号，不单独预警）',
+    source:['1.0 工单创建','2.3 建设情况确认'], output:'规模差异统计看板（复用 2.3）',
+    scene:`<b>典型场景：</b><br>工单说 15 个站房，建设确认录了 12 个 → <b>差异率 20%（未达黄级阈值）</b>。<br>命中但不单独预警，汇总到 2.3 规模差异率看板，项目经理月度差异分布可见。`,
+    why:'为规则 4 提供更完整的统计画像。灰级 = 只计数不预警，避免告警疲劳。',
+    params:[{key:'diff_threshold', name:'差异率阈值', code:'diff', value:10, unit:'%', desc:'计入统计看板的最小差异', min:5, max:50, step:5}],
+    trialHit:12, trialSample:842, isGray:true},
+  {id:11, code:'R-D30-01', name:'跳过率异常高', dim:'integrity', dimName:'廉政', level:'yellow', version:'v30', enabled:true, prep:'warn', prepText:'安措执行模块已具备"跳过+增项"机制；核查执行模块需要补同样的机制才能同样抓到这类行为。',
+    trigger:'单人跳过率 > 40%',
+    source:['3.3 安措执行','2.5 核查执行（补强后）'], output:'跳过滥用风险',
+    scene:`<b>典型场景：</b><br><b>王工</b>在安措执行中遇到"工程车辆拍照"懒得下车拍，直接跳过；下个站房也跳过；再下个站房还是跳过。一个月下来跳过率 <b>45%</b>，理由全是"现场无此设施"。`,
+    why:'合理跳过是"现场真没有这个设施"；高跳过率可能是嫌麻烦乱跳，把跳过机制从"容错"变成"偷懒"。',
+    params:[
+      {key:'skip_ratio', name:'跳过率阈值', code:'skip_ratio', value:40, unit:'%', desc:'单人近 30 天跳过率超过此值触发', min:15, max:80, step:5},
+      {key:'min_items', name:'最小样本量', code:'min_items', value:20, unit:'项', desc:'执行项数不足此值静默', min:5, max:100, step:5},
+    ], trialHit:5, trialSample:842},
+  {id:12, code:'R-D30-02', name:'跳过原因文本雷同', dim:'integrity', dimName:'廉政', level:'yellow', version:'v30', enabled:true, prep:'warn', prepText:'同规则 11：依赖"跳过+增项"机制在核查执行模块也落地。',
+    trigger:'同人同文本批量复用 > 10 次/月',
+    source:['3.3 安措执行','2.5 核查执行（补强后）'], output:'跳过原因伪造',
+    scene:`<b>典型场景：</b><br>李队一个月跳过 30 次，理由全是复制粘贴的"<b>现场无此设施</b>"。表明操作人没认真填，也可能刻意规避"填假理由→被事后追责"。`,
+    why:'结合规则 11 双重命中升级审查。后台可用关键词/相似度检查。',
+    params:[
+      {key:'duplicate_threshold', name:'重复次数阈值', code:'dup', value:10, unit:'次/月', desc:'同人同文本复用次数', min:3, max:50, step:1},
+      {key:'similarity', name:'相似度阈值', code:'similarity', value:85, unit:'%', desc:'文本相似度（后台计算）', min:60, max:100, step:5},
+    ], trialHit:3, trialSample:842},
+  {id:13, code:'R-D30-03', name:'驳回跳过后改补拍模式', dim:'integrity', dimName:'廉政', level:'red', version:'v30', enabled:true, prep:'warn', prepText:'需要结合"改判数据"（依赖规则 1 的前提）+ 安措执行模块的"驳回动作"记录。安措侧已齐备，改判数据看规则 1 进展。',
+    trigger:'被驳回跳过后的补拍照片特征异常（结合规则 1：改判但无真实证据）',
+    source:['3.3 安措执行','照片库'], output:'红级预警 + 项目经理核查',
+    scene:`<b>典型场景：</b><br>① <b>李队</b>跳过"验电操作拍照"<br>② 被工作负责人驳回<br>③ 他在角落<b>对着水管拍了张模糊照片凑数</b>，并改判为合格<br><br>跳过被驳回后的强行凑数——代表现场实际没做但被"表演式通过"。`,
+    why:'典型"表演式通过"——跳过被驳回后补的照片是否真实可验证？V3.0 先抓"驳回后 1h 内补拍 + 判定反转"组合信号。',
+    params:[
+      {key:'post_reject_window', name:'驳回后补拍窗口', code:'reject_window', value:60, unit:'分钟', desc:'驳回后多长时间内的补拍计入', min:10, max:240, step:10},
+      {key:'combine_with_rule1', name:'是否交叉规则 1', code:'combine', value:true, unit:'', desc:'同时满足规则 1 才升红', type:'bool'},
+    ], trialHit:1, trialSample:842},
+  {id:14, code:'R-D30-04', name:'增项频次异常', dim:'integrity', dimName:'廉政', level:'yellow', version:'v30', enabled:true, prep:'warn', prepText:'安措执行模块已具备"跳过+增项"机制；核查执行模块需要补同样的机制才能同样抓到这类行为。',
+    trigger:'单人增项 > 5 次/项目',
+    source:['3.3 安措执行','2.5 核查执行（补强后）'], output:'虚增工作量风险',
+    scene:`<b>典型场景：</b><br>李队在同一个项目里增加了 <b>8 个默认清单之外的检查项</b>。合理增项是"现场确有额外设备"；滥用可能是虚增假项显示"工作量大"。`,
+    why:'执行人虚增假项刷工作量，或为后续申报额外费用铺垫。与结算模块联动时尤其关键。',
+    params:[{key:'add_threshold', name:'增项数阈值', code:'add_threshold', value:5, unit:'项/项目', desc:'单人在单个项目中的增项数', min:2, max:20, step:1}],
+    trialHit:2, trialSample:842},
+  {id:15, code:'R-D30-05', name:'实际拍摄人 ≠ 分工执行人', dim:'integrity', dimName:'廉政', level:'yellow', version:'v30', enabled:true, prep:'ok', prepText:'数据已齐备：核查执行模块已记录每张照片的实际拍摄人（2026 年 4 月 20 日落地）。',
+    trigger:'照片实际拍摄人 ≠ 分工执行人 的比例 > 20%',
+    source:['2.5 核查执行'], output:'挂名检测风险',
+    scene:`<b>典型场景：</b><br><b>张工</b>被分配做"变压器外观核查"，但系统记录 60% 的照片实际是<b>李队（协助者）</b>拍的。<br>典型"挂名检测"——某人名义上在做，实际是另一人干。`,
+    why:'本规则依赖的"照片实际拍摄人"记录已于 4 月 20 日落地，原本计划 V3.1 启用的规则提前到 V3.0。',
+    params:[
+      {key:'mismatch_ratio', name:'不一致比例阈值', code:'mismatch', value:20, unit:'%', desc:'协助者拍照占比超过此值触发', min:10, max:60, step:5},
+      {key:'min_photos', name:'最小照片数', code:'min_photos', value:10, unit:'张', desc:'样本不足此值静默', min:5, max:50, step:5},
+    ], trialHit:2, trialSample:842},
+  {id:16, code:'R-D30-06', name:'全站跳过模式', dim:'integrity', dimName:'廉政', level:'red', version:'v30', enabled:true, prep:'warn', prepText:'安措执行模块已具备"跳过+增项"机制；核查执行模块需要补同样的机制才能同样抓到这类行为。',
+    trigger:'同一执行人在多站房连续"全站跳过"',
+    source:['3.3 安措执行','2.5 核查执行（补强后）'], output:'批量偷懒/代签 · 红级',
+    scene:`<b>典型场景：</b><br><b>王工</b>在 <b>A 站房</b>把所有安措项都跳过；到 <b>B 站房</b>也全跳；到 <b>C 站房</b>还是全跳。<br>批量偷懒 / 代签抹掉实际工作的极强信号。`,
+    why:'单次全站跳过可能是现场真的没设施；连续多站全跳几乎必然是代签或偷懒。红级硬触发。',
+    params:[{key:'consecutive_stations', name:'连续全跳站房数', code:'stations', value:3, unit:'座', desc:'连续几个站房全站跳过触发', min:2, max:10, step:1}],
+    trialHit:1, trialSample:842},
+  {id:17, code:'R-XL-01', name:'环节耗时偏离度', dim:'efficiency', dimName:'效率', level:'yellow', version:'v31', enabled:false, prep:'miss', prepText:'需要先统计出"一个项目理论上该花多少工时"的基准库（如 10 个站房核查理论应需约 10 小时）。V3.0 先积累 3-6 个月真实项目数据，V3.1 统计出基准后启用。',
+    trigger:'偏差率 = |实际 − 理论| / 理论 > 50%；"太快"黄级（走过场），"太慢"灰级（拖延）',
+    source:['全模块环节提交时间戳','2.3 + 3.1 规模','V3.1 基准库'], output:'走过场/拖延 · V3.1 启用',
+    scene:`<b>典型场景：</b><br>某项目 10 个站房 50 个设备，理论上"核查 → 核查确认"环节耗时应约 <b>10 小时</b>，实际只用了 <b>2 小时</b>（偏差率 80%）——工作负责人在咖啡厅<b>一口气按了所有确认按钮</b>。`,
+    why:'本模块覆盖面最广的规则——从环节间整体耗时判断"有没有认真做"。V3.1 用双层基准（行业 P50 + 本单位 P50）避免"一贯慢的单位"被自己洗白。',
+    params:[
+      {key:'deviation_threshold', name:'偏差率阈值', code:'deviation', value:50, unit:'%', desc:'|实际 − 理论| / 理论 超过此值触发', min:20, max:150, step:10},
+      {key:'min_sample_industry', name:'行业基准样本下限', code:'min_industry', value:100, unit:'项目', desc:'跨单位历史项目数下限', min:50, max:500, step:50},
+      {key:'min_sample_unit', name:'本单位基准样本下限', code:'min_unit', value:30, unit:'项目', desc:'本单位历史项目数下限', min:10, max:200, step:10},
+      {key:'workday_only', name:'仅工作日小时', code:'workday_only', value:true, unit:'', desc:'跨周末/节假日按工作日小时数重算', type:'bool'},
+    ], trialHit:0, trialSample:842, v31Notice:true},
+];
+
+function levelTag(level){
+  const map = {red:['红级','red'], yellow:['黄级','yellow'], gray:['灰级','gray']};
+  const [name, cls] = map[level];
+  return `<span class="lv ${cls}">${name}</span>`;
+}
+function prepTag(prep){
+  const map = {ok:'齐备', warn:'依赖补强', miss:'缺失'};
+  return `<span class="prep ${prep}">${map[prep]}</span>`;
+}
+function versionTag(version){
+  return version === 'v30' ? `<span class="ver">V3.0 启用</span>` : `<span class="ver v31">V3.1 启用</span>`;
+}
+
+let currentDim = 'all';
+function renderTable(){
+  const tbody = document.getElementById('ruleTbody');
+  const search = document.getElementById('searchInput').value.trim().toLowerCase();
+  const lv = document.getElementById('filterLevel').value;
+  const ver = document.getElementById('filterVersion').value;
+  const prep = document.getElementById('filterPrep').value;
+
+  const list = RULES.filter(r => {
+    if(currentDim !== 'all' && r.dim !== currentDim) return false;
+    if(lv && r.level !== lv) return false;
+    if(ver && r.version !== ver) return false;
+    if(prep && r.prep !== prep) return false;
+    if(search && !(r.name.toLowerCase().includes(search) || r.trigger.toLowerCase().includes(search))) return false;
+    return true;
+  });
+
+  document.getElementById('totalCount').textContent = list.length;
+
+  if(list.length === 0){
+    tbody.innerHTML = `<tr><td colspan="9"><div class="empty">没有符合条件的规则</div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(r => `
+    <tr onclick="openRule(${r.id})">
+      <td class="col-code">#${String(r.id).padStart(2,'0')}</td>
+      <td class="col-name">${r.name}<div style="font-size:11px;color:#86909c;font-family:Consolas,monospace;margin-top:2px">${r.code}</div></td>
+      <td><span class="dim-text">${r.dimName}</span></td>
+      <td>${levelTag(r.level)}</td>
+      <td class="col-trigger">${r.trigger}</td>
+      <td>${prepTag(r.prep)}</td>
+      <td>${versionTag(r.version)}</td>
+      <td class="col-switch" onclick="event.stopPropagation()">
+        <label class="switch">
+          <input type="checkbox" ${r.enabled?'checked':''} ${r.version==='v31'?'disabled':''} onchange="toggleRule(${r.id}, this.checked)">
+          <span class="switch-slider"></span>
+        </label>
+      </td>
+      <td class="col-ops" onclick="event.stopPropagation()">
+        <span class="op-link" onclick="openRule(${r.id})">配置</span>
+        <span class="op-link" onclick="trialFromRow(${r.id})">试算</span>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterDim(dim){
+  currentDim = dim;
+  document.querySelectorAll('.dim-tab').forEach(t => t.classList.toggle('active', t.dataset.dim === dim));
+  renderTable();
+}
+
+function toggleRule(id, enabled){
+  const r = RULES.find(x => x.id === id);
+  if(r){ r.enabled = enabled; showToast(`${r.name} 已${enabled?'启用':'停用'}`, enabled?'success':'warn'); }
+}
+
+let currentRuleId = null;
+function openRule(id){
+  const r = RULES.find(x => x.id === id);
+  if(!r) return;
+  currentRuleId = id;
+  document.getElementById('drawerCode').textContent = `#${String(r.id).padStart(2,'0')} · ${r.code}`;
+  document.getElementById('drawerName').textContent = r.name;
+  document.getElementById('drawerLevel').innerHTML = ' · ' + levelTag(r.level) + ' · <span class="dim-text">' + r.dimName + '</span> · ' + versionTag(r.version);
+  document.getElementById('drawerSwitch').checked = r.enabled;
+  document.getElementById('drawerSwitch').disabled = r.version === 'v31';
+  renderDrawerContent(r);
+  switchDTab('biz');
+  document.getElementById('drawerMask').classList.add('show');
+  document.getElementById('ruleDrawer').classList.add('show');
+}
+function closeDrawer(){
+  document.getElementById('drawerMask').classList.remove('show');
+  document.getElementById('ruleDrawer').classList.remove('show');
+}
+function switchDTab(tab){
+  document.querySelectorAll('.d-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.d-panel').forEach(p => p.classList.toggle('active', p.id === 'dp-'+tab));
+}
+
+function renderDrawerContent(r){
+  document.getElementById('dp-biz').innerHTML = `
+    <div class="dp-card"><h4>触发条件</h4><p>${r.trigger}</p></div>
+    <div class="dp-card"><h4>业务场景</h4><div class="dp-scene">${r.scene}</div></div>
+    <div class="dp-card"><h4>为什么重要</h4><p>${r.why}</p></div>
+    <div class="dp-card"><h4>处置输出</h4><p>${r.output}</p></div>
+  `;
+
+  const v31Tip = r.v31Notice ? `<div class="dp-note" style="margin-bottom:12px">V3.1 启用 · ${r.prepText}。V3.0 阶段可预配置阈值，实际不触发告警，仅做数据积累。</div>` : '';
+  document.getElementById('dp-param').innerHTML = v31Tip + '<div style="background:#fff">' + r.params.map(p => {
+    let control = '';
+    if(p.options){
+      control = `<select class="f-select" style="min-width:220px">${p.options.map(o => `<option ${o.v===p.value?'selected':''}>${o.l}</option>`).join('')}</select>`;
+    } else if(p.type === 'text'){
+      control = `<input type="text" value="${p.value}" style="width:240px">`;
+    } else if(p.type === 'bool'){
+      control = `<label class="switch"><input type="checkbox" ${p.value?'checked':''}><span class="switch-slider"></span></label><span style="font-size:12px;color:#4e5969;margin-left:8px">${p.value?'启用':'停用'}</span>`;
+    } else {
+      control = `<input type="range" min="${p.min}" max="${p.max}" step="${p.step}" value="${p.value}" oninput="this.nextElementSibling.value=this.value"><input type="number" value="${p.value}" min="${p.min}" max="${p.max}" step="${p.step}"><span class="pr-unit">${p.unit}</span>`;
+    }
+    return `<div class="param-item"><div class="pi-hd"><span class="pi-name">${p.name}</span><span class="pi-code">${p.code}</span></div><div class="pi-desc">${p.desc}</div><div class="param-row">${control}</div></div>`;
+  }).join('') + '</div>';
+
+  document.getElementById('dp-source').innerHTML = `
+    <div class="dp-card"><h4>整体齐备度</h4><div style="margin-top:4px">${prepTag(r.prep)}<span style="margin-left:12px;color:#4e5969;font-size:12px">${r.prepText}</span></div></div>
+    <div class="dp-card" style="padding:0"><h4 style="padding:16px 18px 10px">依赖数据源</h4>${r.source.map(s => `<div class="src-item" style="border-top:1px solid #f2f3f5"><span class="si-label">数据来源</span><span class="si-val">${s}</span><span class="prep ok">已接入</span></div>`).join('')}</div>
+    ${r.prep !== 'ok' ? `<div class="dp-card"><h4>待补强项</h4><div class="dp-note">${r.prepText}</div></div>` : ''}
+    <div class="dp-card"><h4>与督查原则的契合</h4><ul><li>D30 价值观：仅监控执行层员工的业务操作，不监控管理层决策</li><li>单向透明：数据仅向本单位管理层与付费方管理层透明</li><li>零惩罚：前端不做视觉惩罚，命中后进督查看板而非一线 UI</li></ul></div>
+  `;
+
+  document.getElementById('dp-trial').innerHTML = `
+    <div class="trial-card">
+      <h4>基于近 30 天样本试算</h4>
+      <p>样本池：近 30 天内 <b>${r.trialSample}</b> 个提交事件（来自试点项目 · 南京康乐电力）<br>当前阈值：${r.params.slice(0,2).map(p => `<b>${p.name}=${p.value}${p.unit||''}</b>`).join(' · ')}</p>
+      <button class="btn btn-primary" onclick="runTrial(${r.id})">立即试算</button>
+    </div>
+    <div class="dp-card">
+      <h4>试算说明</h4>
+      <p>试算在真实数据上"回放"当前阈值，帮督查岗在上线前预估触发频次，避免一上来就告警风暴。</p>
+      <ul>
+        <li>目标命中率：红级 &lt; 2%，黄级 &lt; 10%（超过此值建议调宽阈值）</li>
+        <li>试点期数据：V3.0 上线前 2-3 周校准期，每周复盘一次</li>
+        <li>申诉通道：一线如认为预警不合理可申诉，申诉数据反哺规则优化</li>
+      </ul>
+    </div>
+  `;
+}
+
+function saveRule(){
+  showToast('规则配置已保存 · 已记入阈值校准记录', 'success');
+  setTimeout(closeDrawer, 400);
+}
+
+function runTrial(id){ openTrial(RULES.find(x => x.id === id)); }
+function trialFromRow(id){ openTrial(RULES.find(x => x.id === id)); }
+
+function openTrial(r){
+  const hitSamples = buildTrialSamples(r);
+  const hitRate = (r.trialHit / r.trialSample * 100).toFixed(2);
+  const numCls = r.level === 'red' ? 'red' : (r.level === 'yellow' ? 'yellow' : '');
+  document.getElementById('trialTitle').textContent = `命中试算 · ${r.name}`;
+  document.getElementById('trialBody').innerHTML = `
+    <div class="trial-hd">
+      <div>
+        <div class="trh-num ${numCls}">${r.trialHit} <span style="font-size:13px;font-weight:400;color:#4e5969">个工单命中</span></div>
+        <div class="trh-lb">样本池 ${r.trialSample} 个事件 · 命中率 ${hitRate}% · 近 30 天</div>
+      </div>
+      <div class="trh-right">
+        ${levelTag(r.level)}<br>
+        <span style="color:#86909c">${r.level==='red'?'命中即工单挂起':'命中进月度审查'}</span>
+      </div>
+    </div>
+    ${r.trialHit === 0 ? `
+      <div class="empty">按当前阈值没有工单命中 — 阈值可能偏严；V3.1 启用前建议先埋点积累数据</div>
+    ` : `
+      <div style="font-size:12px;color:#4e5969;margin-bottom:8px">命中工单预览</div>
+      <div class="hit-list">${hitSamples.map(h => `
+        <div class="hit-row">
+          <span class="hr-wo">${h.wo}</span>
+          <span class="hr-who">${h.who}</span>
+          <span class="hr-sum">${h.sum}</span>
+          <span class="hr-time">${h.time}</span>
+        </div>
+      `).join('')}</div>
+      <div class="note-box" style="margin-top:12px">${r.trialHit > 5 ? '命中数偏多，建议调宽阈值避免告警疲劳；也可能是试点单位历史违规积累' : '命中数在健康区间，建议保持此阈值进入试点期'}</div>
+    `}
+  `;
+  document.getElementById('trialModal').classList.add('show');
+}
+function closeTrial(){ document.getElementById('trialModal').classList.remove('show'); }
+
+function buildTrialSamples(r){
+  const pool = [
+    {wo:'WO-20260415-032', who:'张工 → 李队', sum:'龙泉家园小区（一期）· 判定反转"不合格→合格"· 无新增照片', time:'04-15 17:24'},
+    {wo:'WO-20260408-021', who:'张工 → 李队', sum:'龙泉家园小区（二期）· 退回后判定反转 · 新增 2 张照片', time:'04-08 14:52'},
+    {wo:'WO-20260412-018', who:'李队', sum:'徐州华电二期 · 同设备 2h 内 3 个账号关键提交', time:'04-12 10:32'},
+    {wo:'WO-20260410-008', who:'王工', sum:'盐城工业园 · 连续 3 座站房全站跳过', time:'04-10 16:08'},
+    {wo:'WO-20260405-003', who:'张工', sum:'新北科技园一期 · 深夜 23:00-02:00 占比 60%', time:'04-06 02:15'},
+    {wo:'WO-20260403-014', who:'王工', sum:'盐城工业园 · 跳过率 45% + 理由雷同 30 次', time:'04-03 11:30'},
+    {wo:'WO-20260331-007', who:'王经理（项目经理）', sum:'南京江北核心区 · 近 30 天 90% 派发同一队伍', time:'03-31 09:02'},
+    {wo:'WO-20260328-042', who:'李队', sum:'龙泉家园小区（三期）· 确认耗时中位数 12 秒/项', time:'03-28 15:48'},
+    {wo:'WO-20260325-019', who:'张工', sum:'建湖产业园 · 工单规模 10 站房实际录 4 站房（40%）', time:'03-25 10:15'},
+    {wo:'WO-20260322-011', who:'李队', sum:'龙泉家园 · 驳回跳过后补拍模糊照片改判合格', time:'03-22 14:33'},
+    {wo:'WO-20260320-028', who:'张工', sum:'徐州华电 · 照片实际拍摄人 ≠ 分工执行人 占比 60%', time:'03-20 09:40'},
+    {wo:'WO-20260318-045', who:'李队', sum:'盐城开发区 · 单人增项 8 项/项目', time:'03-18 16:22'},
+  ];
+  return pool.slice(0, Math.min(r.trialHit, pool.length));
+}
+
+function showToast(msg, type = ''){
+  const wrap = document.getElementById('toastWrap');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  wrap.appendChild(t);
+  setTimeout(() => t.style.opacity = '0', 1800);
+  setTimeout(() => wrap.removeChild(t), 2200);
+}
+
+function switchPage(page){
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.toggle('active', i.dataset.page === page));
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + page));
+  const titleMap = {rules:'督查规则配置', board:'督查看板', suspects:'可疑工单列表', accumulate:'数据积累看板', calibrate:'阈值校准记录'};
+  document.getElementById('navText').innerHTML = `督查模块 <span class="bc-sep">/</span> <b>${titleMap[page] || '督查模块'}</b>`;
+}
+
+document.addEventListener('keydown', e => { if(e.key === 'Escape'){ closeDrawer(); closeTrial(); } });
+renderTable();
+</script>
+</body>
+</html>

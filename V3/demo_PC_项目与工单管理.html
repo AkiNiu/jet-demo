@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PC端管理后台 — JET居配检测平台</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans SC',system-ui,sans-serif;background:#f0f2f5;color:#333;font-size:13px;min-height:100vh;display:flex}
+
+/* 左侧深色菜单栏 */
+.sidebar{width:220px;background:#001529;color:#a6adb4;flex-shrink:0;display:flex;flex-direction:column;height:100vh}
+.sidebar-logo{height:48px;display:flex;align-items:center;padding:0 20px;color:#fff;font-size:16px;font-weight:600;letter-spacing:1px;background:#002140;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.sidebar-menu{flex:1;overflow-y:auto;padding:16px 0}
+.sb-group{margin-bottom:16px}
+.sb-title{font-size:12px;color:#6c757d;padding:0 20px 8px;text-transform:uppercase;letter-spacing:1px}
+.sb-item{padding:12px 20px 12px 30px;font-size:13px;cursor:pointer;transition:all .2s;position:relative}
+.sb-item:hover{color:#fff}
+.sb-item.active{background:#1890ff;color:#fff}
+
+/* 右侧主体区 */
+.main-area{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+
+/* 顶部白条 */
+.topbar{height:48px;background:#fff;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;padding:0 20px;flex-shrink:0}
+.breadcrumb{font-size:13px;color:#999}
+.breadcrumb b{color:#333;font-weight:500}
+.topbar-spacer{flex:1}
+.user-info{font-size:13px;color:#666}
+
+/* 内容展示区 */
+.content{flex:1;overflow-y:auto;padding:16px}
+.content::-webkit-scrollbar{width:6px}
+.content::-webkit-scrollbar-thumb{background:#ccc;border-radius:3px}
+
+.page-container{background:#fff;border-radius:2px;min-height:calc(100vh - 80px);display:flex;flex-direction:column}
+
+/* 多页签模拟 (类似2.4顶部的蓝底Tab) */
+.page-tabs{display:flex;border-bottom:1px solid #e8e8e8;background:#fafafa;padding:6px 16px 0}
+.ptab{padding:8px 16px;background:#fff;border:1px solid #e8e8e8;border-bottom:none;border-radius:4px 4px 0 0;font-size:13px;color:#1890ff;margin-right:4px;display:flex;align-items:center;gap:8px}
+.ptab .close{color:#999;font-size:14px;cursor:pointer;line-height:1}
+.ptab .close:hover{color:#f5222d}
+
+.page-body{padding:20px;flex:1}
+
+/* 密集筛选区 */
+.filter-area{display:flex;flex-wrap:wrap;gap:12px 16px;margin-bottom:16px}
+.f-item{display:flex;align-items:center;font-size:13px;color:#666}
+.f-label{width:70px;text-align:right;margin-right:8px}
+.f-input,.f-select{border:1px solid #dcdfe6;border-radius:2px;padding:6px 10px;font-size:13px;outline:none;width:180px;background:#fff;height:30px}
+.f-input:focus,.f-select:focus{border-color:#1890ff}
+.filter-actions{display:flex;align-items:center;gap:8px;margin-left:8px}
+
+/* 按钮栏 */
+.action-bar{display:flex;gap:8px;margin-bottom:12px;padding-top:16px;border-top:1px dashed #eee}
+.btn{height:30px;padding:0 14px;border:1px solid #dcdfe6;border-radius:2px;font-size:13px;cursor:pointer;background:#fff;color:#333;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.btn:hover{border-color:#1890ff;color:#1890ff}
+.btn-primary{background:#1890ff;color:#fff;border-color:#1890ff}
+.btn-primary:hover{background:#40a9ff;border-color:#40a9ff;color:#fff}
+.btn-danger{color:#f5222d;border-color:#f5222d}
+.btn-danger:hover{background:#fff1f0;color:#f5222d}
+
+/* 数据表格 (完全对齐2.4密集风格) */
+.data-table{width:100%;border-collapse:collapse;border-top:1px solid #e8e8e8;border-left:1px solid #e8e8e8}
+.data-table th,.data-table td{border-bottom:1px solid #e8e8e8;border-right:1px solid #e8e8e8;padding:8px 12px;text-align:left}
+.data-table th{background:#fafafa;font-weight:600;color:#333;font-size:12px;white-space:nowrap}
+.data-table td{font-size:12px;color:#666;vertical-align:middle}
+.data-table tbody tr:hover{background:#f5f7fa}
+
+.tag{display:inline-block;padding:2px 6px;border-radius:2px;font-size:12px;border:1px solid transparent}
+.tag-blue{background:#e6f7ff;color:#1890ff;border-color:#91d5ff}
+.tag-green{background:#f6ffed;color:#52c41a;border-color:#b7eb8f}
+.tag-orange{background:#fff7e6;color:#fa8c16;border-color:#ffd591}
+.tag-gray{background:#f5f5f5;color:#999;border-color:#d9d9d9}
+
+.op-link{color:#1890ff;font-size:12px;cursor:pointer;margin-right:8px;text-decoration:none}
+.op-link:hover{text-decoration:underline}
+.op-link.danger{color:#f5222d}
+
+.pagination{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:16px;font-size:13px;color:#666}
+.pagination select{border:1px solid #dcdfe6;border-radius:2px;padding:2px 4px;height:24px;font-size:12px}
+.pg-btn{min-width:28px;height:28px;border:1px solid #dcdfe6;border-radius:2px;background:#fff;color:#666;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center}
+.pg-btn:hover{border-color:#1890ff;color:#1890ff}
+.pg-btn.active{background:#1890ff;border-color:#1890ff;color:#fff}
+
+/* 右侧详情抽屉 */
+.drawer-mask{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;display:none}
+.drawer-mask.show{display:block}
+.drawer{position:fixed;top:0;right:-680px;width:660px;height:100vh;background:#fff;box-shadow:-4px 0 16px rgba(0,0,0,.12);z-index:201;display:flex;flex-direction:column;transition:right .25s ease}
+.drawer.show{right:0}
+.drawer-hd{height:48px;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;padding:0 20px;flex-shrink:0;background:#fafafa}
+.drawer-hd h3{font-size:15px;font-weight:600;color:#303133;flex:1}
+.drawer-close{border:none;background:none;font-size:20px;color:#909399;cursor:pointer;padding:4px 8px}
+.drawer-close:hover{color:#303133}
+.drawer-body{flex:1;overflow-y:auto;padding:20px 24px}
+.drawer-body::-webkit-scrollbar{width:5px}
+.drawer-body::-webkit-scrollbar-thumb{background:#ccc;border-radius:3px}
+
+/* 基础信息卡 */
+.info-card{background:#fafafa;border:1px solid #e8e8e8;border-radius:4px;padding:14px 16px;margin-bottom:18px;display:grid;grid-template-columns:1fr 1fr;gap:8px 24px}
+.info-item{display:flex;align-items:baseline;gap:6px;font-size:12px}
+.info-label{color:#909399;white-space:nowrap}
+.info-val{color:#303133;font-weight:500}
+
+/* 流程时间线 */
+.timeline{position:relative}
+.tl-node{display:flex;gap:14px;margin-bottom:20px;position:relative}
+.tl-left{display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0}
+.tl-dot{width:12px;height:12px;border-radius:50%;background:#1890ff;border:2px solid #fff;box-shadow:0 0 0 2px #1890ff;flex-shrink:0;margin-top:3px}
+.tl-dot.done{background:#52c41a;box-shadow:0 0 0 2px #52c41a}
+.tl-dot.warn{background:#fa8c16;box-shadow:0 0 0 2px #fa8c16}
+.tl-dot.pending{background:#d9d9d9;box-shadow:0 0 0 2px #d9d9d9}
+.tl-line{width:2px;flex:1;background:#e8e8e8;margin-top:4px}
+.tl-content{flex:1;padding-bottom:8px}
+.tl-title{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.tl-name{font-size:13px;font-weight:600;color:#303133}
+.tl-meta{font-size:11px;color:#909399}
+.tl-block{background:#f5f7fa;border:1px solid #e8e8e8;border-radius:4px;padding:10px 12px;font-size:12px}
+.tl-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f0f0f0}
+.tl-row:last-child{border-bottom:none}
+.tl-key{color:#606266}
+.tl-v{color:#303133;font-weight:500}
+.tl-v.ok{color:#52c41a}
+.tl-v.ng{color:#f5222d}
+.tl-photos{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.tl-photo{width:64px;height:64px;background:#e8e8e8;border:1px solid #d9d9d9;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#909399;cursor:pointer}
+.tl-photo:hover{border-color:#1890ff;color:#1890ff}
+.audit-tag{display:inline-block;padding:1px 8px;border-radius:2px;font-size:11px;margin-left:6px}
+</style>
+</head>
+<body>
+
+<!-- ===== 左侧深色菜单 ===== -->
+<div class="sidebar">
+  <div class="sidebar-logo">JET 3.0 平台管理系统</div>
+  <div class="sidebar-menu">
+    <div class="sb-group">
+      <div class="sb-title">核心业务舱</div>
+      <div class="sb-item" data-page="project" onclick="switchPage('project')">项目管理</div>
+      <div class="sb-item active" data-page="workorder" onclick="switchPage('workorder')">工单管理</div>
+    </div>
+    <div class="sb-group">
+      <div class="sb-title">数据配置模块</div>
+      <div class="sb-item">检查项配置</div>
+      <div class="sb-item">数据字典管理</div>
+      <div class="sb-item" onclick="window.location.href='demo_PC_问题模板库与判定规则.html'">
+        <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#52c41a;margin-right:8px"></span>问题模板库与规则配置 ↗
+      </div>
+      <div class="sb-item" onclick="window.location.href='../规则引擎/规则资产库_Demo.html#tab-std'">
+        <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#1890ff;margin-right:8px"></span>判定标准库
+      </div>
+      <div class="sb-item" onclick="window.location.href='../规则引擎/规则资产库_Demo.html#tab-issue'">
+        <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#1890ff;margin-right:8px"></span>问题描述库
+      </div>
+    </div>
+    <div class="sb-group">
+      <div class="sb-title">系统管理</div>
+      <div class="sb-item">组织管理</div>
+      <div class="sb-item">角色管理</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 右侧主体 ===== -->
+<div class="main-area">
+  
+  <!-- 顶部白条 -->
+  <div class="topbar">
+    <div class="breadcrumb" id="navText">首页 / <b>工单管理</b></div>
+    <div class="topbar-spacer"></div>
+    <div class="user-info">部门经理：张建国 | 退出</div>
+  </div>
+
+  <!-- 内容区 -->
+  <div class="content">
+    <div class="page-container">
+      
+      <!-- 模拟多页签 -->
+      <div class="page-tabs">
+        <div class="ptab"><span id="tabText">工单信息</span><span class="close">×</span></div>
+      </div>
+
+      <div class="page-body">
+        
+        <!-- ================= 项目管理页面 ================= -->
+        <div class="page" id="page-project" style="display:none">
+          <div class="filter-area">
+            <div class="f-item"><div class="f-label">行政区划</div><select class="f-select"><option>请选择区域</option></select></div>
+            <div class="f-item"><div class="f-label">项目名称</div><input class="f-input" placeholder="请输入项目名称"></div>
+            <div class="f-item"><div class="f-label">项目类型</div><select class="f-select"><option>请选择项目类型</option></select></div>
+            <div class="f-item"><div class="f-label">整改状态</div><select class="f-select"><option>请选择整改状态</option></select></div>
+            <div class="filter-actions">
+              <button class="btn btn-primary">搜索</button>
+              <button class="btn">重置</button>
+            </div>
+          </div>
+
+          <div class="action-bar">
+            <button class="btn btn-primary">+ 新增项目</button>
+            <button class="btn">导出台账</button>
+          </div>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:30px"><input type="checkbox"></th>
+                <th>项目名称</th>
+                <th>行政区划</th>
+                <th>项目类型</th>
+                <th>立项规模 (站-合-房-箱)</th>
+                <th>累计检测次数</th>
+                <th>历史发现问题</th>
+                <th>最新整改状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td style="color:#1890ff;cursor:pointer">龙泉家园小区（一期）</td>
+                <td>盐城市 建湖县</td>
+                <td><span class="tag tag-blue">省检</span></td>
+                <td>2-0-4-1</td>
+                <td>3 次</td>
+                <td>重大: <b style="color:#f5222d">1</b> / 一般: 4</td>
+                <td><span class="tag tag-orange">部分未整改</span></td>
+                <td>
+                  <span class="op-link">项目详情</span>
+                  <span class="op-link">问题台账</span>
+                </td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td style="color:#1890ff;cursor:pointer">徐州华电二期扩建工程</td>
+                <td>徐州市 泉山区</td>
+                <td><span class="tag tag-green">预检</span></td>
+                <td>0-1-2-0</td>
+                <td>1 次</td>
+                <td>重大: 0 / 一般: 2</td>
+                <td><span class="tag tag-green">已闭环</span></td>
+                <td>
+                  <span class="op-link">项目详情</span>
+                  <span class="op-link">问题台账</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ================= 工单管理页面 ================= -->
+        <div class="page" id="page-workorder">
+          <div class="filter-area">
+            <div class="f-item"><div class="f-label">传票号</div><input class="f-input" placeholder="请输入传票号"></div>
+            <div class="f-item"><div class="f-label">行政区划</div><select class="f-select"><option>请选择区域</option></select></div>
+            <div class="f-item"><div class="f-label">项目名称</div><input class="f-input" placeholder="请输入项目名称"></div>
+            <div class="f-item"><div class="f-label">检测单位</div><select class="f-select"><option>请选择检测单位</option></select></div>
+            <div class="f-item"><div class="f-label">项目类型</div><select class="f-select"><option>请选择项目类型</option></select></div>
+            <div class="f-item"><div class="f-label">检测队伍</div><select class="f-select"><option>请选择检测队伍</option></select></div>
+            <div class="f-item"><div class="f-label">工单状态</div><select class="f-select"><option>请选择状态</option></select></div>
+            <div class="filter-actions">
+              <button class="btn btn-primary">搜索</button>
+              <button class="btn">重置</button>
+            </div>
+          </div>
+
+          <div class="action-bar">
+            <button class="btn btn-primary">+ 新增派发</button>
+            <button class="btn">批量分配</button>
+            <button class="btn" style="border-color:#1890ff;color:#1890ff;font-weight:500">批量下载包裹</button>
+            <button class="btn btn-danger">删除</button>
+            <button class="btn">导出明细</button>
+          </div>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:30px"><input type="checkbox"></th>
+                <th>工单号</th>
+                <th>传票号</th>
+                <th>行政区划</th>
+                <th>项目名称</th>
+                <th>检测单位</th>
+                <th>项目类型</th>
+                <th>检测队伍</th>
+                <th>工作负责人</th>
+                <th>派发时效审计</th>
+                <th>工单状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td>9</td>
+                <td>CP20260421A</td>
+                <td>建湖县</td>
+                <td>龙泉家园小区（一期）</td>
+                <td>南京康乐电力</td>
+                <td><span class="tag tag-blue">省检</span></td>
+                <td>陈雷队</td>
+                <td>陈雷</td>
+                <td><span style="color:#52c41a">提前 24h</span></td>
+                <td><span class="tag tag-orange">已接收</span></td>
+                <td>
+                  <span class="op-link" onclick="openDetail('WO-001')">详情</span>
+                  <span class="op-link">修改</span>
+                  <span class="op-link danger">撤销</span>
+                  <span class="op-link" style="color:#999">下载包裹</span>
+                </td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td>8</td>
+                <td>CP20260415B</td>
+                <td>泉山区</td>
+                <td>徐州华电二期扩建工程</td>
+                <td>南京康乐电力</td>
+                <td><span class="tag tag-green">预检</span></td>
+                <td>华工队</td>
+                <td>李四</td>
+                <td><span style="color:#f5222d">延迟 2h</span></td>
+                <td><span class="tag tag-green">已完成</span></td>
+                <td>
+                  <span class="op-link" onclick="openDetail('WO-002')">详情</span>
+                  <span class="op-link">日志</span>
+                  <span class="op-link" style="font-weight:600">下载包裹</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="pagination">
+            <span class="total">共 6 条</span>
+            <select><option>10条/页</option></select>
+            <button class="pg-btn">&lt;</button>
+            <button class="pg-btn active">1</button>
+            <button class="pg-btn">&gt;</button>
+            <span style="margin-left:8px">前往 <input type="text" value="1" style="width:40px;text-align:center;border:1px solid #dcdfe6;height:24px;border-radius:2px;outline:none"> 页</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 右侧工单详情抽屉 ===== -->
+<div class="drawer-mask" id="drawerMask" onclick="closeDetail()"></div>
+<div class="drawer" id="detailDrawer">
+  <div class="drawer-hd">
+    <h3 id="drawerTitle">工单详情 · 全流程审计单</h3>
+    <button class="drawer-close" onclick="closeDetail()">×</button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</div>
+
+<script>
+function switchPage(page){
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  document.querySelector(`.sb-item[data-page="${page}"]`).classList.add('active');
+  document.querySelectorAll('.page').forEach(p=>p.style.display='none');
+  document.getElementById('page-'+page).style.display='block';
+
+  let title = '项目管理';
+  if(page === 'workorder') title = '工单信息';
+
+  document.getElementById('navText').innerHTML = '首页 / <b>' + title + '</b>';
+  document.getElementById('tabText').innerHTML = title;
+}
+
+const woData = {
+  'WO-001': {
+    title: 'WO-20260421-001 · 龙泉家园小区（一期）',
+    info: [
+      {label:'传票号', val:'CP20260421A'},
+      {label:'项目类型', val:'省检'},
+      {label:'检测队伍', val:'陈雷队'},
+      {label:'工作负责人', val:'陈雷'},
+      {label:'派发时间', val:'2026-04-20 18:32'},
+      {label:'派发时效', val:'提前 24h', cls:'ok'},
+      {label:'工单状态', val:'进行中'},
+      {label:'电压等级', val:'10kV'},
+    ],
+    stages: [
+      {
+        name:'2.1 作业前准备', status:'done',
+        meta:'陈雷 · 2026-04-22 08:47:12 提交',
+        rows:[
+          {k:'纸质记录单', v:'合格', ok:true},
+          {k:'检测仪器', v:'合格', ok:true},
+          {k:'安全工器具', v:'合格', ok:true},
+          {k:'工程车辆', v:'合格', ok:true},
+          {k:'人员情况', v:'合格', ok:true},
+          {k:'主业联系', v:'不合格 — 联系未果', ok:false},
+          {k:'配合事项要求', v:'合格', ok:true},
+        ],
+        audit:'提交耗时 4s · 一键全合格 · 1项不合格'
+      },
+      {
+        name:'2.2 现场准备', status:'done',
+        meta:'陈雷 · 2026-04-22 10:03:17 提交',
+        rows:[
+          {k:'水印文本', v:'盐城市建湖县龙泉家园小区 [GPS定位]', ok:true},
+          {k:'定位方式', v:'GPS定位', ok:true},
+          {k:'电压等级', v:'10kV', ok:true},
+          {k:'执法设备状态', v:'合格', ok:true},
+          {k:'配合事项要求', v:'合格', ok:true},
+          {k:'主业已到', v:'合格', ok:true},
+          {k:'工作票已开具', v:'合格', ok:true},
+          {k:'配合人员已到', v:'合格', ok:true},
+          {k:'上级电源搭接情况', v:'合格', ok:true},
+          {k:'试验电源准备情况', v:'合格', ok:true},
+        ],
+        photos:['车辆照片1','车辆照片2','车辆照片3'],
+        audit:'提交耗时 1m32s · 含拍照3张 · 全部合格'
+      },
+      {name:'2.3 建设情况确认', status:'pending', meta:'待操作'},
+      {name:'2.4 核查分工', status:'pending', meta:'待操作'},
+      {name:'2.5 核查执行', status:'pending', meta:'待操作'},
+    ]
+  },
+  'WO-002': {
+    title: 'WO-20260415-092 · 徐州华电二期扩建工程',
+    info: [
+      {label:'传票号', val:'CP20260415B'},
+      {label:'项目类型', val:'预检'},
+      {label:'检测队伍', val:'华工队'},
+      {label:'工作负责人', val:'李四'},
+      {label:'派发时间', val:'2026-04-15 06:10'},
+      {label:'派发时效', val:'延迟 2h', cls:'ng'},
+      {label:'工单状态', val:'已完成'},
+      {label:'电压等级', val:'20kV'},
+    ],
+    stages: [
+      {
+        name:'2.1 作业前准备', status:'done',
+        meta:'李四 · 2026-04-15 07:58:31 提交',
+        rows:[
+          {k:'纸质记录单', v:'合格', ok:true},
+          {k:'检测仪器', v:'合格', ok:true},
+          {k:'安全工器具', v:'合格', ok:true},
+          {k:'工程车辆', v:'合格', ok:true},
+          {k:'人员情况', v:'合格', ok:true},
+          {k:'主业联系', v:'合格', ok:true},
+          {k:'配合事项要求', v:'合格', ok:true},
+        ],
+        audit:'提交耗时 3s · 一键全合格'
+      },
+      {
+        name:'2.2 现场准备', status:'done',
+        meta:'李四 · 2026-04-15 09:14:05 提交',
+        rows:[
+          {k:'水印文本', v:'徐州市泉山区华电二期 [手动输入]', ok:false},
+          {k:'定位方式', v:'手动输入 ⚠️', ok:false},
+          {k:'电压等级', v:'20kV', ok:true},
+          {k:'执法设备状态', v:'合格', ok:true},
+          {k:'配合事项要求', v:'合格', ok:true},
+          {k:'主业已到', v:'合格', ok:true},
+          {k:'工作票已开具', v:'合格', ok:true},
+          {k:'配合人员已到', v:'合格', ok:true},
+          {k:'上级电源搭接情况', v:'合格', ok:true},
+          {k:'试验电源准备情况', v:'合格', ok:true},
+        ],
+        photos:['车辆照片1'],
+        audit:'⚠️ 定位方式：手动输入，建议复核'
+      },
+    ]
+  }
+};
+
+function openDetail(id){
+  const wo = woData[id]; if(!wo) return;
+  document.getElementById('drawerTitle').textContent = '工单详情 · ' + wo.title;
+  let html = '<div class="info-card">';
+  wo.info.forEach(i=>{ html += `<div class="info-item"><span class="info-label">${i.label}：</span><span class="info-val ${i.cls||''}">${i.val}</span></div>`; });
+  html += '</div><div class="timeline">';
+  wo.stages.forEach((s,idx)=>{
+    const dotCls = s.status==='done' ? (s.audit&&s.audit.includes('⚠️')?'warn':'done') : 'pending';
+    const isLast = idx===wo.stages.length-1;
+    html += `<div class="tl-node"><div class="tl-left"><div class="tl-dot ${dotCls}"></div>${!isLast?'<div class="tl-line"></div>':''}</div><div class="tl-content">`;
+    html += `<div class="tl-title"><span class="tl-name">${s.name}</span><span class="tl-meta">${s.meta}</span></div>`;
+    if(s.rows){
+      html += '<div class="tl-block">';
+      s.rows.forEach(r=>{ html += `<div class="tl-row"><span class="tl-key">${r.k}</span><span class="tl-v ${r.ok?'ok':'ng'}">${r.v}</span></div>`; });
+      html += '</div>';
+      if(s.photos){ html += '<div class="tl-photos">'+s.photos.map(p=>`<div class="tl-photo">${p}</div>`).join('')+'</div>'; }
+      if(s.audit){ html += `<div style="margin-top:8px;font-size:11px;color:#909399;padding:4px 8px;background:#fffbe6;border:1px solid #ffe58f;border-radius:3px">${s.audit}</div>`; }
+    }
+    html += '</div></div>';
+  });
+  html += '</div>';
+  document.getElementById('drawerBody').innerHTML = html;
+  document.getElementById('drawerMask').classList.add('show');
+  document.getElementById('detailDrawer').classList.add('show');
+}
+function closeDetail(){
+  document.getElementById('drawerMask').classList.remove('show');
+  document.getElementById('detailDrawer').classList.remove('show');
+}
+</script>
+</body>
+</html>
