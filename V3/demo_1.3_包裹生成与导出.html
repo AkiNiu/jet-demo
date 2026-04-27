@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>4.3 包裹生成与导出 — 检e通V3.0 Demo V1.0</title>
+<link rel="stylesheet" href="demo_shared_base.css">
+<style>
+  /* 左右布局容器（保留右侧设计说明） */
+  .demo-layout {
+    display: flex; gap: 40px; max-width: 1280px;
+    margin: 0 auto; padding: 32px 24px; align-items: flex-start;
+  }
+  .demo-left { flex-shrink: 0; position: sticky; top: 24px; }
+  .demo-right { flex: 1; min-width: 0; }
+  .demo-right h2 { font-size: 18px; font-weight: 700; color: #374151; margin-bottom: 16px; }
+  .demo-right h3 { font-size: 14px; font-weight: 600; color: #4B5563; margin: 20px 0 8px; }
+  .demo-right p, .demo-right li { font-size: 13px; color: #6B7280; line-height: 1.8; }
+  .demo-right ul { padding-left: 20px; }
+  .demo-right table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 8px 0; }
+  .demo-right th { background: #F3F4F6; padding: 6px 8px; text-align: left; font-weight: 600; color: #4B5563; border: 1px solid #E5E7EB; }
+  .demo-right td { padding: 6px 8px; border: 1px solid #E5E7EB; color: #6B7280; vertical-align: top; }
+  .demo-right details { border: 1px solid #E5E7EB; border-radius: 8px; padding: 12px 16px; margin-top: 20px; background: #F9FAFB; }
+  .demo-right details summary { cursor: pointer; font-weight: 600; color: #374151; font-size: 13px; }
+  .demo-right details[open] summary { margin-bottom: 12px; }
+
+  /* === 3个Tab 条 === */
+  .pkg-tabs { display:flex; border-bottom:1px solid #E5E7EB; background:#fff; }
+  .pkg-tab { flex:1; text-align:center; padding:12px 0; font-size:14px; color:#6B7280; position:relative; cursor:pointer; }
+  .pkg-tab.active { color:var(--pri); font-weight:600; }
+  .pkg-tab.active::after { content:''; position:absolute; bottom:0; left:30%; right:30%; height:3px; background:var(--pri); border-radius:3px; }
+
+  .tab-pane { display:none; flex:1; min-height:0; flex-direction:column; overflow:hidden; }
+  .tab-pane.active { display:flex; }
+  .tab-scroll { flex:1; overflow-y:auto; overflow-x:hidden; padding:12px; -webkit-overflow-scrolling:touch; }
+
+  /* === Tab 1 报告 === */
+  .report-status-bar {
+    display:flex; align-items:center; gap:10px;
+    padding:10px 12px; background:#F9FAFB; border-bottom:1px solid #E5E7EB;
+    font-size:12px;
+  }
+  .report-status-dot { width:8px; height:8px; border-radius:50%; background:#9CA3AF; }
+  .report-status-dot.ready { background:#10B981; }
+  .report-status-dot.generating { background:#F59E0B; animation:pulse 1s infinite; }
+  .report-status-text { color:#6B7280; flex:1; }
+  .report-actions { display:flex; gap:8px; padding:10px 12px; background:#fff; border-bottom:1px solid #F3F4F6; }
+  .report-actions .btn { flex:1; min-height:36px; font-size:13px; }
+
+  .report-group-title { font-size:12px; color:#6B7280; font-weight:600; padding:10px 4px 6px; }
+  .report-row {
+    display:flex; align-items:center; gap:10px;
+    background:#fff; padding:12px; border-radius:8px; margin-bottom:6px;
+  }
+  .report-row .doc-icon {
+    width:32px; height:32px; background:#EEF2FF; color:#4338CA;
+    border-radius:6px; display:flex; align-items:center; justify-content:center;
+    font-size:10px; font-weight:700; flex-shrink:0;
+  }
+  .report-row .doc-icon.record { background:#FEE2E2; color:#DC2626; }
+  .report-row .doc-meta { flex:1; display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .report-row .doc-name { font-size:13px; color:#111827; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .report-row .doc-sub { font-size:11px; color:#9CA3AF; }
+  .report-row .doc-actions { display:flex; gap:6px; flex-shrink:0; }
+  .report-row .doc-btn {
+    padding:5px 10px; border:1px solid #D1D5DB; color:#4B5563; background:#fff;
+    border-radius:14px; font-size:11px; cursor:pointer;
+  }
+  .report-row .doc-btn.primary { border-color:var(--pri); color:var(--pri); }
+  .report-row.ungenerated .doc-btn { opacity:.4; pointer-events:none; }
+
+  /* === Tab 2 媒体 === */
+  .media-filter { display:flex; padding:10px 12px; gap:6px; border-bottom:1px solid #F3F4F6; background:#fff; }
+  .media-chip {
+    padding:5px 12px; border-radius:14px; background:#F3F4F6; color:#4B5563;
+    font-size:12px; cursor:pointer;
+  }
+  .media-chip.active { background:var(--pri); color:#fff; }
+
+  .media-group { margin-bottom:12px; }
+  .media-group-header {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:8px 4px; cursor:pointer;
+  }
+  .media-group-title { font-size:13px; font-weight:600; color:#111827; }
+  .media-group-count { font-size:11px; color:#9CA3AF; }
+  .media-group-header .chevron { font-size:12px; color:#9CA3AF; transition:transform .2s; }
+  .media-group.collapsed .chevron { transform:rotate(-90deg); }
+  .media-group.collapsed .media-group-body { display:none; }
+  .media-group-actions { font-size:11px; color:var(--pri); padding:4px 0 8px 4px; }
+
+  .media-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:4px; }
+  .media-thumb {
+    aspect-ratio:1; border-radius:4px; position:relative;
+    background:linear-gradient(135deg,#DDE8F0,#BFD3E3);
+    cursor:pointer; overflow:hidden;
+  }
+  .media-thumb.video::after {
+    content:'▶'; position:absolute; top:50%; left:50%;
+    transform:translate(-50%,-50%); color:#fff; font-size:14px;
+    background:rgba(0,0,0,.5); width:22px; height:22px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .media-thumb.selected { box-shadow:0 0 0 3px var(--pri); }
+  .media-thumb .sel-icon {
+    position:absolute; top:4px; right:4px; width:18px; height:18px;
+    border:2px solid #fff; border-radius:50%; background:rgba(0,0,0,.3); display:none;
+    align-items:center; justify-content:center; color:#fff; font-size:10px;
+  }
+  .media-thumb.selected .sel-icon { display:flex; background:var(--pri); }
+
+  .media-missing-item {
+    background:#FFF7ED; border-left:3px solid #F59E0B;
+    padding:10px 12px; border-radius:0 6px 6px 0;
+    display:flex; align-items:center; gap:8px; margin-bottom:6px;
+  }
+  .media-missing-icon { color:#F59E0B; }
+  .media-missing-name { flex:1; font-size:13px; color:#92400E; }
+  .media-missing-btn {
+    padding:4px 10px; border:1px solid #F59E0B; background:#fff; color:#B45309;
+    border-radius:14px; font-size:11px; cursor:pointer;
+  }
+
+  /* 多选状态下底部操作栏 */
+  .media-action-bar {
+    padding:10px 12px; background:#fff; border-top:1px solid #E5E7EB;
+    display:flex; gap:8px; flex-shrink:0;
+  }
+  .media-action-bar .btn { flex:1; min-height:36px; font-size:12px; }
+  .media-action-bar.hide { display:none; }
+
+  /* === Tab 3 包裹 Step向导 === */
+  .step-indicator {
+    display:flex; justify-content:center; align-items:center; gap:8px;
+    padding:14px 12px; background:#fff; border-bottom:1px solid #F3F4F6;
+  }
+  .step-dot {
+    width:24px; height:24px; border-radius:50%;
+    background:#E5E7EB; color:#9CA3AF;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:600; transition:all .2s;
+  }
+  .step-dot.done { background:#10B981; color:#fff; }
+  .step-dot.current { background:var(--pri); color:#fff; box-shadow:0 0 0 4px #E0F7F4; }
+  .step-line { flex:0 0 20px; height:2px; background:#E5E7EB; }
+  .step-line.done { background:#10B981; }
+
+  .step-title {
+    padding:14px 12px 8px;
+    font-size:15px; font-weight:700; color:#111827;
+  }
+  .step-subtitle { padding:0 12px 8px; font-size:12px; color:#6B7280; }
+
+  /* Step 1 盘点条目 */
+  .overview-row {
+    display:flex; align-items:center; gap:10px;
+    background:#fff; padding:14px 12px; border-radius:8px; margin-bottom:6px;
+  }
+  .overview-row .ov-icon {
+    width:24px; height:24px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; flex-shrink:0;
+  }
+  .overview-row.ok .ov-icon { background:#D1FAE5; color:#065F46; }
+  .overview-row.warn .ov-icon { background:#FEF3C7; color:#B45309; }
+  .overview-row .ov-name { flex:1; font-size:13px; color:#111827; font-weight:500; }
+  .overview-row .ov-desc { font-size:12px; color:#6B7280; }
+
+  /* Step 2 信息行 */
+  .info-row {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:12px 4px; border-bottom:1px solid #F3F4F6;
+    font-size:13px;
+  }
+  .info-row:last-child { border-bottom:none; }
+  .info-row .info-label { color:#6B7280; }
+  .info-row .info-value { color:#111827; font-weight:500; text-align:right; max-width:65%; }
+  .info-row .info-value.lock { color:#9CA3AF; }
+  .info-row .info-value.lock::after { content:' 🔒'; font-size:10px; }
+  .info-row .info-value.edit { color:var(--pri); cursor:pointer; }
+  .info-row .info-value.edit::after { content:' ✎'; font-size:11px; }
+
+  .station-code-row {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:10px 12px; background:#F9FAFB; border-radius:8px; margin-bottom:6px;
+  }
+  .station-code-row .station-type { font-size:13px; color:#111827; font-weight:500; }
+  .station-code-row .station-code-box {
+    display:inline-flex; align-items:center; gap:6px;
+    border:1px solid #D1D5DB; border-radius:6px; padding:4px 10px;
+    background:#fff; cursor:pointer;
+  }
+  .station-code-row .station-code-box .code {
+    font-size:14px; color:var(--pri); font-weight:600; min-width:24px;
+  }
+  .station-code-row .station-code-box .edit-hint {
+    font-size:10px; color:#9CA3AF;
+  }
+
+  /* Step 3 / 4 */
+  .final-summary {
+    background:#fff; padding:14px; border-radius:10px; margin-bottom:10px;
+  }
+  .final-summary-title { font-size:13px; font-weight:600; color:#111827; margin-bottom:8px; }
+  .final-summary-line {
+    display:flex; justify-content:space-between;
+    padding:6px 0; font-size:12px;
+  }
+  .final-summary-line .key { color:#6B7280; }
+  .final-summary-line .val { color:#111827; font-weight:500; }
+
+  .generating-box {
+    background:#fff; padding:14px; border-radius:10px; margin-bottom:10px;
+  }
+  .gen-step-row { display:flex; align-items:center; gap:10px; padding:6px 0; font-size:12px; color:#9CA3AF; }
+  .gen-step-row.done { color:#065F46; }
+  .gen-step-row.current { color:var(--pri); font-weight:600; }
+  .gen-step-row .dot {
+    width:14px; height:14px; border-radius:50%; border:2px solid currentColor;
+  }
+  .gen-step-row.done .dot { background:#10B981; border-color:#10B981; }
+  .gen-step-row.current .dot { animation:pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.2);} }
+  .gen-bar-track { height:4px; background:#F3F4F6; border-radius:2px; margin-top:8px; overflow:hidden; }
+  .gen-bar-fill { height:100%; background:var(--pri); transition:width .5s; }
+
+  .pkg-meta-card {
+    background:#fff; padding:16px; border-radius:12px;
+    text-align:center; margin-bottom:10px;
+  }
+  .pkg-meta-icon {
+    font-size:36px; margin-bottom:8px;
+  }
+  .pkg-meta-title { font-size:16px; font-weight:700; color:#065F46; margin-bottom:4px; }
+  .pkg-meta-sub { font-size:12px; color:#6B7280; margin-bottom:10px; }
+  .pkg-download-hint {
+    background:#E0F2FE; color:#075985; padding:10px 12px;
+    border-radius:8px; font-size:12px; margin-top:8px;
+  }
+
+  /* 包裹文件树 */
+  .pkg-tree { font-size:12px; }
+  .tree-folder { margin-bottom:8px; }
+  .tree-folder-header {
+    display:flex; align-items:center; gap:6px;
+    padding:6px 0; font-weight:600; color:#111827;
+  }
+  .tree-children { padding-left:16px; }
+  .tree-row {
+    display:flex; align-items:center; gap:6px;
+    padding:7px 0; border-bottom:1px solid #F9FAFB;
+  }
+  .tree-row.subfolder { color:#6B7280; }
+  .tree-row.muted { color:#9CA3AF; font-style:italic; }
+  .tree-row.muted .tree-name { font-size:11px; }
+  .tree-icon { font-size:12px; flex-shrink:0; }
+  .tree-name {
+    flex:1; color:inherit; overflow:hidden;
+    text-overflow:ellipsis; white-space:nowrap;
+  }
+  .tree-actions { display:flex; gap:4px; flex-shrink:0; }
+  .tree-btn {
+    padding:3px 8px; border:1px solid #D1D5DB;
+    color:#4B5563; background:#fff; border-radius:10px;
+    font-size:10px; cursor:pointer;
+  }
+  .tree-btn.primary { border-color:var(--pri); color:var(--pri); }
+
+  /* 底部按钮栏 */
+  .step-actionbar {
+    padding:10px 12px; background:#fff; border-top:1px solid #F3F4F6;
+    display:flex; gap:8px; flex-shrink:0;
+  }
+  .step-actionbar .btn { flex:1; min-height:44px; font-size:14px; }
+
+  /* === 弹出层 === */
+  .bs-mask { position:absolute; left:0; right:0; top:0; bottom:0; background:rgba(0,0,0,.4); display:none; z-index:100; }
+  .bs-mask.show { display:block; }
+  .bs-sheet { position:absolute; left:0; right:0; bottom:0; background:#fff; border-radius:16px 16px 0 0; padding:16px 16px 20px; z-index:101; display:none; }
+  .bs-sheet.show { display:block; }
+  .bs-title { font-size:14px; font-weight:700; color:#111827; margin-bottom:14px; }
+  .bs-field { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+  .bs-field label { font-size:12px; color:#6B7280; }
+  .bs-field input { padding:10px 12px; border:1px solid #D1D5DB; border-radius:8px; font-size:14px; }
+  .bs-btns { display:flex; gap:10px; margin-top:4px; }
+  .bs-btns .btn { flex:1; }
+
+  /* 确认弹窗 */
+  .cd-mask { position:absolute; inset:0; background:rgba(0,0,0,.4); z-index:200; display:none; align-items:center; justify-content:center; padding:32px; }
+  .cd-mask.show { display:flex; }
+  .cd-dialog { background:#fff; border-radius:14px; padding:20px 18px; width:100%; max-width:300px; }
+  .cd-title { font-size:15px; font-weight:700; color:#111827; margin-bottom:10px; }
+  .cd-msg { font-size:13px; color:#4B5563; line-height:1.6; margin-bottom:16px; }
+  .cd-btns { display:flex; gap:10px; }
+  .cd-btns .btn { flex:1; }
+
+  /* 问题记录单编辑全屏层 */
+  .edit-mask {
+    position:absolute; inset:0; background:rgba(0,0,0,.4); z-index:200;
+    display:none; padding:0; align-items:stretch; justify-content:center;
+  }
+  .edit-mask.show { display:flex; }
+  .edit-panel {
+    background:#fff; width:100%; max-width:360px; height:100%;
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+
+  /* 编辑页简洁表单 */
+  .edit-form {
+    flex:1; overflow-y:auto;
+    padding:12px; background:#fff;
+  }
+  .edit-section { margin-bottom:18px; }
+  .edit-section-title {
+    font-size:13px; font-weight:700; color:#374151;
+    padding:6px 0; margin-bottom:8px;
+    border-bottom:2px solid var(--pri);
+  }
+  .form-row {
+    display:flex; align-items:flex-start; gap:10px;
+    padding:8px 0; border-bottom:1px solid #F3F4F6;
+  }
+  .form-row:last-child { border-bottom:none; }
+  .form-row .form-label {
+    flex:0 0 82px; font-size:12px; color:#6B7280;
+    padding-top:8px;
+  }
+  .form-row .form-field { flex:1; min-width:0; }
+  .form-row input.form-input,
+  .form-row textarea.form-input {
+    width:100%; box-sizing:border-box;
+    padding:7px 10px;
+    border:1px solid #D1D5DB; border-radius:6px;
+    font-size:13px; color:#111827;
+    background:#fff; outline:none;
+    font-family:inherit;
+  }
+  .form-row input.form-input:focus,
+  .form-row textarea.form-input:focus {
+    border-color:var(--pri);
+    background:#FFFBEB;
+  }
+  .form-row textarea.form-input {
+    min-height:52px; resize:vertical; line-height:1.5;
+  }
+  .form-row textarea.form-input.tall { min-height:90px; }
+  .form-count {
+    font-size:10px; color:#9CA3AF;
+    text-align:right; margin-top:2px;
+  }
+
+  /* 长字段纵向排列 */
+  .form-row.vertical {
+    flex-direction:column; align-items:stretch; gap:4px;
+  }
+  .form-row.vertical .form-label {
+    flex:none; padding-top:0;
+  }
+
+  /* 设备问题卡片 */
+  .device-card {
+    background:#F9FAFB; border-radius:8px;
+    padding:10px 12px; margin-bottom:8px;
+  }
+  .device-header {
+    display:flex; align-items:center; gap:8px;
+    font-size:13px; font-weight:600; color:#111827;
+    margin-bottom:6px;
+  }
+  .device-header .dev-seq {
+    display:inline-flex; width:22px; height:22px;
+    background:var(--pri); color:#fff; border-radius:50%;
+    align-items:center; justify-content:center;
+    font-size:11px; font-weight:700;
+  }
+  .device-card .form-row { padding:6px 0; }
+  .device-card .form-row:last-child { border-bottom:none; }
+  .device-card .form-row .form-label { flex:0 0 64px; font-size:11px; }
+
+  /* PDF预览层 */
+  .pdf-mask {
+    position:absolute; inset:0; background:rgba(0,0,0,.8); z-index:300;
+    display:none; align-items:stretch; justify-content:center;
+  }
+  .pdf-mask.show { display:flex; }
+  .pdf-panel {
+    background:#fff; width:100%; max-width:360px; height:100%;
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .pdf-header {
+    display:flex; align-items:center; gap:8px;
+    padding:12px; border-bottom:1px solid #E5E7EB; flex-shrink:0;
+  }
+  .pdf-back { cursor:pointer; font-size:20px; color:#374151; }
+  .pdf-title { flex:1; font-size:13px; font-weight:600; color:#111827; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pdf-body {
+    flex:1; overflow-y:auto; padding:20px 16px;
+    background:#F3F4F6;
+  }
+  .pdf-page {
+    background:#fff; margin:0 auto 12px; padding:24px 20px;
+    max-width:300px; box-shadow:0 2px 8px rgba(0,0,0,.1);
+    font-size:11px; line-height:1.8; color:#374151;
+  }
+  .pdf-page h4 { font-size:14px; text-align:center; margin-bottom:12px; color:#111827; }
+  .pdf-page table { width:100%; border-collapse:collapse; margin:6px 0; font-size:10px; }
+  .pdf-page td { border:1px solid #333; padding:3px 5px; }
+
+</style>
+</head>
+<body>
+
+<div class="demo-layout">
+  <div class="demo-left">
+
+    <div class="phone" id="phoneShell" style="position:relative;">
+      <div class="sbar">9:41</div>
+      <div class="nbar"><div class="back">←</div><div class="title">包裹生成与导出</div></div>
+
+      <!-- 3个Tab 条 -->
+      <div class="pkg-tabs">
+        <div class="pkg-tab active" data-tab="report" onclick="switchTab('report')">报告</div>
+        <div class="pkg-tab" data-tab="media" onclick="switchTab('media')">媒体</div>
+        <div class="pkg-tab" data-tab="package" onclick="switchTab('package')">包裹</div>
+      </div>
+
+      <!-- ==================== Tab 1 报告 ==================== -->
+      <div class="tab-pane active" id="pane-report">
+        <div class="report-status-bar">
+          <span class="report-status-dot" id="reportStatusDot"></span>
+          <span class="report-status-text" id="reportStatusText">未生成</span>
+        </div>
+        <div class="report-actions">
+          <button class="btn primary" id="reportGenBtn" onclick="generateReports()">生成</button>
+          <button class="btn outline" id="reportRegenBtn" onclick="regenerateReports()" style="display:none;">重新生成</button>
+        </div>
+        <div class="tab-scroll">
+          <div class="report-group-title">检测报告（12份）</div>
+          <div id="report-list-1"></div>
+
+          <div class="report-group-title">记录单（4份）</div>
+          <div id="report-list-2"></div>
+        </div>
+      </div>
+
+      <!-- ==================== Tab 2 媒体 ==================== -->
+      <div class="tab-pane" id="pane-media">
+        <div class="media-filter">
+          <span class="media-chip active" onclick="filterMedia(this,'all')">全部</span>
+          <span class="media-chip" onclick="filterMedia(this,'photo')">照片</span>
+          <span class="media-chip" onclick="filterMedia(this,'video')">视频</span>
+        </div>
+        <div class="tab-scroll">
+          <!-- 现场核查 -->
+          <div class="media-group" data-group="check">
+            <div class="media-group-header" onclick="toggleMediaGroup(this)">
+              <span class="media-group-title">现场核查 <span class="media-group-count">· 48张</span></span>
+              <span class="chevron">▾</span>
+            </div>
+            <div class="media-group-body">
+              <div class="media-group-actions">
+                <span onclick="exportGroup('现场核查')">批量导出该分类</span>
+              </div>
+              <div class="media-grid" id="grid-check"></div>
+            </div>
+          </div>
+          <!-- 安措执行 -->
+          <div class="media-group" data-group="safety">
+            <div class="media-group-header" onclick="toggleMediaGroup(this)">
+              <span class="media-group-title">安措执行 <span class="media-group-count">· 72张</span></span>
+              <span class="chevron">▾</span>
+            </div>
+            <div class="media-group-body">
+              <div class="media-group-actions">
+                <span onclick="exportGroup('安措执行')">批量导出该分类</span>
+              </div>
+              <div class="media-grid" id="grid-safety"></div>
+            </div>
+          </div>
+          <!-- 开收工会 -->
+          <div class="media-group collapsed" data-group="meeting">
+            <div class="media-group-header" onclick="toggleMediaGroup(this)">
+              <span class="media-group-title">开/收工会 <span class="media-group-count">· 2张</span></span>
+              <span class="chevron">▾</span>
+            </div>
+            <div class="media-group-body">
+              <div class="media-group-actions">
+                <span onclick="exportGroup('开/收工会')">批量导出该分类</span>
+              </div>
+              <div class="media-grid" id="grid-meeting"></div>
+            </div>
+          </div>
+          <!-- 检测执行 -->
+          <div class="media-group collapsed" data-group="test">
+            <div class="media-group-header" onclick="toggleMediaGroup(this)">
+              <span class="media-group-title">检测执行 <span class="media-group-count">· 156张 · 2段视频</span></span>
+              <span class="chevron">▾</span>
+            </div>
+            <div class="media-group-body">
+              <div class="media-group-actions">
+                <span onclick="exportGroup('检测执行')">批量导出该分类</span>
+              </div>
+              <div class="media-grid" id="grid-test"></div>
+            </div>
+          </div>
+          <!-- 蓝图/资料 -->
+          <div class="media-group collapsed" data-group="blueprint">
+            <div class="media-group-header" onclick="toggleMediaGroup(this)">
+              <span class="media-group-title">蓝图/资料 <span class="media-group-count">· 8张</span></span>
+              <span class="chevron">▾</span>
+            </div>
+            <div class="media-group-body">
+              <div class="media-group-actions">
+                <span onclick="exportGroup('蓝图/资料')">批量导出该分类</span>
+              </div>
+              <div class="media-grid" id="grid-blueprint"></div>
+            </div>
+          </div>
+          <!-- 补拍缺项 -->
+          <div class="media-group" data-group="missing">
+            <div class="media-group-header" onclick="toggleMediaGroup(this)">
+              <span class="media-group-title">补拍 <span class="media-group-count" style="color:#B45309;">· 2项待补</span></span>
+              <span class="chevron">▾</span>
+            </div>
+            <div class="media-group-body">
+              <div class="media-missing-item">
+                <span class="media-missing-icon">⚠</span>
+                <span class="media-missing-name">2#配电室 · 站房外观照</span>
+                <button class="media-missing-btn" onclick="takePhoto('2#配电室 · 站房外观照')">补拍</button>
+              </div>
+              <div class="media-missing-item">
+                <span class="media-missing-icon">⚠</span>
+                <span class="media-missing-name">0702 收工会打卡照</span>
+                <button class="media-missing-btn" onclick="takePhoto('0702 收工会打卡照')">补拍</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 多选时浮现的操作栏 -->
+        <div class="media-action-bar hide" id="mediaActionBar">
+          <button class="btn primary" onclick="exportSelected()">导出到手机</button>
+          <button class="btn outline" onclick="replaceSelected()">替换</button>
+          <button class="btn outline" style="color:#DC2626; border-color:#DC2626;" onclick="deleteSelected()">删除</button>
+        </div>
+      </div>
+
+      <!-- ==================== Tab 3 包裹 · Step-by-Step 向导 ==================== -->
+      <div class="tab-pane" id="pane-package">
+        <div class="step-indicator" id="stepIndicator"></div>
+
+        <div class="tab-scroll" id="stepContent"></div>
+
+        <div class="step-actionbar" id="stepActionBar"></div>
+      </div>
+
+      <!-- Toast -->
+      <div class="toast" id="toast"></div>
+
+      <!-- Bottom Sheet 通用 -->
+      <div class="bs-mask" id="bsMask" onclick="closeBottomSheet()"></div>
+      <div class="bs-sheet" id="bsSheet">
+        <div class="bs-title" id="bsTitle">编辑</div>
+        <div class="bs-field">
+          <label id="bsLabel">值</label>
+          <input type="text" id="bsInput" value="">
+        </div>
+        <div class="bs-btns">
+          <button class="btn outline" onclick="closeBottomSheet()">取消</button>
+          <button class="btn primary" onclick="saveBottomSheet()">保存</button>
+        </div>
+      </div>
+
+      <!-- 站房编号编辑 Sheet -->
+      <div class="bs-sheet" id="stationSheet">
+        <div class="bs-title">修改站房编号</div>
+        <div class="bs-field">
+          <label>站房类型</label>
+          <input type="text" id="stationTypeInput" disabled>
+        </div>
+        <div class="bs-field">
+          <label>编号（可含数字和符号）</label>
+          <input type="text" id="stationCodeInput" value="">
+        </div>
+        <div class="bs-btns">
+          <button class="btn outline" onclick="closeStationSheet()">取消</button>
+          <button class="btn primary" onclick="saveStationCode()">保存</button>
+        </div>
+      </div>
+
+      <!-- 确认弹窗 -->
+      <div class="cd-mask" id="cdMask">
+        <div class="cd-dialog">
+          <div class="cd-title" id="cdTitle">确认</div>
+          <div class="cd-msg" id="cdMsg"></div>
+          <div class="cd-btns">
+            <button class="btn outline" id="cdCancel">取消</button>
+            <button class="btn primary" id="cdOk">确定</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 问题记录单编辑页（简洁表单版） -->
+      <div class="edit-mask" id="issueEditMask">
+        <div class="edit-panel">
+          <div class="nbar" style="flex-shrink:0;">
+            <div class="back" onclick="closeIssueEdit()">←</div>
+            <div class="title">检测问题记录单</div>
+          </div>
+          <div class="edit-form">
+
+            <!-- 头部信息 -->
+            <div class="edit-section">
+              <div class="edit-section-title">头部信息</div>
+              <div class="form-row">
+                <label class="form-label">地市</label>
+                <div class="form-field"><input class="form-input" type="text" value="徐州" maxlength="10"></div>
+              </div>
+              <div class="form-row">
+                <label class="form-label">区县</label>
+                <div class="form-field"><input class="form-input" type="text" value="城东" maxlength="15"></div>
+              </div>
+              <div class="form-row">
+                <label class="form-label">项目名称</label>
+                <div class="form-field"><input class="form-input" type="text" value="慧悦雅园（东郭庄地块）" maxlength="50"></div>
+              </div>
+              <div class="form-row">
+                <label class="form-label">传票号</label>
+                <div class="form-field"><input class="form-input" type="text" value="3224010900062823" maxlength="30"></div>
+              </div>
+              <div class="form-row">
+                <label class="form-label">日期</label>
+                <div class="form-field"><input class="form-input" type="text" value="2026年03月12日" maxlength="15"></div>
+              </div>
+              <div class="form-row">
+                <label class="form-label">记录人</label>
+                <div class="form-field"><input class="form-input" type="text" value="张振寰" maxlength="10"></div>
+              </div>
+            </div>
+
+            <!-- 现场核查 -->
+            <div class="edit-section">
+              <div class="edit-section-title">现场核查</div>
+              <div class="form-row">
+                <label class="form-label">电源检查</label>
+                <div class="form-field"><input class="form-input" type="text" value="进线电缆未敷设" maxlength="100"></div>
+              </div>
+              <div class="form-row">
+                <label class="form-label">项目规模</label>
+                <div class="form-field"><input class="form-input" type="text" value="与报检一致" maxlength="100"></div>
+              </div>
+              <div class="form-row">
+                <label class="form-label">居民入住</label>
+                <div class="form-field"><input class="form-input" type="text" value="居民未入住" maxlength="100"></div>
+              </div>
+              <div class="form-row">
+                <label class="form-label">送电痕迹</label>
+                <div class="form-field"><input class="form-input" type="text" value="报检范围内设备无送电投运的相关痕迹" maxlength="100"></div>
+              </div>
+              <div class="form-row">
+                <label class="form-label">临时电源</label>
+                <div class="form-field"><input class="form-input" type="text" value="无临代正、临时电源无异常" maxlength="100"></div>
+              </div>
+              <div class="form-row">
+                <label class="form-label">安全风险</label>
+                <div class="form-field"><input class="form-input" type="text" value="无安全风险类问题" maxlength="100"></div>
+              </div>
+              <div class="form-row vertical">
+                <label class="form-label">其它问题</label>
+                <div class="form-field">
+                  <textarea class="form-input tall" maxlength="500">1、高压电缆存在2家厂家，分别为：江苏汉兴电缆有限公司和无锡市光环电缆有限公司；
+2、计量表箱存在4家厂家，分别为：河南许继仪表有限公司、南京杨中电器设备有限公司、中电华骋科技有限公司和中电装备山东电子有限公司。</textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- 设备问题 -->
+            <div class="edit-section">
+              <div class="edit-section-title">设备问题</div>
+
+              <div class="device-card">
+                <div class="device-header"><span class="dev-seq">1</span>高压开关柜</div>
+                <div class="form-row">
+                  <label class="form-label">问题</label>
+                  <div class="form-field"><textarea class="form-input" maxlength="200">无问题</textarea></div>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">供应商</label>
+                  <div class="form-field"><input class="form-input" type="text" value="江苏鹏泰电气有限公司" maxlength="80"></div>
+                </div>
+              </div>
+
+              <div class="device-card">
+                <div class="device-header"><span class="dev-seq">2</span>环网柜</div>
+                <div class="form-row">
+                  <label class="form-label">问题</label>
+                  <div class="form-field"><textarea class="form-input" maxlength="200">无问题</textarea></div>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">供应商</label>
+                  <div class="form-field"><input class="form-input" type="text" value="卡雷迪电气（常州）有限公司" maxlength="80"></div>
+                </div>
+              </div>
+
+              <div class="device-card">
+                <div class="device-header"><span class="dev-seq">3</span>高压电缆</div>
+                <div class="form-row">
+                  <label class="form-label">问题</label>
+                  <div class="form-field"><textarea class="form-input" maxlength="200">无问题</textarea></div>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">供应商1</label>
+                  <div class="form-field"><input class="form-input" type="text" value="江苏汉兴电缆有限公司" maxlength="80"></div>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">供应商2</label>
+                  <div class="form-field"><input class="form-input" type="text" value="无锡市光环电缆有限公司" maxlength="80"></div>
+                </div>
+              </div>
+
+              <div class="device-card">
+                <div class="device-header"><span class="dev-seq">4</span>配电变压器</div>
+                <div class="form-row">
+                  <label class="form-label">问题</label>
+                  <div class="form-field"><textarea class="form-input" maxlength="200">无问题</textarea></div>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">供应商</label>
+                  <div class="form-field"><input class="form-input" type="text" value="天宏电力科技有限公司" maxlength="80"></div>
+                </div>
+              </div>
+
+              <div class="device-card">
+                <div class="device-header"><span class="dev-seq">5</span>低压开关柜</div>
+                <div class="form-row">
+                  <label class="form-label">问题</label>
+                  <div class="form-field"><textarea class="form-input" maxlength="200">无问题</textarea></div>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">供应商</label>
+                  <div class="form-field"><input class="form-input" type="text" value="江苏鹏泰电气有限公司" maxlength="80"></div>
+                </div>
+              </div>
+
+              <div class="device-card">
+                <div class="device-header"><span class="dev-seq">6</span>低压电缆</div>
+                <div class="form-row">
+                  <label class="form-label">问题</label>
+                  <div class="form-field"><textarea class="form-input" maxlength="200">无问题</textarea></div>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">供应商</label>
+                  <div class="form-field"><input class="form-input" type="text" value="江苏汉兴电缆有限公司" maxlength="80"></div>
+                </div>
+              </div>
+
+              <div class="device-card">
+                <div class="device-header"><span class="dev-seq">7</span>低压电缆分支箱</div>
+                <div class="form-row">
+                  <label class="form-label">问题</label>
+                  <div class="form-field"><textarea class="form-input" maxlength="200">无问题</textarea></div>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">供应商</label>
+                  <div class="form-field"><input class="form-input" type="text" value="南京杨中电器设备有限公司" maxlength="80"></div>
+                </div>
+              </div>
+
+              <div class="device-card">
+                <div class="device-header"><span class="dev-seq">8</span>计量表箱</div>
+                <div class="form-row">
+                  <label class="form-label">问题</label>
+                  <div class="form-field"><textarea class="form-input" maxlength="200">无问题</textarea></div>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">供应商1</label>
+                  <div class="form-field"><input class="form-input" type="text" value="河南许继仪表有限公司" maxlength="80"></div>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">供应商2</label>
+                  <div class="form-field"><input class="form-input" type="text" value="南京杨中电器设备有限公司" maxlength="80"></div>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">供应商3</label>
+                  <div class="form-field"><input class="form-input" type="text" value="中电华骋科技有限公司" maxlength="80"></div>
+                </div>
+                <div class="form-row">
+                  <label class="form-label">供应商4</label>
+                  <div class="form-field"><input class="form-input" type="text" value="中电装备山东电子有限公司" maxlength="80"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 备注 -->
+            <div class="edit-section">
+              <div class="edit-section-title">备注</div>
+              <textarea class="form-input tall" maxlength="500" style="width:100%; box-sizing:border-box; min-height:100px;">1、本次报检1#独立开关站和1#、2#、3#配电房，抽检1#开关站和2#配电房，增补3#配电房；
+2、中置柜PT柜五防检查未开展（现场PT柜下柜门内无带电设备）；
+3、现场环网柜为半绝缘型，气箱材质检测未开展。</textarea>
+            </div>
+
+          </div>
+          <div class="step-actionbar" style="flex-shrink:0;">
+            <button class="btn outline" onclick="closeIssueEdit()">取消</button>
+            <button class="btn primary" onclick="saveIssueEdit()">保存</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PDF 预览层 -->
+      <div class="pdf-mask" id="pdfMask">
+        <div class="pdf-panel">
+          <div class="pdf-header">
+            <span class="pdf-back" onclick="closePdfPreview()">←</span>
+            <span class="pdf-title" id="pdfTitle">报告预览</span>
+          </div>
+          <div class="pdf-body" id="pdfBody">
+            <div class="pdf-page">
+              <h4>高压开关柜检测报告</h4>
+              <table>
+                <tr><td style="width:30%;">报告编号</td><td>XZHD 20260312 10 1</td></tr>
+                <tr><td>委托单位</td><td>营销服务中心</td></tr>
+                <tr><td>检测地点</td><td>慧悦雅园（东郭庄地块）</td></tr>
+                <tr><td>检验日期</td><td>2026年03月12日</td></tr>
+                <tr><td>天气/温度/湿度</td><td>阴 / 12℃ / 58%</td></tr>
+              </table>
+              <p style="margin-top:12px; text-align:center; color:#9CA3AF;">（模拟 PDF 预览）</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============= 右侧设计说明 ============= -->
+  <div class="demo-right">
+    <h2>📦 包裹生成与导出（PRD 1.3 · V1.0）</h2>
+    <p style="font-size:12px; color:#9CA3AF;">
+      角色：工作负责人独占　·　粒度：工单级　·　入口：本次检测流程页 Bottom Sheet
+    </p>
+
+    <h3>🎯 V1.0 模块定位</h3>
+    <p>本模块完成两件事：</p>
+    <ul>
+      <li><b>生成</b>：报告（16份docx，手机端快速渲染）+ 完整包裹（照片/视频/目录/ZIP，最终整包构建）</li>
+      <li><b>导出</b>：报告在<b>手机端</b>导出（预览+临场填纸质报告）；整包在 <b>PC 端</b>下载后交甲方</li>
+    </ul>
+
+    <h3>🧩 3 Tab 架构（局部→整体）</h3>
+    <table>
+      <thead><tr><th>Tab</th><th>职责</th><th>使用频率</th></tr></thead>
+      <tbody>
+      <tr><td><b>1 报告</b></td><td>16份docx 生成+预览+记录单编辑</td><td>高频（检测过程）</td></tr>
+      <tr><td><b>2 媒体</b></td><td>照片视频分类查看+批量导出手机+补拍缺项+删改</td><td>过程中随时</td></tr>
+      <tr><td><b>3 包裹</b></td><td>Step-by-Step 向导：盘点→定稿→生成→已生成（可循环编辑）</td><td>最终一次性（可反复）</td></tr>
+      </tbody>
+    </table>
+
+    <h3>🔄 Tab 3 循环式 Step 向导</h3>
+    <pre style="background:#fff; padding:10px; border-radius:6px; font-size:11px; overflow-x:auto; line-height:1.6;">未生成时：
+  Step 1 作业盘点 → Step 2 基础信息 → Step 3 最后确认 → [生成包裹]
+                                                          ↓
+                                                   Step 4 已生成
+
+已生成后：
+  默认落在 Step 4 → [重新编辑] → 回到 Step 1 → 循环</pre>
+
+    <h3>📋 关键业务规则</h3>
+    <table>
+      <thead><tr><th>规则</th><th>说明</th></tr></thead>
+      <tbody>
+      <tr><td>生成 ≠ 交付</td><td>Tab 1 / Tab 3 随时可生成草稿预览；Step 4 已生成后仍可循环编辑重新生成</td></tr>
+      <tr><td>Step 1 不阻塞</td><td>作业盘点有缺漏仅提示，允许用户判断后进入 Step 3 生成</td></tr>
+      <tr><td>站房编号最后修改</td><td>Tab 3 Step 2 是 1.3 模块内最后一次修改机会，之后随最终包裹锁定</td></tr>
+      <tr><td>记录单可轻量编辑</td><td>仅《检测问题记录单》支持字段编辑；方案A 覆写字段表 + 静默审计</td></tr>
+      <tr><td>媒体导出权限</td><td>删除/替换/补拍仅工作负责人可操作；软删除（后端保留）</td></tr>
+      <tr><td>重新生成 = 覆盖</td><td>不保留历史版本，V3.0简化</td></tr>
+      </tbody>
+    </table>
+
+    <h3>🚪 甲方验收两道闸门</h3>
+    <ul>
+      <li><b>闸门1 完整性</b>：该有的必须齐全（照片/报告/记录单/视频），缺一拒收</li>
+      <li><b>闸门2 规范性</b>：Word 模板统一性、字体规范、目录整齐度</li>
+    </ul>
+    <p>本模块通过 <b>Step 1 盘点</b> + <b>规范要求补拍清单</b> 支持闸门1；通过 <b>系统模板渲染</b> + <b>人工编辑受限</b> 支持闸门2。</p>
+
+    <h3>🧭 版本边界</h3>
+    <table>
+      <thead><tr><th>能力</th><th>V3.0</th><th>V3.1+</th></tr></thead>
+      <tbody>
+      <tr><td>3Tab（报告/媒体/包裹）</td><td>✅</td><td></td></tr>
+      <tr><td>Step-by-Step 循环编辑</td><td>✅</td><td></td></tr>
+      <tr><td>检测问题记录单 轻量编辑</td><td>✅</td><td></td></tr>
+      <tr><td>其他3份记录单 + 12份报告的编辑</td><td></td><td>评估</td></tr>
+      <tr><td>3.7 检测执行中实时预览单设备报告</td><td></td><td>✅</td></tr>
+      <tr><td>照片替换/增删</td><td>✅</td><td></td></tr>
+      <tr><td>判定结论修改（合格↔不合格）</td><td></td><td>评估</td></tr>
+      <tr><td>省检平台直推</td><td></td><td>V3.2+</td></tr>
+      </tbody>
+    </table>
+
+    <h3>🔁 场景演示（左上角切换）</h3>
+    <ol>
+      <li><b>场景1 初始</b>：Tab 1 未生成，底部"生成"按钮可点</li>
+      <li><b>场景2 已生成草稿</b>：Tab 1 显示16份docx，点[预览]看PDF；问题记录单可[编辑]</li>
+      <li><b>场景3 包裹 Step 1</b>：Tab 3 默认落在 Step 1 作业盘点</li>
+      <li><b>场景4 已生成包裹</b>：Tab 3 默认落在 Step 4，点"重新编辑"循环</li>
+    </ol>
+
+    <details>
+      <summary>📐 开发参考（技术侧）</summary>
+
+      <h3 style="margin-top:12px;">后端架构（已被开发技术预研验证）</h3>
+      <ul>
+        <li>模板引擎：poi-tl 1.12.2（主，支持图表）+ Apache POI 5.2.5（辅，动态行克隆）</li>
+        <li>单份docx渲染约 110ms（Apache POI 方案）/ 750ms（poi-tl 含图表）</li>
+        <li>16份并发渲染约 2-8 秒，远低于包裹级10分钟</li>
+      </ul>
+
+      <h3>关键API</h3>
+      <ul>
+        <li><code>POST /report/renderReports</code>（🆕）— 仅渲染16份docx（Tab 1 使用）</li>
+        <li><code>POST /report/createTestPackage</code> — 整包构建（Tab 3 Step 3 使用，10分钟异步）</li>
+        <li><code>POST /report/updateIssueSheetField</code>（🆕）— 编辑问题记录单字段（Tab 1 编辑）</li>
+        <li><code>POST /myManage/getMutiFileList</code> — 批量媒体下载（Tab 2 导出）</li>
+      </ul>
+
+      <h3>数据表（新增）</h3>
+      <ul>
+        <li><code>report_field_override</code> — 记录单字段覆写（方案A）</li>
+        <li><code>report_field_override_audit</code> — 字段级编辑审计（静默）</li>
+        <li><code>station_code_override</code>（🆕）— 1.3 站房编号最后修改</li>
+      </ul>
+
+      <h3>前端依赖（uni-app 组件）</h3>
+      <ul>
+        <li>PDF 预览：uni-pdf 或后端转PDF+uni-image</li>
+        <li>媒体批量导出：uni.saveImageToPhotosAlbum + 权限申请</li>
+        <li>Step 指示器：自定义组件</li>
+        <li>长按多选：uni touch events</li>
+      </ul>
+
+    </details>
+  </div>
+</div>
+
+<script>
+// ============= 全局状态 =============
+let state = {
+  activeTab: 'report',
+  reportsGenerated: false,
+  pkgStep: 1,              // 1~4
+  pkgGenerated: false,
+  pkgGenerating: false,
+  genStep: 0,
+  selectedMedia: [],
+  editingField: null,
+  editingStation: null,
+  stations: [
+    {id:1, type:'开关站', code:'1#'},
+    {id:2, type:'配电室', code:'2#'},
+    {id:3, type:'配电房', code:'3#'}
+  ],
+  baseInfo: {
+    projectName: '慧悦雅园（东郭庄地块）',
+    district: '江苏 · 徐州 · 城东',
+    location: '徐州城东慧悦雅园（东郭庄地块）',
+    client: '徐州华电',
+    testDate: '2026-03-12',
+    testType: '居配抽检',
+    voltage: '12 kV',
+    team: '张振寰（负责）· 李四 · 王五 · 赵六'
+  }
+};
+
+// ============= Tab 切换 =============
+function switchTab(tab) {
+  state.activeTab = tab;
+  document.querySelectorAll('.pkg-tab').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
+  document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+  document.getElementById('pane-' + tab).classList.add('active');
+  renderAll();
+}
+
+// ============= Tab 1 报告 =============
+const REPORTS = [
+  {id:1,  name:'1. 中置柜试验报告',            sub:'1#开关站'},
+  {id:2,  name:'2. 环网柜检测报告',            sub:'2#配电室'},
+  {id:3,  name:'3-1. 高压电缆检测报告(1)',      sub:'1#开关站 · GP5'},
+  {id:4,  name:'3-2. 高压电缆检测报告(2)',      sub:'1#开关站 · GP20'},
+  {id:5,  name:'3-3. 高压电缆检测报告(3)',      sub:'2#配电室 · GP3'},
+  {id:6,  name:'3-4. 高压电缆检测报告(4)',      sub:'2#配电室 · GP8'},
+  {id:7,  name:'3-5. 高压电缆检测报告(5)',      sub:'3#配电房 · GP8'},
+  {id:8,  name:'4-1. 配电变压器检测报告(1)',    sub:'2#配电室 · 1#变'},
+  {id:9,  name:'4-2. 配电变压器检测报告(2)',    sub:'3#配电房 · 2#变'},
+  {id:10, name:'5. 低压开关柜检测报告',         sub:'2#配电室'},
+  {id:11, name:'6. 低压电缆检测报告×5',        sub:'2#、3#配电室'},
+  {id:12, name:'7. 低压电缆分支箱检测报告×2',   sub:'2#、3#配电室'}
+];
+const SHEETS = [
+  {id:101, name:'检测问题记录单',            editable:true},
+  {id:102, name:'检测工作量记录单',          editable:false},
+  {id:103, name:'检测站房、设备抽取信息记录单', editable:false},
+  {id:104, name:'低压电缆、变压器检测情况汇总', editable:false}
+];
+
+function renderReportStatus() {
+  const dot = document.getElementById('reportStatusDot');
+  const txt = document.getElementById('reportStatusText');
+  const gen = document.getElementById('reportGenBtn');
+  const re  = document.getElementById('reportRegenBtn');
+  if (state.reportsGenerated) {
+    dot.className = 'report-status-dot ready';
+    txt.innerText = '草稿版 · 按最新数据渲染';
+    gen.style.display = 'none';
+    re.style.display = '';
+  } else {
+    dot.className = 'report-status-dot';
+    txt.innerText = '未生成';
+    gen.style.display = '';
+    re.style.display = 'none';
+  }
+}
+
+function renderReportLists() {
+  const box1 = document.getElementById('report-list-1');
+  const box2 = document.getElementById('report-list-2');
+  const cls = state.reportsGenerated ? '' : 'ungenerated';
+
+  box1.innerHTML = REPORTS.map(r => `
+    <div class="report-row ${cls}">
+      <div class="doc-icon">DOC</div>
+      <div class="doc-meta">
+        <span class="doc-name">${r.name}</span>
+        <span class="doc-sub">${r.sub}</span>
+      </div>
+      <div class="doc-actions">
+        <button class="doc-btn primary" onclick="previewReport('${r.name}')">预览</button>
+      </div>
+    </div>
+  `).join('');
+
+  box2.innerHTML = SHEETS.map(s => `
+    <div class="report-row ${cls}">
+      <div class="doc-icon record">REC</div>
+      <div class="doc-meta">
+        <span class="doc-name">${s.name}</span>
+      </div>
+      <div class="doc-actions">
+        <button class="doc-btn primary" onclick="previewReport('${s.name}')">预览</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function generateReports() {
+  showToast('正在渲染 16 份报告...');
+  setTimeout(() => {
+    state.reportsGenerated = true;
+    renderAll();
+    showToast('生成完成');
+  }, 1200);
+}
+
+function regenerateReports() {
+  openConfirm('重新生成？', '将按最新数据覆盖当前草稿', () => {
+    showToast('正在重新渲染...');
+    setTimeout(() => {
+      renderAll();
+      showToast('已更新');
+    }, 1000);
+  });
+}
+
+function previewReport(name) {
+  if (!state.reportsGenerated) { showToast('请先生成'); return; }
+  document.getElementById('pdfTitle').innerText = name;
+  document.getElementById('pdfMask').classList.add('show');
+}
+function closePdfPreview() {
+  document.getElementById('pdfMask').classList.remove('show');
+}
+
+// ============= 问题记录单编辑 =============
+function openIssueEdit() {
+  if (!state.pkgGenerated) { showToast('请先生成包裹'); return; }
+  document.getElementById('issueEditMask').classList.add('show');
+}
+function closeIssueEdit() {
+  document.getElementById('issueEditMask').classList.remove('show');
+}
+function saveIssueEdit() {
+  setTimeout(() => {
+    closeIssueEdit();
+    showToast('已保存');
+  }, 400);
+}
+
+
+// ============= Tab 2 媒体 =============
+function renderMediaGrids() {
+  const counts = { check:48, safety:72, meeting:2, test:12, blueprint:8 };
+  for (const [key, cnt] of Object.entries(counts)) {
+    const grid = document.getElementById('grid-' + key);
+    if (!grid) continue;
+    const showCount = Math.min(cnt, 12);
+    let html = '';
+    for (let i = 0; i < showCount; i++) {
+      const isVideo = (key === 'test' && i >= 10);
+      html += `<div class="media-thumb ${isVideo?'video':''}" data-key="${key}-${i}" onclick="toggleMediaSelect(this,'${key}-${i}')"><div class="sel-icon">✓</div></div>`;
+    }
+    if (cnt > showCount) html += `<div class="media-thumb" style="display:flex;align-items:center;justify-content:center;font-size:11px;color:#9CA3AF;">+${cnt-showCount}</div>`;
+    grid.innerHTML = html;
+  }
+}
+
+function toggleMediaGroup(el) {
+  const grp = el.closest('.media-group');
+  grp.classList.toggle('collapsed');
+}
+function filterMedia(el, kind) {
+  document.querySelectorAll('.media-filter .media-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  showToast('筛选：' + (kind==='all'?'全部':kind==='photo'?'照片':'视频'));
+}
+function toggleMediaSelect(el, key) {
+  el.classList.toggle('selected');
+  if (el.classList.contains('selected')) {
+    state.selectedMedia.push(key);
+  } else {
+    state.selectedMedia = state.selectedMedia.filter(k => k !== key);
+  }
+  document.getElementById('mediaActionBar').classList.toggle('hide', state.selectedMedia.length === 0);
+}
+function exportGroup(name) {
+  openConfirm('批量导出', `将"${name}"分类下所有照片视频导出到手机相册`, () => {
+    showToast('已导出到相册');
+  });
+}
+function exportSelected() {
+  openConfirm('导出到手机', `已选 ${state.selectedMedia.length} 项`, () => {
+    state.selectedMedia = [];
+    document.querySelectorAll('.media-thumb.selected').forEach(e => e.classList.remove('selected'));
+    document.getElementById('mediaActionBar').classList.add('hide');
+    showToast('已导出到相册');
+  });
+}
+function replaceSelected() {
+  if (state.selectedMedia.length !== 1) { showToast('仅支持单张替换'); return; }
+  showToast('调起相机重拍');
+}
+function deleteSelected() {
+  openConfirm('删除', `将删除 ${state.selectedMedia.length} 项（可从回收站恢复）`, () => {
+    state.selectedMedia = [];
+    document.querySelectorAll('.media-thumb.selected').forEach(e => e.classList.remove('selected'));
+    document.getElementById('mediaActionBar').classList.add('hide');
+    showToast('已删除');
+  });
+}
+function takePhoto(name) {
+  showToast('进入拍照：' + name);
+}
+
+// ============= Tab 3 包裹 · Step 向导 =============
+function renderStepIndicator() {
+  const box = document.getElementById('stepIndicator');
+  const steps = ['1','2','3','4'];
+  let html = '';
+  for (let i = 0; i < 4; i++) {
+    let cls = 'step-dot';
+    if (state.pkgStep > (i+1)) cls += ' done';
+    else if (state.pkgStep === (i+1)) cls += ' current';
+    html += `<div class="${cls}">${steps[i]}</div>`;
+    if (i < 3) html += `<div class="step-line ${state.pkgStep > (i+1) ? 'done' : ''}"></div>`;
+  }
+  box.innerHTML = html;
+}
+
+function renderStepContent() {
+  const box = document.getElementById('stepContent');
+  if (state.pkgGenerating) {
+    box.innerHTML = renderStepGenerating();
+    return;
+  }
+  if (state.pkgStep === 1) box.innerHTML = renderStep1();
+  if (state.pkgStep === 2) box.innerHTML = renderStep2();
+  if (state.pkgStep === 3) box.innerHTML = renderStep3();
+  if (state.pkgStep === 4) box.innerHTML = renderStep4();
+}
+
+function renderStep1() {
+  return `
+    <div class="step-title">Step 1 · 作业完成度盘点</div>
+    <div class="step-subtitle">快速检视本次工作整体情况</div>
+
+    <div class="overview-row ok">
+      <div class="ov-icon">✓</div>
+      <div class="ov-name">现场核查</div>
+      <div class="ov-desc">8/8 完成</div>
+    </div>
+    <div class="overview-row ok">
+      <div class="ov-icon">✓</div>
+      <div class="ov-name">安措执行</div>
+      <div class="ov-desc">4 站房全部完成</div>
+    </div>
+    <div class="overview-row ok">
+      <div class="ov-icon">✓</div>
+      <div class="ov-name">开/收工会</div>
+      <div class="ov-desc">已完成</div>
+    </div>
+    <div class="overview-row ok">
+      <div class="ov-icon">✓</div>
+      <div class="ov-name">检测执行</div>
+      <div class="ov-desc">12 台设备已提交</div>
+    </div>
+    <div class="overview-row warn">
+      <div class="ov-icon">⚠</div>
+      <div class="ov-name">补拍</div>
+      <div class="ov-desc">还缺 2 项</div>
+    </div>
+    <div class="overview-row ok">
+      <div class="ov-icon">✓</div>
+      <div class="ov-name">蓝图/资料</div>
+      <div class="ov-desc">完整</div>
+    </div>
+  `;
+}
+
+function renderStep2() {
+  return `
+    <div class="step-title">Step 2 · 定稿基础信息</div>
+    <div class="step-subtitle">以下信息将出现在每份检测报告封面</div>
+
+    <div class="section-card">
+      <div class="info-row">
+        <span class="info-label">项目名称</span>
+        <span class="info-value lock">${state.baseInfo.projectName}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">行政区划</span>
+        <span class="info-value lock">${state.baseInfo.district}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">检测地点</span>
+        <span class="info-value edit" onclick="editBaseField('location','检测地点')">${state.baseInfo.location}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">委托单位</span>
+        <span class="info-value lock">${state.baseInfo.client}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">检测日期</span>
+        <span class="info-value lock">${state.baseInfo.testDate}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">检验类别</span>
+        <span class="info-value lock">${state.baseInfo.testType}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">额定电压</span>
+        <span class="info-value lock">${state.baseInfo.voltage}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">团队</span>
+        <span class="info-value lock">${state.baseInfo.team}</span>
+      </div>
+    </div>
+
+    <div class="step-subtitle" style="margin-top:12px;">站房编号（1.3 模块最后修改机会）</div>
+    <div>
+      ${state.stations.map(s => `
+        <div class="station-code-row">
+          <span class="station-type">${s.type}</span>
+          <div class="station-code-box" onclick="openStationSheet(${s.id})">
+            <span class="code">${s.code}</span>
+            <span class="edit-hint">修改</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderStep3() {
+  const pending = 2;
+  return `
+    <div class="step-title">Step 3 · 最后确认</div>
+    <div class="step-subtitle">生成包裹前最后核对</div>
+
+    <div class="final-summary">
+      <div class="final-summary-title">本次将生成的包裹包含</div>
+      <div class="final-summary-line"><span class="key">检测报告</span><span class="val">12 份</span></div>
+      <div class="final-summary-line"><span class="key">记录单</span><span class="val">4 份</span></div>
+      <div class="final-summary-line"><span class="key">照片</span><span class="val">284 张</span></div>
+      <div class="final-summary-line"><span class="key">视频</span><span class="val">2 段</span></div>
+      <div class="final-summary-line"><span class="key">目录结构</span><span class="val">4 大板块</span></div>
+    </div>
+
+    ${pending > 0 ? `
+      <div style="background:#FEF3C7; color:#92400E; padding:10px 12px; border-radius:8px; font-size:12px; margin-bottom:10px;">
+        ⚠ 仍有 ${pending} 项补拍未完成，生成将包含当前状态（如需补齐请返回 Step 1 或媒体Tab）
+      </div>
+    ` : ''}
+
+    <div class="final-summary">
+      <div class="final-summary-title">预计耗时</div>
+      <div class="final-summary-line"><span class="key">整包构建</span><span class="val">约 5-10 分钟</span></div>
+      <div class="final-summary-line" style="color:#9CA3AF; font-size:11px;">
+        <span>后台异步执行，可继续其他操作</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderStepGenerating() {
+  const steps = [
+    '汇总检测数据',
+    '渲染 16 份报告和记录单',
+    '归档照片和视频（按模板）',
+    '压缩整包',
+    '上传至服务端'
+  ];
+  return `
+    <div class="step-title">正在生成包裹...</div>
+    <div class="step-subtitle">可退出此页面，完成后会通知你</div>
+
+    <div class="generating-box">
+      ${steps.map((s, i) => {
+        let cls = 'gen-step-row';
+        if (state.genStep > i) cls += ' done';
+        else if (state.genStep === i) cls += ' current';
+        return `<div class="${cls}"><div class="dot"></div><span>${s}</span></div>`;
+      }).join('')}
+      <div class="gen-bar-track"><div class="gen-bar-fill" style="width:${(state.genStep/5)*100}%"></div></div>
+    </div>
+  `;
+}
+
+function renderStep4() {
+  return `
+    <div class="pkg-meta-card">
+      <div class="pkg-meta-icon">📦</div>
+      <div class="pkg-meta-title">包裹已生成</div>
+      <div class="pkg-meta-sub">总大小 1.23 GB · 14:32</div>
+      <div class="pkg-download-hint">请到 PC 端下载包裹后交付甲方</div>
+    </div>
+
+    <div class="final-summary" style="padding:12px;">
+      <div class="final-summary-title" style="margin-bottom:6px;">包裹内容</div>
+
+      <div class="pkg-tree">
+        ${renderPkgTreeNode('folder', '1 管理工作', [
+          renderPkgTreeNode('folder-sub', '1.站房蓝图（8）'),
+          renderPkgTreeNode('folder-sub', '2.现场核查情况（42）'),
+          renderPkgTreeNode('folder-sub', '3.站房全景图（16）'),
+          renderPkgTreeNode('folder-sub', '4.场地安措（20）'),
+          renderPkgTreeNode('folder-sub', '5.抽检规则（1）'),
+          renderPkgTreeNode('folder-sub', '6.检测设备（8）'),
+          renderPkgTreeNode('folder-sub', '7.开收工会（2）'),
+          renderPkgTreeNode('folder-sub', '8.工作票（2）')
+        ])}
+
+        ${renderPkgTreeNode('folder', '2 设备检测', [
+          renderPkgTreeNode('folder-sub', '1.开关站中置柜（3设备）'),
+          renderPkgTreeNode('folder-sub', '3.配电室环网柜（1设备）'),
+          renderPkgTreeNode('folder-sub', '4.高压电缆（5设备）'),
+          renderPkgTreeNode('folder-sub', '5.干式配电变压器（2设备）'),
+          renderPkgTreeNode('folder-sub', '7.低压柜（1设备）'),
+          renderPkgTreeNode('folder-sub', '8.低压电缆（5设备）'),
+          renderPkgTreeNode('folder-sub', '9.低压电缆分支箱（2设备）'),
+          renderPkgTreeNode('folder-sub', '10.计量表箱（4设备）')
+        ])}
+
+        ${renderPkgTreeNode('folder', '3 检测报告', [
+          renderPkgTreeNode('doc', '1. 中置柜试验报告.docx', {preview:true}),
+          renderPkgTreeNode('doc', '2. 环网柜检测报告.docx', {preview:true}),
+          renderPkgTreeNode('doc', '3-1. 高压电缆检测报告(1).docx', {preview:true}),
+          renderPkgTreeNode('doc', '...共12份', {muted:true})
+        ])}
+
+        ${renderPkgTreeNode('folder', '4 现场信息及问题记录单', [
+          renderPkgTreeNode('doc', '检测问题记录单.docx', {preview:true, edit:true}),
+          renderPkgTreeNode('doc', '检测工作量记录单.docx', {preview:true}),
+          renderPkgTreeNode('doc', '抽取信息记录单.docx', {preview:true}),
+          renderPkgTreeNode('doc', '电缆变压器检测情况汇总.docx', {preview:true})
+        ])}
+      </div>
+    </div>
+  `;
+}
+
+function renderPkgTreeNode(kind, name, children) {
+  if (kind === 'folder') {
+    const childHtml = children ? children.join('') : '';
+    return `
+      <div class="tree-folder">
+        <div class="tree-folder-header">
+          <span class="tree-icon">📁</span>
+          <span class="tree-name">${name}</span>
+        </div>
+        <div class="tree-children">${childHtml}</div>
+      </div>
+    `;
+  }
+  if (kind === 'folder-sub') {
+    return `
+      <div class="tree-row subfolder">
+        <span class="tree-icon">📁</span>
+        <span class="tree-name">${name}</span>
+      </div>
+    `;
+  }
+  if (kind === 'doc') {
+    const opts = children || {};
+    const muted = opts.muted ? 'muted' : '';
+    const preview = opts.preview ? `<button class="tree-btn" onclick="previewReport('${name}')">预览</button>` : '';
+    const edit = opts.edit ? `<button class="tree-btn primary" onclick="openIssueEdit()">编辑</button>` : '';
+    return `
+      <div class="tree-row ${muted}">
+        <span class="tree-icon">📄</span>
+        <span class="tree-name">${name}</span>
+        <span class="tree-actions">${preview}${edit}</span>
+      </div>
+    `;
+  }
+}
+
+function renderStepActions() {
+  const box = document.getElementById('stepActionBar');
+  if (state.pkgGenerating) {
+    box.innerHTML = `<button class="btn primary" disabled>生成中...</button>`;
+    return;
+  }
+  if (state.pkgStep === 1) {
+    box.innerHTML = `<button class="btn primary" onclick="nextStep()">下一步</button>`;
+  } else if (state.pkgStep === 2) {
+    box.innerHTML = `
+      <button class="btn outline" onclick="prevStep()">上一步</button>
+      <button class="btn primary" onclick="nextStep()">下一步</button>`;
+  } else if (state.pkgStep === 3) {
+    const label = state.pkgGenerated ? '重新生成' : '生成包裹';
+    box.innerHTML = `
+      <button class="btn outline" onclick="prevStep()">上一步</button>
+      <button class="btn primary" onclick="generatePackage()">${label}</button>`;
+  } else if (state.pkgStep === 4) {
+    box.innerHTML = `
+      <button class="btn outline" onclick="reEditPackage()">重新编辑</button>
+      <button class="btn outline" style="color:#DC2626; border-color:#DC2626;" onclick="resetAllOverrides()">恢复默认</button>
+    `;
+  }
+}
+
+function nextStep() {
+  if (state.pkgStep < 3) { state.pkgStep++; renderAll(); }
+  else if (state.pkgStep === 3) generatePackage();
+}
+function prevStep() {
+  if (state.pkgStep > 1) { state.pkgStep--; renderAll(); }
+}
+function reEditPackage() {
+  state.pkgStep = 1;
+  renderAll();
+  showToast('回到 Step 1');
+}
+
+function resetAllOverrides() {
+  openConfirm('恢复默认？', '将清空对包裹内记录单的全部编辑修改，恢复到系统渲染的原始值', () => {
+    showToast('已清空所有编辑');
+  });
+}
+
+function generatePackage() {
+  const isRegen = state.pkgGenerated;
+  const title = isRegen ? '重新生成？' : '生成包裹？';
+  const msg = isRegen ? '将覆盖当前包裹' : '预计 5-10 分钟，可后台等待';
+  openConfirm(title, msg, () => {
+    state.pkgGenerating = true;
+    state.genStep = 0;
+    renderAll();
+    const tick = () => {
+      state.genStep++;
+      renderAll();
+      if (state.genStep < 5) {
+        setTimeout(tick, 1000);
+      } else {
+        setTimeout(() => {
+          state.pkgGenerating = false;
+          state.pkgGenerated = true;
+          // 整包构建包含报告渲染，Tab 1 的报告也视为已生成
+          state.reportsGenerated = true;
+          state.pkgStep = 4;
+          renderAll();
+          showToast('包裹生成完成');
+        }, 500);
+      }
+    };
+    setTimeout(tick, 600);
+  });
+}
+
+// ============= 站房编号编辑 =============
+function openStationSheet(id) {
+  const s = state.stations.find(x => x.id === id);
+  state.editingStation = id;
+  document.getElementById('stationTypeInput').value = s.type;
+  document.getElementById('stationCodeInput').value = s.code;
+  showSheet('stationSheet');
+}
+function closeStationSheet() { hideSheet('stationSheet'); }
+function saveStationCode() {
+  const newCode = document.getElementById('stationCodeInput').value.trim();
+  if (!newCode) { showToast('不能为空'); return; }
+  const s = state.stations.find(x => x.id === state.editingStation);
+  s.code = newCode;
+  hideSheet('stationSheet');
+  renderAll();
+  showToast('已更新');
+}
+
+// ============= 基础信息编辑 =============
+function editBaseField(key, label) {
+  state.editingField = key;
+  document.getElementById('bsTitle').innerText = '修改 ' + label;
+  document.getElementById('bsLabel').innerText = label;
+  document.getElementById('bsInput').value = state.baseInfo[key];
+  showSheet('bsSheet');
+}
+function saveBottomSheet() {
+  const val = document.getElementById('bsInput').value.trim();
+  if (!val) { showToast('不能为空'); return; }
+  state.baseInfo[state.editingField] = val;
+  hideSheet('bsSheet');
+  renderAll();
+  showToast('已保存');
+}
+function closeBottomSheet() { hideSheet('bsSheet'); }
+
+// ============= 通用工具 =============
+function showSheet(id) {
+  document.getElementById('bsMask').classList.add('show');
+  document.getElementById(id).classList.add('show');
+}
+function hideSheet(id) {
+  document.getElementById('bsMask').classList.remove('show');
+  document.getElementById(id).classList.remove('show');
+}
+function openConfirm(title, msg, ok) {
+  document.getElementById('cdTitle').innerText = title;
+  document.getElementById('cdMsg').innerText = msg;
+  const mask = document.getElementById('cdMask');
+  mask.classList.add('show');
+  document.getElementById('cdCancel').onclick = () => mask.classList.remove('show');
+  document.getElementById('cdOk').onclick = () => { mask.classList.remove('show'); ok && ok(); };
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.innerText = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1600);
+}
+
+// ============= 总渲染 =============
+function renderAll() {
+  renderReportStatus();
+  renderReportLists();
+  renderMediaGrids();
+  renderStepIndicator();
+  renderStepContent();
+  renderStepActions();
+}
+
+renderAll();
+</script>
+
+</body>
+</html>

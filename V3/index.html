@@ -1,385 +1,148 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>检e通 V3.0 交互Demo导览 | JET3.0</title>
-<meta name="description" content="检e通 V3.0 全流程交互原型演示导览，12个Demo页面覆盖核查阶段与检测阶段完整流程">
 <style>
-    :root {
-        --primary-color: #0052D9;
-        --bg-color: #F3F5F8;
-        --card-bg: #FFFFFF;
-        --text-main: #181818;
-        --text-sub: #666666;
-        --border-radius: 12px;
-        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-        background-color: var(--bg-color);
-        color: var(--text-main);
-        line-height: 1.6;
-    }
-
-    .header {
-        background-color: var(--card-bg);
-        padding: 40px 0;
-        text-align: center;
-        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
-        margin-bottom: 40px;
-    }
-
-    .header-nav {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        margin-bottom: 16px;
-        font-size: 14px;
-        color: var(--text-sub);
-    }
-    .header-nav a {
-        color: var(--primary-color);
-        text-decoration: none;
-        font-weight: 500;
-    }
-    .header-nav a:hover { text-decoration: underline; }
-    .header-nav .sep { color: #D1D5DB; }
-
-    .header h1 {
-        margin: 0;
-        font-size: 32px;
-        font-weight: 600;
-        color: var(--text-main);
-    }
-
-    .header p {
-        margin: 12px 0 0;
-        font-size: 16px;
-        color: var(--text-sub);
-    }
-
-    .header-meta {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 24px;
-        margin-top: 20px;
-        flex-wrap: wrap;
-    }
-    .header-meta-item {
-        font-size: 13px;
-        color: var(--text-sub);
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-    .header-meta-badge {
-        display: inline-block;
-        background: rgba(0, 82, 217, 0.08);
-        color: var(--primary-color);
-        font-size: 12px;
-        font-weight: 600;
-        padding: 3px 10px;
-        border-radius: 20px;
-    }
-
-    .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 24px 60px;
-    }
-
-    .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 24px;
-    }
-
-    .card {
-        background: var(--card-bg);
-        border-radius: var(--border-radius);
-        padding: 32px 24px;
-        text-decoration: none;
-        color: inherit;
-        display: flex;
-        flex-direction: column;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
-        transition: var(--transition);
-        border: 1px solid rgba(0,0,0,0.04);
-    }
-
-    .card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 32px rgba(0, 82, 217, 0.1);
-        border-color: rgba(0, 82, 217, 0.2);
-    }
-
-    .card-hero {
-        grid-column: 1 / -1;
-        border-top: 3px solid var(--primary-color);
-    }
-    .card-hero .card-title { font-size: 20px; }
-
-    .card-icon {
-        width: 48px;
-        height: 48px;
-        background: rgba(0, 82, 217, 0.08);
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 20px;
-        color: var(--primary-color);
-    }
-
-    .card-icon svg {
-        width: 24px;
-        height: 24px;
-    }
-
-    .card-step {
-        font-size: 11px;
-        font-weight: 700;
-        color: var(--primary-color);
-        letter-spacing: 1px;
-        margin-bottom: 8px;
-        opacity: 0.7;
-    }
-
-    .card-title {
-        font-size: 18px;
-        font-weight: 600;
-        margin: 0 0 8px;
-    }
-
-    .card-desc {
-        font-size: 14px;
-        color: var(--text-sub);
-        margin: 0;
-        flex-grow: 1;
-    }
-
-    .card-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin-top: 16px;
-    }
-    .tag {
-        font-size: 11px;
-        font-weight: 600;
-        padding: 3px 8px;
-        border-radius: 5px;
-        background: rgba(0,82,217,0.07);
-        color: var(--primary-color);
-    }
-    .tag-warn {
-        background: rgba(234,88,12,0.07);
-        color: #C2410C;
-    }
-    .tag-ok {
-        background: rgba(22,163,74,0.07);
-        color: #15803D;
-    }
-
-    .card-footer {
-        margin-top: 24px;
-        font-size: 14px;
-        color: var(--primary-color);
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-    }
-
-    .card-footer svg {
-        width: 16px;
-        height: 16px;
-        margin-left: 4px;
-        transition: var(--transition);
-    }
-
-    .card:hover .card-footer svg {
-        transform: translateX(4px);
-    }
-
-    .section-title {
-        font-size: 20px;
-        font-weight: 600;
-        margin: 40px 0 20px;
-        padding-bottom: 12px;
-        border-bottom: 1px solid rgba(0,0,0,0.08);
-    }
+:root{--c:#0052D9;--bg:#F3F5F8;--cb:#FFF;--t1:#181818;--t2:#666;--r:12px;--tr:all .3s cubic-bezier(.4,0,.2,1)}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;margin:0;padding:0;background:var(--bg);color:var(--t1);line-height:1.6}
+.hd{background:var(--cb);padding:40px 0;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.04);margin-bottom:40px}
+.hd h1{margin:0;font-size:32px;font-weight:600}.hd p{margin:12px 0 0;font-size:16px;color:var(--t2)}
+.hd-nav{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px;font-size:14px;color:var(--t2)}
+.hd-nav a{color:var(--c);text-decoration:none;font-weight:500}.hd-nav a:hover{text-decoration:underline}
+.hd-m{display:flex;align-items:center;justify-content:center;gap:24px;margin-top:20px;flex-wrap:wrap}
+.hd-m span{font-size:13px;color:var(--t2)}.badge{display:inline-block;background:rgba(0,82,217,.08);color:var(--c);font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px}
+.ct{max-width:1200px;margin:0 auto;padding:0 24px 60px}
+.gr{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px}
+.cd{background:var(--cb);border-radius:var(--r);padding:32px 24px;text-decoration:none;color:inherit;display:flex;flex-direction:column;box-shadow:0 2px 12px rgba(0,0,0,.03);transition:var(--tr);border:1px solid rgba(0,0,0,.04)}
+.cd:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,82,217,.1);border-color:rgba(0,82,217,.2)}
+.cd-h{grid-column:1/-1;border-top:3px solid var(--c)}.cd-h .cd-t{font-size:20px}
+.cd-i{width:48px;height:48px;background:rgba(0,82,217,.08);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;color:var(--c)}
+.cd-i svg{width:24px;height:24px}
+.cd-s{font-size:11px;font-weight:700;color:var(--c);letter-spacing:1px;margin-bottom:8px;opacity:.7}
+.cd-t{font-size:18px;font-weight:600;margin:0 0 8px}.cd-d{font-size:14px;color:var(--t2);margin:0;flex-grow:1}
+.cd-f{margin-top:24px;font-size:14px;color:var(--c);font-weight:500;display:flex;align-items:center}
+.cd-f svg{width:16px;height:16px;margin-left:4px;transition:var(--tr)}.cd:hover .cd-f svg{transform:translateX(4px)}
+.tg{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}.tg span{font-size:11px;font-weight:600;padding:3px 8px;border-radius:5px;background:rgba(0,82,217,.07);color:var(--c)}
+.tg .tw{background:rgba(234,88,12,.07);color:#C2410C}.tg .to{background:rgba(22,163,74,.07);color:#15803D}
+.st{font-size:20px;font-weight:600;margin:40px 0 20px;padding-bottom:12px;border-bottom:1px solid rgba(0,0,0,.08)}
 </style>
 </head>
 <body>
-
-<div class="header">
-    <div class="header-nav">
-        <a href="../index.html">← 返回演示大厅</a>
-    </div>
-    <h1>检e通 V3.0 交互Demo导览</h1>
-    <p>完整覆盖从工单创建到检测执行的全流程，点击任意页面查看详细交互演示</p>
-    <div class="header-meta">
-        <div class="header-meta-item"><span class="header-meta-badge">V3.0 最新版</span></div>
-        <div class="header-meta-item">📦 共 12 个演示页面</div>
-        <div class="header-meta-item">🎯 Material Design 3 规范</div>
-        <div class="header-meta-item">📅 更新于 2026-04</div>
-    </div>
+<div class="hd">
+<div class="hd-nav"><a href="../index.html">← 返回演示大厅</a></div>
+<h1>检e通 V3.0 交互Demo导览</h1>
+<p>完整覆盖从工单创建到包裹导出的全流程，点击任意页面查看详细交互演示</p>
+<div class="hd-m"><span class="badge">V3.0 最新版</span><span>📦 共 18 个演示页面</span><span>🎯 Material Design 3 规范</span><span>📅 更新于 2026-04-27</span></div>
 </div>
-
-<div class="container">
-
-    <div class="section-title">核心入口</div>
-    <div class="grid">
-        <a href="demo_1.0_项目工作台.html" class="card card-hero" target="_blank">
-            <div class="card-step">ENTRY · 1.0</div>
-            <div class="card-icon">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-            </div>
-            <h3 class="card-title">项目工作台（BIGA）</h3>
-            <p class="card-desc">从项目维度统一管理所有工单和流程进度。支持项目经理 / 工作负责人 / 试验人员三角色切换，Bottom Sheet 操作菜单，工单接收与删除流程演示。</p>
-            <div class="card-tags">
-                <span class="tag">角色切换</span>
-                <span class="tag">工单管理</span>
-                <span class="tag">BIGA 流程进度</span>
-            </div>
-            <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
-        </a>
-    </div>
-
-    <div class="section-title">核查阶段</div>
-    <div class="grid">
-        <a href="demo_1.1.1_轻量工单创建与派发.html" class="card" target="_blank">
-            <div class="card-step">STEP 1.1.1</div>
-            <div class="card-icon">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-            </div>
-            <h3 class="card-title">轻量工单创建与派发</h3>
-            <p class="card-desc">项目经理创建检测工单，填写基本信息、选择检测队伍并派发。</p>
-            <div class="card-tags"><span class="tag">项目经理</span><span class="tag">工单派发</span></div>
-            <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
-        </a>
-
-        <a href="demo_1.1.2_作业前准备.html" class="card" target="_blank">
-            <div class="card-step">STEP 1.1.2</div>
-            <div class="card-icon">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-            </div>
-            <h3 class="card-title">作业前准备</h3>
-            <p class="card-desc">工作负责人完成到达现场前的准备事项确认，包括人员、车辆、工器具等清单核对。</p>
-            <div class="card-tags"><span class="tag">工作负责人</span><span class="tag">清单确认</span></div>
-            <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
-        </a>
-
-        <a href="demo_1.1.3_现场准备.html" class="card" target="_blank">
-            <div class="card-step">STEP 1.1.3</div>
-            <div class="card-icon">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-            </div>
-            <h3 class="card-title">现场准备</h3>
-            <p class="card-desc">到达现场后的环境确认、安全措施及现场照片采集，定位打卡与到场确认。</p>
-            <div class="card-tags"><span class="tag">工作负责人</span><span class="tag">拍照上传</span></div>
-            <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
-        </a>
-
-        <a href="demo_1.1.4_建设情况确认.html" class="card" target="_blank">
-            <div class="card-step">STEP 1.1.4</div>
-            <div class="card-icon">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-            </div>
-            <h3 class="card-title">建设情况确认</h3>
-            <p class="card-desc">确认现场设备实际建设情况与派单信息是否一致，支持差异修正，决定后续核查任务数量。</p>
-            <div class="card-tags"><span class="tag">工作负责人</span><span class="tag-warn tag">差异修正</span></div>
-            <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
-        </a>
-
-        <a href="demo_1.1.5_核查分工.html" class="card" target="_blank">
-            <div class="card-step">STEP 1.1.5</div>
-            <div class="card-icon">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-            </div>
-            <h3 class="card-title">核查分工</h3>
-            <p class="card-desc">工作负责人为每个检测对象指定核查负责人，按人分配 6~8 项核查任务。</p>
-            <div class="card-tags"><span class="tag">工作负责人</span><span class="tag">人员分配</span></div>
-            <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
-        </a>
-
-        <a href="demo_1.1.6_核查执行.html" class="card" target="_blank">
-            <div class="card-step">STEP 1.1.6</div>
-            <div class="card-icon">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            </div>
-            <h3 class="card-title">核查执行</h3>
-            <p class="card-desc">试验人员逐台设备完成外观检查、铭牌核查、拍照记录，支持合格 / 不合格判定。</p>
-            <div class="card-tags"><span class="tag">试验人员</span><span class="tag">拍照核查</span><span class="tag-warn tag">合规判定</span></div>
-            <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
-        </a>
-
-        <a href="demo_1.1.8_抽检对象确认.html" class="card" target="_blank">
-            <div class="card-step">STEP 1.1.8</div>
-            <div class="card-icon">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
-            </div>
-            <h3 class="card-title">抽检对象确认</h3>
-            <p class="card-desc">从已核查设备中自动抽取检测样本，确认最终检测对象范围，针对站房对象与设备的最终确认。</p>
-            <div class="card-tags"><span class="tag">工作负责人</span><span class="tag">抽检逻辑</span></div>
-            <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
-        </a>
-    </div>
-
-    <div class="section-title">检测阶段</div>
-    <div class="grid">
-        <a href="demo_1.1.9_安措执行.html" class="card" target="_blank">
-            <div class="card-step">STEP 1.1.9</div>
-            <div class="card-icon" style="background:rgba(234,88,12,0.08);color:#C2410C;">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-            </div>
-            <h3 class="card-title">安措执行</h3>
-            <p class="card-desc">在检测开始前完成安全措施布置，逐项确认并记录安全状态，安全关键环节。</p>
-            <div class="card-tags"><span class="tag-warn tag">安全关键</span><span class="tag">逐项确认</span></div>
-            <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
-        </a>
-
-        <a href="demo_1.1.10_开工会.html" class="card" target="_blank">
-            <div class="card-step">STEP 1.1.10</div>
-            <div class="card-icon">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-            </div>
-            <h3 class="card-title">开工会</h3>
-            <p class="card-desc">检测正式开始前的班前会，工作负责人主持，全员签到确认任务分工及安全要求。</p>
-            <div class="card-tags"><span class="tag">工作负责人</span><span class="tag">全员签到</span></div>
-            <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
-        </a>
-
-        <a href="demo_1.1.11_检测分工.html" class="card" target="_blank">
-            <div class="card-step">STEP 1.1.11</div>
-            <div class="card-icon">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-            </div>
-            <h3 class="card-title">检测分工</h3>
-            <p class="card-desc">工作负责人为各检测项目分配试验人员，形成检测任务单。防盲查功能支持全员确认查阅。</p>
-            <div class="card-tags"><span class="tag">工作负责人</span><span class="tag">防盲查</span></div>
-            <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
-        </a>
-
-        <a href="demo_1.2.1_检测执行.html" class="card" target="_blank">
-            <div class="card-step">STEP 1.2.1</div>
-            <div class="card-icon">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-            </div>
-            <h3 class="card-title">检测执行</h3>
-            <p class="card-desc">试验人员按设备逐项录入检测数据，系统自动判定合格 / 不合格，支持照片、备注记录。</p>
-            <div class="card-tags"><span class="tag">试验人员</span><span class="tag-warn tag">数据录入</span><span class="tag-ok tag">自动判定</span></div>
-            <div class="card-footer">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
-        </a>
-    </div>
-
-</div>
-
-</body>
-</html>
+<div class="ct"><div class="st">核心入口</div>
+<div class="gr"><a href="demo_1.0_项目工作台.html" class="cd cd-h" target="_blank">
+<div class='cd-s'>ENTRY · 1.0</div>
+<h3 class="cd-t">项目工作台（BIGA）</h3>
+<p class="cd-d">从项目维度统一管理所有工单和流程进度。支持项目经理/工作负责人/试验人员三角色切换，Bottom Sheet操作菜单。</p>
+<div class="tg"><span>角色切换</span><span>工单管理</span><span>BIGA流程</span></div>
+<div class="cd-f">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+</a></div><div class="st">核查阶段</div><div class="gr"><a href="demo_1.1.1_轻量工单创建与派发.html" class="cd" target="_blank">
+<div class='cd-s'>STEP 1.1.1</div>
+<h3 class="cd-t">轻量工单创建与派发</h3>
+<p class="cd-d">项目经理创建检测工单，填写基本信息、选择检测队伍并派发。</p>
+<div class="tg"><span>项目经理</span><span>工单派发</span></div>
+<div class="cd-f">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+</a><a href="demo_1.1.2_作业前准备.html" class="cd" target="_blank">
+<div class='cd-s'>STEP 1.1.2</div>
+<h3 class="cd-t">作业前准备</h3>
+<p class="cd-d">工作负责人完成到达现场前的准备事项确认，包括人员、车辆、工器具等清单核对。</p>
+<div class="tg"><span>工作负责人</span><span>清单确认</span></div>
+<div class="cd-f">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+</a><a href="demo_1.1.3_现场准备.html" class="cd" target="_blank">
+<div class='cd-s'>STEP 1.1.3</div>
+<h3 class="cd-t">现场准备</h3>
+<p class="cd-d">到达现场后的环境确认、安全措施及现场照片采集，定位打卡与到场确认。</p>
+<div class="tg"><span>工作负责人</span><span>拍照上传</span></div>
+<div class="cd-f">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+</a><a href="demo_1.1.4_建设情况确认.html" class="cd" target="_blank">
+<div class='cd-s'>STEP 1.1.4</div>
+<h3 class="cd-t">建设情况确认</h3>
+<p class="cd-d">确认现场设备实际建设情况与派单信息是否一致，支持差异修正。</p>
+<div class="tg"><span>工作负责人</span><span class="tw">差异修正</span></div>
+<div class="cd-f">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+</a><a href="demo_1.1.5_核查分工.html" class="cd" target="_blank">
+<div class='cd-s'>STEP 1.1.5</div>
+<h3 class="cd-t">核查分工</h3>
+<p class="cd-d">工作负责人为每个检测对象指定核查负责人，按人分配核查任务。</p>
+<div class="tg"><span>工作负责人</span><span>人员分配</span></div>
+<div class="cd-f">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+</a><a href="demo_1.1.6_核查执行.html" class="cd" target="_blank">
+<div class='cd-s'>STEP 1.1.6</div>
+<h3 class="cd-t">核查执行</h3>
+<p class="cd-d">试验人员逐台设备完成外观检查、铭牌核查、拍照记录，支持合格/不合格判定。</p>
+<div class="tg"><span>试验人员</span><span>拍照核查</span><span class="tw">合规判定</span></div>
+<div class="cd-f">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+</a><a href="demo_1.1.8_抽检对象确认.html" class="cd" target="_blank">
+<div class='cd-s'>STEP 1.1.8</div>
+<h3 class="cd-t">抽检对象确认</h3>
+<p class="cd-d">从已核查设备中自动抽取检测样本，确认最终检测对象范围。</p>
+<div class="tg"><span>工作负责人</span><span>抽检逻辑</span></div>
+<div class="cd-f">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+</a></div><div class="st">检测阶段</div><div class="gr"><a href="demo_1.1.9_安措执行.html" class="cd" target="_blank">
+<div class='cd-s'>STEP 1.1.9</div>
+<h3 class="cd-t">安措执行</h3>
+<p class="cd-d">检测开始前完成安全措施布置，逐项确认并记录安全状态。</p>
+<div class="tg"><span class="tw">安全关键</span><span>逐项确认</span></div>
+<div class="cd-f">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+</a><a href="demo_1.1.10_开工会.html" class="cd" target="_blank">
+<div class='cd-s'>STEP 1.1.10</div>
+<h3 class="cd-t">开工会</h3>
+<p class="cd-d">检测正式开始前的班前会，工作负责人主持，全员签到确认任务分工。</p>
+<div class="tg"><span>工作负责人</span><span>全员签到</span></div>
+<div class="cd-f">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+</a><a href="demo_1.1.11_检测分工.html" class="cd" target="_blank">
+<div class='cd-s'>STEP 1.1.11</div>
+<h3 class="cd-t">检测分工</h3>
+<p class="cd-d">工作负责人为各检测项目分配试验人员，形成检测任务单。</p>
+<div class="tg"><span>工作负责人</span><span>防盲查</span></div>
+<div class="cd-f">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+</a><a href="demo_1.1.12_蓝图录入.html" class="cd" target="_blank">
+<div class='cd-s'>STEP 1.1.12</div>
+<h3 class="cd-t">蓝图录入</h3>
+<p class="cd-d">现场蓝图信息采集与录入，支持图纸拍照、关键参数标注与结构化存储。</p>
+<div class="tg"><span>试验人员</span><span class="to">图纸采集</span></div>
+<div class="cd-f">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+</a><a href="demo_1.1.13_资料录入.html" class="cd" target="_blank">
+<div class='cd-s'>STEP 1.1.13</div>
+<h3 class="cd-t">资料录入</h3>
+<p class="cd-d">项目相关资料的数字化录入，支持多类型文档上传与结构化管理。</p>
+<div class="tg"><span>试验人员</span><span>文档管理</span></div>
+<div class="cd-f">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+</a><a href="demo_1.2.1_检测执行.html" class="cd" target="_blank">
+<div class='cd-s'>STEP 1.2.1</div>
+<h3 class="cd-t">检测执行</h3>
+<p class="cd-d">试验人员按设备逐项录入检测数据，系统自动判定合格/不合格。</p>
+<div class="tg"><span>试验人员</span><span class="tw">数据录入</span><span class="to">自动判定</span></div>
+<div class="cd-f">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+</a><a href="demo_1.2.1_蓝牙采集.html" class="cd" target="_blank">
+<div class='cd-s'>STEP 1.2.1-BT</div>
+<h3 class="cd-t">蓝牙采集</h3>
+<p class="cd-d">通过蓝牙连接检测仪器，自动采集检测数据并回填至对应检测项。</p>
+<div class="tg"><span>试验人员</span><span class="to">蓝牙连接</span><span>自动回填</span></div>
+<div class="cd-f">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+</a></div><div class="st">收尾与导出</div><div class="gr"><a href="demo_1.3_包裹生成与导出.html" class="cd" target="_blank">
+<div class='cd-s'>STEP 1.3</div>
+<h3 class="cd-t">包裹生成与导出</h3>
+<p class="cd-d">检测完成后，自动汇总生成检测报告包裹，支持预览、审核与一键导出。</p>
+<div class="tg"><span>工作负责人</span><span class="to">报告生成</span><span>一键导出</span></div>
+<div class="cd-f">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+</a></div><div class="st">PC端配置</div><div class="gr"><a href="demo_1.1.2_PC配置页面.html" class="cd" target="_blank">
+<div class='cd-s'>PC · 1.1.2-A</div>
+<h3 class="cd-t">PC配置页面</h3>
+<p class="cd-d">PC端管理后台的检测模板与流程配置界面，支持字段级自定义。</p>
+<div class="tg"><span>管理员</span><span>PC端</span></div>
+<div class="cd-f">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+</a><a href="demo_1.1.2_低代码编辑器.html" class="cd" target="_blank">
+<div class='cd-s'>PC · 1.1.2-B</div>
+<h3 class="cd-t">低代码编辑器</h3>
+<p class="cd-d">可视化拖拽式表单编辑器，快速构建检测模板，降低配置门槛。</p>
+<div class="tg"><span>管理员</span><span>低代码</span><span class="to">可视化</span></div>
+<div class="cd-f">立即体验 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+</a></div></div></body></html>

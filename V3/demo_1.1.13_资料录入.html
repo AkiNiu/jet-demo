@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>资料录入 — 检e通V3.0 Demo</title>
+<link rel="stylesheet" href="demo_shared_base.css">
+<style>
+/* ===== 左右布局 ===== */
+.demo-layout{display:flex;gap:40px;max-width:1100px;margin:0 auto;padding:32px 24px;align-items:flex-start}
+.demo-left{flex-shrink:0;position:sticky;top:24px}
+.demo-right{flex:1;min-width:0}
+.demo-right h2{font-size:18px;font-weight:700;color:#374151;margin-bottom:16px}
+.demo-right h3{font-size:14px;font-weight:600;color:#4B5563;margin:20px 0 8px}
+.demo-right p,.demo-right li{font-size:13px;color:#6B7280;line-height:1.8}
+.demo-right ul{padding-left:20px}
+.demo-right table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0 16px}
+.demo-right th{background:#F3F4F6;padding:8px 10px;text-align:left;font-weight:600;color:#4B5563;border-bottom:1px solid #E5E7EB}
+.demo-right td{padding:8px 10px;border-bottom:1px solid #F3F4F6;color:#6B7280}
+.demo-right td:first-child{color:#374151;font-weight:500}
+
+/* 视角切换（Demo 外置） */
+.view-switch{display:flex;gap:12px;margin-bottom:24px;justify-content:center}
+.view-btn{padding:10px 20px;border-radius:8px;border:2px solid var(--g200);background:#fff;font-size:14px;font-weight:600;color:var(--g500);cursor:pointer;transition:all .15s}
+.view-btn.active{border-color:var(--pri);background:var(--pri-l);color:var(--pri)}
+
+/* 滚动区 */
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--g50);padding-bottom:12px}
+
+/* 项目摘要卡 */
+.prj-card{margin:8px 12px;padding:10px 14px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm)}
+.prj-row{display:flex;justify-content:space-between;align-items:center}
+.prj-row+.prj-row{margin-top:6px}
+.prj-name{font-size:14px;font-weight:600;color:var(--g800)}
+.prj-date{font-size:12px;color:var(--g500)}
+.prj-addr{font-size:12px;color:var(--g500)}
+.prj-scale{font-size:11px;color:var(--g400)}
+
+/* 站房分组头（默认展开，可手动折叠） */
+.group-header{display:flex;align-items:center;padding:14px 14px 6px;gap:8px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.group-arrow{font-size:10px;color:var(--g400);transition:transform .2s;width:16px}
+.group-arrow.collapsed{transform:rotate(-90deg)}
+.group-label{font-size:12px;font-weight:600;color:var(--g500);flex:1}
+.group-count{font-size:11px;color:var(--g400)}
+.group-items{overflow:hidden;transition:max-height .25s ease}
+.group-items.collapsed{max-height:0 !important}
+
+/* 设备卡片（含 3 slot） */
+.dev-card{margin:0 12px 8px;background:#fff;border-radius:var(--rs);box-shadow:var(--shadow-sm);overflow:hidden}
+.dev-hd{display:flex;align-items:center;padding:10px 14px;gap:8px;border-bottom:1px solid var(--g100)}
+.dev-no{font-size:13px;font-weight:700;color:var(--g800)}
+.dev-type{font-size:11px;color:var(--g500)}
+.dev-count{margin-left:auto;font-size:11px;color:var(--g400);font-variant-numeric:tabular-nums}
+.dev-count.done{color:var(--ok);font-weight:600}
+
+/* Slot 行（复刻 3.3 item-card 嵌入版） */
+.slot-row{display:flex;align-items:center;padding:10px 14px;gap:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--g50);border-left:3px solid var(--g300);transition:background .1s}
+.slot-row:last-child{border-bottom:none}
+.slot-row:active{background:var(--g50)}
+.slot-row.done{border-left-color:var(--ok)}
+.slot-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.slot-icon.photo{background:var(--pri-l);color:var(--pri)}
+.slot-icon.done{background:var(--ok-l);color:var(--ok)}
+.slot-info{flex:1;min-width:0}
+.slot-name{font-size:13px;font-weight:600;color:var(--g800)}
+.slot-meta{font-size:11px;color:var(--g400);margin-top:2px}
+.slot-chevron{color:var(--g300);font-size:14px}
+
+/* 展开的照片网格 */
+.photo-grid{display:none;padding:0 14px 10px 14px;gap:8px;flex-wrap:wrap}
+.photo-grid.show{display:flex}
+.photo-thumb{width:56px;height:56px;border-radius:6px;background:var(--g200);display:flex;align-items:center;justify-content:center;font-size:20px;position:relative;color:var(--g500)}
+.photo-thumb .ph-del{position:absolute;top:-5px;right:-5px;width:18px;height:18px;border-radius:50%;background:var(--ng);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.2);-webkit-tap-highlight-color:transparent}
+.photo-thumb .ph-del:active{transform:scale(.85)}
+.photo-add{width:56px;height:56px;border-radius:6px;background:var(--g50);border:1px dashed var(--g300);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--g400);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.photo-add:active{background:var(--pri-l);color:var(--pri);border-color:var(--pri)}
+
+/* PM 只读 */
+body[data-role="pm"] .photo-add,
+body[data-role="pm"] .ph-del{display:none !important}
+body[data-role="pm"] .slot-row:not(.done){opacity:.5;pointer-events:none}
+
+/* 拍照模式（参照 3.3 + 4.1） */
+.cam-mode{display:none;flex-direction:column;flex:1;min-height:0}
+.cam-mode.on{display:flex}
+.list-mode{display:flex;flex-direction:column;flex:1;min-height:0}
+.list-mode.hid{display:none}
+.vf{position:relative;height:200px;background:#1a1a1a;flex-shrink:0;overflow:hidden}
+.vf-grid{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr;pointer-events:none}
+.vf-grid span{border:.5px solid rgba(255,255,255,.1)}
+.vf-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:rgba(255,255,255,.35);font-size:12px}
+.vf-placeholder .icon{font-size:28px;opacity:.4}
+.vf-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .08s}
+.vf-flash.fire{opacity:.7}
+.vf-label{position:absolute;bottom:10px;left:10px;right:10px;background:rgba(0,0,0,.55);border-radius:var(--rs);padding:8px 12px;display:flex;align-items:center;gap:8px}
+.vf-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--pri)}
+.vf-text{color:#fff;font-size:13px;font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vf-count{color:rgba(255,255,255,.5);font-size:11px;flex-shrink:0}
+.cam-scroll{flex:1;overflow-y:auto;background:#fff}
+.cam-item{display:flex;align-items:center;padding:12px 14px;border-bottom:1px solid var(--g100);cursor:pointer;-webkit-tap-highlight-color:transparent;min-height:48px;transition:background .12s}
+.cam-item:active{background:var(--g50)}
+.cam-item.sel{background:var(--pri-l)}
+.cam-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-right:12px;border:2px solid var(--g300);transition:all .15s}
+.cam-dot.doing{border-color:var(--pri);background:var(--pri);box-shadow:0 0 0 3px var(--pri-l)}
+.cam-dot.done{border-color:var(--ok);background:var(--ok)}
+.cam-item-name{flex:1;font-size:14px;color:var(--g700)}
+.cam-item.sel .cam-item-name{color:var(--pri-d);font-weight:600}
+.cam-item-count{font-size:11px;color:var(--g400);background:var(--g100);padding:2px 8px;border-radius:10px}
+.cam-ctrl{padding:10px 16px 14px;background:#fff;border-top:1px solid var(--g200);flex-shrink:0}
+.cam-shutter-row{display:flex;align-items:center;justify-content:center;gap:24px}
+.shutter{width:60px;height:60px;border-radius:50%;border:3.5px solid var(--pri);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:all .1s}
+.shutter:active{transform:scale(.88)}
+.shutter-inner{width:46px;height:46px;border-radius:50%;background:var(--pri)}
+.shutter:active .shutter-inner{background:var(--pri-d)}
+.shutter-nav{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--g400);background:var(--g100);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.shutter-nav:active{transform:scale(.88);background:var(--g200)}
+.shutter-nav.dis{opacity:.15;pointer-events:none}
+
+/* Toast */
+.toast{display:none;position:absolute;left:50%;bottom:80px;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;z-index:999;white-space:nowrap}
+.toast.show{display:block;animation:fadeInUp .3s}
+@keyframes fadeInUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}}
+
+/* Bottom sheet 通用 */
+.sh-bg{display:none;position:absolute;inset:0;background:rgba(0,0,0,.35);z-index:800;align-items:flex-end;justify-content:center;border-radius:28px;overflow:hidden}
+.sh-bg.show{display:flex}
+.sh-panel{width:100%;background:#fff;border-radius:16px 16px 0 0;padding:16px 16px 24px;animation:su .2s ease-out}
+@keyframes su{from{transform:translateY(100%)}}
+.sh-title{font-size:15px;font-weight:600;text-align:center;margin-bottom:14px;color:var(--g800)}
+.confirm-content{font-size:13px;color:var(--g600);line-height:1.8;padding:0 4px 16px}
+.confirm-btns{display:flex;gap:10px}
+.cbtn{flex:1;padding:12px;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent;border:none}
+.cbtn.cancel{background:var(--g100);color:var(--g600)}
+.cbtn.ok{background:var(--ng);color:#fff}
+
+/* 添加照片 action-sheet */
+.add-mask{display:none;position:absolute;inset:0;background:rgba(0,0,0,.35);z-index:800;border-radius:28px;overflow:hidden}
+.add-mask.show{display:block}
+.add-sheet{position:absolute;bottom:0;left:8px;right:8px;z-index:801;display:none}
+.add-sheet.show{display:block;animation:su .25s ease-out}
+.add-sheet .as-group{background:#fff;border-radius:14px;overflow:hidden;margin-bottom:8px}
+.add-sheet .as-item{padding:16px;text-align:center;font-size:16px;color:var(--pri);cursor:pointer;border-bottom:.5px solid var(--g200);-webkit-tap-highlight-color:transparent}
+.add-sheet .as-item:last-child{border-bottom:none}
+.add-sheet .as-item:active{background:var(--g50)}
+.add-sheet .as-cancel{background:#fff;border-radius:14px;padding:16px;text-align:center;font-size:16px;font-weight:600;color:var(--g700);cursor:pointer;margin-bottom:8px;-webkit-tap-highlight-color:transparent}
+</style>
+</head>
+<body data-role="operator">
+
+<div class="demo-layout">
+  <div class="demo-left">
+    <div class="view-switch">
+      <button class="view-btn active" data-role="operator">现场人员（可录）</button>
+      <button class="view-btn" data-role="pm">项目经理（只读）</button>
+    </div>
+
+    <div class="phone">
+      <div class="sbar">9:41</div>
+
+      <!-- 列表模式 -->
+      <div class="list-mode" id="listMode">
+        <div class="nbar"><div class="back">←</div><div class="title">资料录入</div></div>
+
+        <div class="scroll">
+          <div class="prj-card">
+            <div class="prj-row"><span class="prj-name">建湖复兴花园一期</span><span class="prj-date">2026-03-31</span></div>
+            <div class="prj-row"><span class="prj-addr">江苏省盐城市建湖县</span><span class="prj-scale">项目规模 2-0-4-1</span></div>
+          </div>
+
+          <div id="device-list"></div>
+        </div>
+
+        <div class="toast" id="toastList"></div>
+      </div>
+
+      <!-- 拍照模式 -->
+      <div class="cam-mode" id="camMode">
+        <div class="nbar"><div class="back" id="camBack">←</div><div class="title" id="camTitle">设备</div></div>
+
+        <div class="vf">
+          <div class="vf-grid"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+          <div class="vf-placeholder"><span class="icon">📄</span><span>翻拍取景区 · 对准资料后按快门</span></div>
+          <div class="vf-label">
+            <div class="vf-dot"></div>
+            <div class="vf-text" id="vfText">产品合格证</div>
+            <div class="vf-count" id="vfCount">0 张</div>
+          </div>
+          <div class="vf-flash" id="vfFlash"></div>
+        </div>
+
+        <div class="cam-scroll" id="camScroll"></div>
+
+        <div class="cam-ctrl">
+          <div class="cam-shutter-row">
+            <div class="shutter-nav" id="camPrev">‹</div>
+            <div class="shutter" id="camShutter"><div class="shutter-inner"></div></div>
+            <div class="shutter-nav" id="camNext">›</div>
+          </div>
+        </div>
+
+        <div class="toast" id="toastCam"></div>
+      </div>
+
+      <!-- 添加照片 action-sheet -->
+      <div class="add-mask" id="addMask"></div>
+      <div class="add-sheet" id="addSheet">
+        <div class="as-group">
+          <div class="as-item" id="optCam">📷 拍摄照片</div>
+          <div class="as-item" id="optUpload">🖼️ 从相册上传</div>
+        </div>
+        <div class="as-cancel" id="optCancel">取消</div>
+      </div>
+
+      <!-- 删除二次确认 -->
+      <div class="sh-bg" id="confirmBg">
+        <div class="sh-panel">
+          <div class="sh-title">确认删除</div>
+          <div class="confirm-content" id="confirmMsg">确认删除？</div>
+          <div class="confirm-btns">
+            <button class="cbtn cancel" id="confirmCancel">取消</button>
+            <button class="cbtn ok" id="confirmOk">删除</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-right">
+    <h2>资料录入 — 设计说明</h2>
+
+    <h3>设计决策说明</h3>
+    <ul>
+      <li><strong>全员共享录入，不做分工</strong> — 资料是厂家标准化文件（合格证/出厂报告/交接报告），翻拍即可，不涉及判定；工作负责人和试验员都可录入任意条目，谁有空谁录</li>
+      <li><strong>不做合格/不合格判定</strong> — 资料只是照片归档，无判定维度；状态仅 "未录 / 已录" 二态</li>
+      <li><strong>采集范围 = 抽中设备</strong> — 来源 3.1 抽检对象确认的设备清单，只对抽中设备采集资料（未抽中设备不做）</li>
+      <li><strong>每设备固定 3 类资料</strong> — 产品合格证 / 出厂试验报告 / 交接试验报告（依据徐州华电真实包裹事实）</li>
+      <li><strong>双通道入图：拍摄 / 从相册上传</strong> — 纸质原件现场拍；PDF 原件手机打开截屏后从相册上传</li>
+      <li><strong>操作元数据仅后端留痕</strong> — 谁录的 / 何时录的 / 来源哪里，一线不需要看，只进后端审计日志 + 4.6 督查埋点</li>
+      <li><strong>默认展开无折叠</strong> — 打开页面所有设备 slot 一览无余，不做折叠交互；用户直接看到还有哪些未录</li>
+    </ul>
+
+    <h3>业务规则摘要</h3>
+    <table>
+      <tr><th>规则</th><th>说明</th></tr>
+      <tr><td><strong>采集范围</strong></td><td>3.1 抽检对象确认后的设备清单（仅抽中设备）</td></tr>
+      <tr><td><strong>每设备资料</strong></td><td>固定 3 类：产品合格证 / 出厂试验报告 / 交接试验报告</td></tr>
+      <tr><td><strong>操作角色</strong></td><td>工作负责人+试验员均可录入；项目经理只读查看；非本工单无权限</td></tr>
+      <tr><td><strong>入图通道</strong></td><td>拍摄照片（应用内取景窗）+ 从相册上传，两者平等</td></tr>
+      <tr><td><strong>张数限制</strong></td><td>每 slot 默认单张（标准化文件一般一页足够）</td></tr>
+      <tr><td><strong>状态</strong></td><td>未录 / 已录 二态，不做判定</td></tr>
+      <tr><td><strong>触发</strong></td><td>3.5 开工会提交完成后入口解锁</td></tr>
+      <tr><td><strong>合流</strong></td><td>软合流 4.3 包裹生成（工单级兜底校验，不做设备级守卫）</td></tr>
+      <tr><td><strong>OCR/离线</strong></td><td>均不做</td></tr>
+    </table>
+
+    <h3>版本边界</h3>
+    <table>
+      <tr><th>功能</th><th>V3.0</th><th>V3.1+</th></tr>
+      <tr><td>拍摄录入</td><td>✓</td><td>—</td></tr>
+      <tr><td>从相册上传</td><td>✓</td><td>—</td></tr>
+      <tr><td>合格/不合格判定</td><td>✗（不做）</td><td>保持不做</td></tr>
+      <tr><td>多页 slot（出厂/交接报告多页）</td><td>默认单张</td><td>如业务反馈调整</td></tr>
+      <tr><td>4.6 督查埋点</td><td>静默记录录入/删除事件</td><td>规则计算</td></tr>
+      <tr><td>OCR / PDF 解析上传</td><td>✗</td><td>✗</td></tr>
+    </table>
+
+    <details style="margin-top:24px;border:1px solid #E5E7EB;border-radius:8px;padding:12px 16px;background:#ebfdfa">
+      <summary style="font-size:14px;font-weight:600;color:#047857;cursor:pointer;outline:none">📋 开发参考（点击展开）</summary>
+      <div style="margin-top:12px;font-size:13px;color:#4B5563;line-height:1.6">
+        <p style="font-weight:600;margin-bottom:8px">Flowable 节点</p>
+        <ul style="padding-left:20px;list-style:disc">
+          <li>节点 Key：<code>material_capture</code></li>
+          <li>触发：<code>kickoffMeetingSubmitted</code>（3.5 开工会 commit）</li>
+          <li>合流：软合流到 1.3 <code>package_generate</code></li>
+          <li>Candidate：工单全体现场成员（工作负责人+试验员）；PM 只读</li>
+        </ul>
+        <p style="font-weight:600;margin:12px 0 8px">数据模型</p>
+        <pre style="font-size:11px;background:#fff;padding:10px;border-radius:6px;border:1px solid #E5E7EB;overflow-x:auto">{
+  workOrderId, stationId, deviceId, deviceType,
+  materialType: "certificate" | "factoryReport" | "handoverReport",
+  configCode: "13101011" | "13101012" | "13101013",
+  photos: [{url, source:"camera"|"gallery", photographer, capturedAt, watermark}, ...],
+  maxCount: 1
+}</pre>
+        <p style="font-weight:600;margin:12px 0 8px">4.6 埋点</p>
+        <ul style="padding-left:20px;list-style:disc">
+          <li><code>material.photo.added</code> — 新增（含 source=camera/gallery）</li>
+          <li><code>material.photo.deleted</code> — 删除</li>
+          <li><code>material.cross_operator_replace</code> — 跨角色覆盖事件（A 删了 B 拍的）</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+</div>
+
+<script>
+(function(){
+  const $=s=>document.querySelector(s);
+  const $$=s=>document.querySelectorAll(s);
+  function toast(id,msg){const t=$(id);t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1500)}
+  const canEdit=()=>document.body.dataset.role==='operator';
+
+  // 3 类资料定义
+  const MAT_TYPES=[
+    {k:'cert',name:'产品合格证',code:'13101011'},
+    {k:'factory',name:'出厂试验报告',code:'13101012'},
+    {k:'handover',name:'交接试验报告',code:'13101013'}
+  ];
+
+  // Demo 数据：5 个抽中设备（展示四种状态分布）
+  // 规模 2-0-4-1 = 7 站房，抽中 3 站房中若干设备
+  const stations=[
+    {id:'1k',no:'1',type:'开关站',devices:[
+      {id:'1k-01',no:'1-01',type:'中置柜',slots:{
+        cert:{photos:[{by:'张三',time:'10:20'}]},
+        factory:{photos:[{by:'张三',time:'10:22'}]},
+        handover:{photos:[{by:'李四',time:'10:25'}]}
+      }},
+      {id:'1k-02',no:'1-02',type:'中置柜',slots:{
+        cert:{photos:[{by:'李四',time:'10:30'}]},
+        factory:{photos:[]},
+        handover:{photos:[]}
+      }}
+    ]},
+    {id:'2p',no:'2',type:'配电室',devices:[
+      {id:'2p-01',no:'2-01',type:'环网柜',slots:{
+        cert:{photos:[]},
+        factory:{photos:[]},
+        handover:{photos:[]}
+      }},
+      {id:'2p-02',no:'2-02',type:'干式变压器',slots:{
+        cert:{photos:[{by:'王五',time:'11:00'}]},
+        factory:{photos:[{by:'王五',time:'11:05'}]},
+        handover:{photos:[]}
+      }}
+    ]},
+    {id:'3p',no:'3',type:'配电室',devices:[
+      {id:'3p-01',no:'3-01',type:'干式变压器',slots:{
+        cert:{photos:[]},
+        factory:{photos:[]},
+        handover:{photos:[]}
+      }}
+    ]}
+  ];
+  // 补全默认字段
+  stations.forEach(st=>st.devices.forEach(d=>{
+    MAT_TYPES.forEach(m=>{
+      if(!d.slots[m.k])d.slots[m.k]={photos:[]};
+      d.slots[m.k].maxCount=1;
+      d.slots[m.k].matType=m.k;
+      d.slots[m.k].deviceId=d.id;
+    });
+  }));
+  const slotKey=(deviceId,matK)=>`${deviceId}__${matK}`;
+  const slotMap={};
+  stations.forEach(st=>st.devices.forEach(d=>MAT_TYPES.forEach(m=>{
+    slotMap[slotKey(d.id,m.k)]={...d.slots[m.k],name:m.name,code:m.code,matK:m.k,deviceId:d.id,deviceNo:d.no,deviceType:d.type,stationNo:st.no,stationType:st.type};
+  })));
+
+  // ========== 渲染列表 ==========
+  function renderList(){
+    const wrap=$('#device-list');
+    wrap.innerHTML='';
+    stations.forEach(st=>{
+      // 站房分组头（默认展开，可折叠）
+      const hd=document.createElement('div');
+      hd.className='group-header';
+      const totalDev=st.devices.length;
+      const doneDev=st.devices.filter(d=>MAT_TYPES.every(m=>d.slots[m.k].photos.length>0)).length;
+      hd.innerHTML=`
+        <span class="group-arrow">▼</span>
+        <span class="group-label">${st.no}# ${st.type}</span>
+        <span class="group-count">${doneDev}/${totalDev} 设备已齐</span>
+      `;
+      wrap.appendChild(hd);
+
+      // 设备分组体（默认展开）
+      const bd=document.createElement('div');
+      bd.className='group-items';
+      st.devices.forEach(d=>bd.appendChild(renderDevice(st,d)));
+      wrap.appendChild(bd);
+
+      hd.addEventListener('click',()=>{
+        hd.querySelector('.group-arrow').classList.toggle('collapsed');
+        bd.classList.toggle('collapsed');
+      });
+    });
+  }
+
+  function renderDevice(st,d){
+    const card=document.createElement('div');
+    card.className='dev-card';
+
+    // 设备头
+    const dhd=document.createElement('div');
+    dhd.className='dev-hd';
+    const doneCnt=MAT_TYPES.filter(m=>d.slots[m.k].photos.length>0).length;
+    const allDone=doneCnt===MAT_TYPES.length;
+    dhd.innerHTML=`
+      <span class="dev-no">${d.no}</span>
+      <span class="dev-type">${d.type}</span>
+      <span class="dev-count ${allDone?'done':''}">${doneCnt}/${MAT_TYPES.length}</span>
+    `;
+    card.appendChild(dhd);
+
+    // 3 个 slot
+    MAT_TYPES.forEach(m=>{
+      const sl={...d.slots[m.k],name:m.name,code:m.code};
+      const row=renderSlot(d.id,m.k,sl);
+      card.appendChild(row);
+    });
+
+    return card;
+  }
+
+  function renderSlot(deviceId,matK,sl){
+    const wrap=document.createElement('div');
+    wrap.style.cssText='display:flex;flex-direction:column';
+
+    const has=sl.photos.length>0;
+    const row=document.createElement('div');
+    row.className='slot-row'+(has?' done':'');
+    row.dataset.slot=slotKey(deviceId,matK);
+
+    let iconCls=has?'done':'photo',iconCh=has?'✓':'📷',metaText;
+    if(has){
+      metaText=`已录 ${sl.photos.length} 张`;
+    } else {
+      metaText=`未拍照 · 编号 ${sl.code}`;
+    }
+    row.innerHTML=`
+      <div class="slot-icon ${iconCls}">${iconCh}</div>
+      <div class="slot-info">
+        <div class="slot-name">${sl.name}</div>
+        <div class="slot-meta">${metaText}</div>
+      </div>
+      <div class="slot-chevron">›</div>
+    `;
+
+    const grid=document.createElement('div');
+    grid.className='photo-grid';
+
+    row.addEventListener('click',e=>{
+      const curHas=sl.photos.length>0;
+      if(!curHas){
+        if(!canEdit())return;
+        openAddSheet(slotKey(deviceId,matK));
+      } else {
+        const isOpen=grid.classList.contains('show');
+        $$('.photo-grid').forEach(g=>g.classList.remove('show'));
+        if(!isOpen){
+          grid.classList.add('show');
+          renderPhotos(grid,deviceId,matK,sl);
+        }
+      }
+    });
+
+    wrap.appendChild(row);
+    wrap.appendChild(grid);
+
+    if(has){
+      renderPhotos(grid,deviceId,matK,sl);
+    }
+    return wrap;
+  }
+
+  function renderPhotos(grid,deviceId,matK,sl){
+    grid.innerHTML='';
+    sl.photos.forEach((p,idx)=>{
+      const t=document.createElement('div');
+      t.className='photo-thumb';
+      t.innerHTML=`📄<div class="ph-del">×</div>`;
+      t.querySelector('.ph-del').addEventListener('click',e=>{
+        e.stopPropagation();
+        if(!canEdit())return;
+        openConfirm('删除该张照片？',()=>{
+          sl.photos.splice(idx,1);
+          renderList();
+          toast('#toastList','已删除');
+        });
+      });
+      grid.appendChild(t);
+    });
+    if(sl.photos.length < sl.maxCount){
+      const add=document.createElement('div');
+      add.className='photo-add';
+      add.textContent='＋';
+      add.addEventListener('click',e=>{
+        e.stopPropagation();
+        if(!canEdit())return;
+        openAddSheet(slotKey(deviceId,matK));
+      });
+      grid.appendChild(add);
+    }
+  }
+
+  // ========== 添加照片 action-sheet ==========
+  let addForSlot=null;
+  function openAddSheet(slotK){
+    addForSlot=slotK;
+    $('#addMask').classList.add('show');
+    $('#addSheet').classList.add('show');
+  }
+  function closeAddSheet(){
+    $('#addMask').classList.remove('show');
+    $('#addSheet').classList.remove('show');
+    addForSlot=null;
+  }
+  $('#addMask').addEventListener('click',closeAddSheet);
+  $('#optCancel').addEventListener('click',closeAddSheet);
+  $('#optCam').addEventListener('click',()=>{
+    const sk=addForSlot;
+    closeAddSheet();
+    enterCam(sk);
+  });
+  $('#optUpload').addEventListener('click',()=>{
+    const sl=slotMap[addForSlot];
+    const d=new Date();
+    const t=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+    sl.photos.push({by:'相册',time:t});
+    closeAddSheet();
+    renderList();
+    toast('#toastList','已上传');
+  });
+
+  // ========== 拍照模式 ==========
+  let camDeviceId=null,camSlotK=null;
+  function enterCam(slotK){
+    camSlotK=slotK;
+    camDeviceId=slotMap[slotK].deviceId;
+    renderCamMode();
+    $('#listMode').classList.add('hid');
+    $('#camMode').classList.add('on');
+  }
+  function exitCam(){
+    $('#listMode').classList.remove('hid');
+    $('#camMode').classList.remove('on');
+  }
+  $('#camBack').addEventListener('click',exitCam);
+
+  function renderCamMode(){
+    const curSl=slotMap[camSlotK];
+    $('#camTitle').textContent=`${curSl.stationNo}#${curSl.stationType} · ${curSl.deviceNo} ${curSl.deviceType}`;
+    $('#vfText').textContent=curSl.name;
+    $('#vfCount').textContent=curSl.photos.length+' 张';
+
+    const scroll=$('#camScroll');
+    scroll.innerHTML='';
+    // 列出当前设备的 3 个 slot
+    MAT_TYPES.forEach(m=>{
+      const sk=slotKey(camDeviceId,m.k);
+      const sl=slotMap[sk];
+      const item=document.createElement('div');
+      item.className='cam-item';
+      if(sk===camSlotK)item.classList.add('sel');
+      let dotCls='';
+      if(sl.photos.length>0 && sk!==camSlotK)dotCls='done';
+      else if(sk===camSlotK)dotCls='doing';
+      item.innerHTML=`
+        <div class="cam-dot ${dotCls}"></div>
+        <div class="cam-item-name">${m.name}</div>
+        <div class="cam-item-count">${sl.photos.length} 张</div>
+      `;
+      item.addEventListener('click',()=>{camSlotK=sk;renderCamMode();});
+      scroll.appendChild(item);
+    });
+
+    const idx=MAT_TYPES.findIndex(m=>slotKey(camDeviceId,m.k)===camSlotK);
+    $('#camPrev').classList.toggle('dis',idx===0);
+    $('#camNext').classList.toggle('dis',idx===MAT_TYPES.length-1);
+  }
+  $('#camPrev').addEventListener('click',()=>{
+    const idx=MAT_TYPES.findIndex(m=>slotKey(camDeviceId,m.k)===camSlotK);
+    if(idx>0){camSlotK=slotKey(camDeviceId,MAT_TYPES[idx-1].k);renderCamMode();}
+  });
+  $('#camNext').addEventListener('click',()=>{
+    const idx=MAT_TYPES.findIndex(m=>slotKey(camDeviceId,m.k)===camSlotK);
+    if(idx<MAT_TYPES.length-1){camSlotK=slotKey(camDeviceId,MAT_TYPES[idx+1].k);renderCamMode();}
+  });
+  $('#camShutter').addEventListener('click',()=>{
+    const sl=slotMap[camSlotK];
+    if(sl.photos.length>=sl.maxCount){
+      toast('#toastCam','该项已达上限');return;
+    }
+    const d=new Date();
+    const t=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+    sl.photos.push({by:'张三',time:t});
+    $('#vfFlash').classList.add('fire');
+    setTimeout(()=>$('#vfFlash').classList.remove('fire'),100);
+    renderCamMode();
+    renderList();
+    toast('#toastCam','已录入');
+  });
+
+  // ========== 二次确认 ==========
+  let confirmCb=null;
+  function openConfirm(msg,cb){
+    $('#confirmMsg').textContent=msg;
+    confirmCb=cb;
+    $('#confirmBg').classList.add('show');
+  }
+  function closeConfirm(){
+    $('#confirmBg').classList.remove('show');
+    confirmCb=null;
+  }
+  $('#confirmCancel').addEventListener('click',closeConfirm);
+  $('#confirmOk').addEventListener('click',()=>{if(confirmCb)confirmCb();closeConfirm();});
+  $('#confirmBg').addEventListener('click',e=>{if(e.target.id==='confirmBg')closeConfirm();});
+
+  // ========== 视角切换 ==========
+  $$('.view-btn').forEach(b=>b.addEventListener('click',()=>{
+    $$('.view-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    document.body.dataset.role=b.dataset.role;
+    renderList();
+  }));
+
+  renderList();
+})();
+</script>
+</body>
+</html>
